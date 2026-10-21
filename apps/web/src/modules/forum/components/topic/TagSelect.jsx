@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect, useCallback } from 'react';
 import { useDebounce } from '@uidotdev/usehooks';
 import MultiSelect from '@/components/common/MultiSelect';
@@ -17,50 +18,34 @@ export default function TagSelect({
   value = [],
   onChange,
   maxTags = 5,
-  canCreateTag = false,
+  canCreateTag = false
 }) {
+  const pbnT = usePbnTranslations();
   const [search, setSearch] = useState('');
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const debouncedSearch = useDebounce(search, 300);
-
-  const fetchTags = useCallback(async (query) => {
+  const fetchTags = useCallback(async query => {
     setLoading(true);
     try {
       const res = await tagApi.getAll(query, 20);
-      setOptions(
-        (res.items || []).map((t) => ({ value: t.name, label: t.name }))
-      );
+      setOptions((res.items || []).map(t => ({
+        value: t.name,
+        label: t.name
+      })));
     } catch {
       setOptions([]);
     } finally {
       setLoading(false);
     }
   }, []);
-
   useEffect(() => {
     fetchTags(debouncedSearch);
   }, [debouncedSearch, fetchTags]);
-
-  const handleCreate = canCreateTag
-    ? (name) => {
-        if (!value.includes(name)) {
-          onChange([...value, name]);
-        }
-      }
-    : undefined;
-
-  return (
-    <MultiSelect
-      value={value}
-      onChange={onChange}
-      options={options}
-      placeholder="搜索或选择标签..."
-      searchPlaceholder="搜索标签..."
-      onSearch={setSearch}
-      loading={loading}
-      maxCount={maxTags}
-      onCreate={handleCreate}
-    />
-  );
+  const handleCreate = canCreateTag ? name => {
+    if (!value.includes(name)) {
+      onChange([...value, name]);
+    }
+  } : undefined;
+  return <MultiSelect value={value} onChange={onChange} options={options} placeholder={pbnT("m2317")} searchPlaceholder={pbnT("m828")} onSearch={setSearch} loading={loading} maxCount={maxTags} onCreate={handleCreate} />;
 }

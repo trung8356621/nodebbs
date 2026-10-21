@@ -1,37 +1,15 @@
 'use client';
 
+import LocaleSwitcher from '@/i18n/LocaleSwitcher';
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState } from 'react';
 import Link from '@/components/common/Link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import UserAvatar from '@/components/user/UserAvatar';
-import {
-  Search,
-  Plus,
-  Settings,
-  Menu,
-  X,
-  MessageSquare,
-  LogOut,
-  User,
-  Mail,
-  Shield,
-  Wallet,
-  ChevronDown,
-} from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Search, Plus, Settings, Menu, X, MessageSquare, LogOut, User, Mail, Shield, Wallet, ChevronDown } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NotificationPopover } from '@/components/common/Notification';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,19 +28,30 @@ import { Input } from '@/components/ui/input';
  * - 底部装饰色条
  */
 export default function Header() {
+  const pbnT = usePbnTranslations();
   const router = useRouter();
-  const { user, isAuthenticated, loading, logout, openLoginDialog } = useAuth();
-  const { settings } = useSettings();
-  const { isWalletEnabled } = useLedger();
-  const { hasDashboardAccess } = usePermission();
+  const {
+    user,
+    isAuthenticated,
+    loading,
+    logout,
+    openLoginDialog
+  } = useAuth();
+  const {
+    settings
+  } = useSettings();
+  const {
+    isWalletEnabled
+  } = useLedger();
+  const {
+    hasDashboardAccess
+  } = usePermission();
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   const handleLogout = () => {
     logout();
   };
-
-  const handleSearch = (e) => {
+  const handleSearch = e => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/search?s=${encodeURIComponent(searchQuery.trim())}`);
@@ -70,9 +59,7 @@ export default function Header() {
       setIsMobileMenuOpen(false);
     }
   };
-
-  return (
-    <header className='sticky top-0 z-50'>
+  return <header className='sticky top-0 z-50'>
       {/* 主导航栏 */}
       <div className='bg-card border-b border-border'>
         <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
@@ -80,16 +67,10 @@ export default function Header() {
             {/* 左侧：品牌 + 搜索框 */}
             <div className='flex items-center gap-4 min-w-0'>
               <Link href='/' className='flex items-center gap-2.5 shrink-0 group'>
-                <img
-                  src={settings?.site_logo?.value || '/logo.svg'}
-                  alt='logo'
-                  className='h-8 w-auto max-w-32 transition-transform group-hover:scale-105'
-                />
-                {(settings?.show_logo_text?.value !== false) && (
-                  <span className='text-2xl font-bold text-foreground tracking-tight hidden sm:inline'>
+                <img src={settings?.site_logo?.value || '/logo.svg'} alt={pbnT("e13")} className='h-8 w-auto max-w-32 transition-transform group-hover:scale-105' />
+                {settings?.show_logo_text?.value !== false && <span className='text-2xl font-bold text-foreground tracking-tight hidden sm:inline'>
                     {settings?.site_name?.value || 'NodeBBS'}
-                  </span>
-                )}
+                  </span>}
               </Link>
             </div>
 
@@ -100,38 +81,24 @@ export default function Header() {
               <div className='hidden md:block w-64 lg:w-80 shrink-0'>
                 <form onSubmit={handleSearch} className='relative'>
                   <Search className='absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none' />
-                  <Input
-                    type='text'
-                    placeholder='搜索...'
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className='w-full h-9 pl-10'
-                  />
+                  <Input type='text' placeholder={pbnT("m475")} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className='w-full h-9 pl-10' />
                 </form>
               </div>
 
-              {loading ? (
-                <Loading size='sm' />
-              ) : (
-                <>
+              {loading ? <Loading size='sm' /> : <>
                   {/* 主题切换 */}
+                  <LocaleSwitcher />
                   <ThemeSwitcher />
 
                   {/* 通知按钮 */}
                   {isAuthenticated && <NotificationPopover />}
 
-                  {isAuthenticated ? (
-                    <>
+                  {isAuthenticated ? <>
                       {/* 用户头像下拉菜单 */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className='flex items-center gap-2 rounded-full px-1 py-1 hover:bg-muted/50 transition-colors cursor-pointer'>
-                            <UserAvatar
-                              url={user?.avatar}
-                              name={user?.name || user?.username}
-                              size='xs'
-                              frameMetadata={user?.avatarFrame?.itemMetadata}
-                            />
+                            <UserAvatar url={user?.avatar} name={user?.name || user?.username} size='xs' frameMetadata={user?.avatarFrame?.itemMetadata} />
                             <span className='text-sm font-medium text-foreground hidden sm:inline max-w-24 truncate'>
                               {user?.name || user?.username}
                             </span>
@@ -140,12 +107,7 @@ export default function Header() {
                         <DropdownMenuContent align='end' className='w-56'>
                           <DropdownMenuLabel className='pb-2'>
                             <div className='flex items-center gap-2'>
-                              <UserAvatar
-                                url={user?.avatar}
-                                name={user?.name || user?.username}
-                                size='sm'
-                                frameMetadata={user?.avatarFrame?.itemMetadata}
-                              />
+                              <UserAvatar url={user?.avatar} name={user?.name || user?.username} size='sm' frameMetadata={user?.avatarFrame?.itemMetadata} />
                               <div className='flex flex-col'>
                                 <span className='font-medium'>
                                   {user?.name || user?.username}
@@ -160,136 +122,84 @@ export default function Header() {
 
                           <DropdownMenuItem asChild>
                             <Link href={`/users/${user?.username}`} className='cursor-pointer'>
-                              <User className='h-4 w-4' />
-                              个人主页
-                            </Link>
+                              <User className='h-4 w-4' />{pbnT("m2453")}</Link>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem asChild>
                             <Link href='/profile/topics' className='cursor-pointer'>
-                              <MessageSquare className='h-4 w-4' />
-                              我的话题
-                            </Link>
+                              <MessageSquare className='h-4 w-4' />{pbnT("m1193")}</Link>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem asChild>
                             <Link href='/profile/messages' className='cursor-pointer'>
-                              <Mail className='h-4 w-4' />
-                              站内信
-                            </Link>
+                              <Mail className='h-4 w-4' />{pbnT("m962")}</Link>
                           </DropdownMenuItem>
 
-                          {isWalletEnabled && (
-                            <DropdownMenuItem asChild>
+                          {isWalletEnabled && <DropdownMenuItem asChild>
                               <Link href='/profile/wallet' className='cursor-pointer'>
-                                <Wallet className='h-4 w-4' />
-                                我的钱包
-                              </Link>
-                            </DropdownMenuItem>
-                          )}
+                                <Wallet className='h-4 w-4' />{pbnT("m1511")}</Link>
+                            </DropdownMenuItem>}
 
                           <DropdownMenuItem asChild>
                             <Link href='/profile/settings' className='cursor-pointer'>
-                              <Settings className='h-4 w-4' />
-                              个人设置
-                            </Link>
+                              <Settings className='h-4 w-4' />{pbnT("m1171")}</Link>
                           </DropdownMenuItem>
 
-                          {hasDashboardAccess() && (
-                            <>
+                          {hasDashboardAccess() && <>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem asChild>
                                 <Link href='/dashboard' className='cursor-pointer text-primary'>
-                                  <Shield className='h-4 w-4' />
-                                  管理后台
-                                </Link>
+                                  <Shield className='h-4 w-4' />{pbnT("m350")}</Link>
                               </DropdownMenuItem>
-                            </>
-                          )}
+                            </>}
 
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={handleLogout}
-                            className='cursor-pointer text-red-600 dark:text-red-500'
-                          >
-                            <LogOut className='h-4 w-4' />
-                            退出登录
-                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleLogout} className='cursor-pointer text-red-600 dark:text-red-500'>
+                            <LogOut className='h-4 w-4' />{pbnT("m2454")}</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
 
                       {/* 发布按钮 — 风格 "New" 按钮 */}
                       <Link href='/create'>
-                        <Button
-                          size='sm'
-                          className='h-8 px-4 rounded-md text-sm font-semibold shadow-sm'
-                        >
-                          发布话题
-                          <Plus className='h-3.5 w-3.5' />
+                        <Button size='sm' className='h-8 px-4 rounded-md text-sm font-semibold shadow-sm'>{pbnT("m54")}<Plus className='h-3.5 w-3.5' />
                         </Button>
                       </Link>
-                    </>
-                  ) : (
-                    /* 未登录：登录按钮 */
-                    <Button
-                      size='sm'
-                      onClick={openLoginDialog}
-                      className='h-8 px-4 rounded-md text-sm font-semibold shadow-sm'
-                    >
-                      <User className='h-3.5 w-3.5' />
-                      登录
-                    </Button>
-                  )}
-                </>
-              )}
+                    </> : (/* 未登录：登录按钮 */
+              <Button size='sm' onClick={openLoginDialog} className='h-8 px-4 rounded-md text-sm font-semibold shadow-sm'>
+                      <User className='h-3.5 w-3.5' />{pbnT("m4")}</Button>)}
+                </>}
 
               {/* 移动端菜单按钮 */}
               <Popover open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='md:hidden hover:bg-muted/50 h-8 w-8'
-                  >
+                  <Button variant='ghost' size='icon' className='md:hidden hover:bg-muted/50 h-8 w-8'>
                     {isMobileMenuOpen ? <X className='h-4 w-4' /> : <Menu className='h-4 w-4' />}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent
-                  align='end'
-                  sideOffset={0}
-                  className='w-screen mt-px rounded-none shadow-none border-x-0 border-b md:hidden p-0'
-                  onOpenAutoFocus={(e) => e.preventDefault()}
-                >
+                <PopoverContent align='end' sideOffset={0} className='w-screen mt-px rounded-none shadow-none border-x-0 border-b md:hidden p-0' onOpenAutoFocus={e => e.preventDefault()}>
                   {/* 移动端搜索 */}
                   <div className='p-4'>
                     <form onSubmit={handleSearch} className='relative'>
                       <Search className='absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none' />
-                      <Input
-                        type='text'
-                        placeholder='搜索...'
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className='w-full h-9 pl-10'
-                      />
+                      <Input type='text' placeholder={pbnT("m475")} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className='w-full h-9 pl-10' />
                     </form>
                   </div>
 
                   {/* 移动端导航链接 */}
                   <div className='flex flex-col gap-1 px-4 pb-4'>
-                    {[
-                      { href: '/', label: '首页', icon: MessageSquare },
-                      { href: '/categories', label: '分类' },
-                      { href: '/tags', label: '标签' },
-                    ].map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className='flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-muted text-sm font-medium text-muted-foreground hover:text-foreground transition-colors'
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
+                    {[{
+                    href: '/',
+                    label: pbnT("m2441"),
+                    icon: MessageSquare
+                  }, {
+                    href: '/categories',
+                    label: pbnT("m44")
+                  }, {
+                    href: '/tags',
+                    label: pbnT("m824")
+                  }].map(item => <Link key={item.href} href={item.href} className='flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-muted text-sm font-medium text-muted-foreground hover:text-foreground transition-colors' onClick={() => setIsMobileMenuOpen(false)}>
                         {item.label}
-                      </Link>
-                    ))}
+                      </Link>)}
                   </div>
 
                 </PopoverContent>
@@ -298,6 +208,5 @@ export default function Header() {
           </div>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 }

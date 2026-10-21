@@ -1,3 +1,4 @@
+import { getPbnTranslations } from "@/i18n/server";
 import { getStatsData } from '@/modules/forum/server';
 import { AdSlot } from '@/extensions/ads/components';
 import RightSidebar from '../components/RightSidebar';
@@ -11,11 +12,12 @@ import RightSidebar from '../components/RightSidebar';
  * 用法:
  *   <SidebarLayout>                       → 默认右栏 + 侧栏广告
  */
-export default async function SidebarLayout({ children }) {
-  const stats = await getStatsData();
-
-  return (
-    <div className='flex flex-col gap-6'>
+export default async function SidebarLayout({
+  children
+}) {
+  const pbnT = await getPbnTranslations();
+  const stats = await getStatsData(pbnT);
+  return <div className='flex flex-col gap-6'>
       <AdSlot slotCode='home_header_banner' className='rounded-lg' />
       <div className='flex gap-6 items-start'>
         <main className='flex-1 min-w-0 flex flex-col gap-6'>
@@ -29,6 +31,5 @@ export default async function SidebarLayout({ children }) {
         </aside>
       </div>
       <AdSlot slotCode='home_footer_banner' className='rounded-lg' />
-    </div>
-  );
+    </div>;
 }

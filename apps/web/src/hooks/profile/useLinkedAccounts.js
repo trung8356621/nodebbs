@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { authApi } from '@/lib/api';
@@ -15,9 +16,14 @@ import { toast } from 'sonner';
  * 否则用户将无从解绑。
  */
 export function useLinkedAccounts() {
-  const { user, refreshUser } = useAuth();
-  const { oauthProviders: enabledProviders } = useOAuthProviders();
-
+  const pbnT = usePbnTranslations();
+  const {
+    user,
+    refreshUser
+  } = useAuth();
+  const {
+    oauthProviders: enabledProviders
+  } = useOAuthProviders();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -29,7 +35,6 @@ export function useLinkedAccounts() {
 
   // ===== 关联中的平台（跳转前的 loading）=====
   const [linkingProvider, setLinkingProvider] = useState(null);
-
   const fetchAccounts = useCallback(async () => {
     try {
       setLoading(true);
@@ -39,13 +44,12 @@ export function useLinkedAccounts() {
     } catch (err) {
       // 不能只吞进 console：rows 会退化成空数组，整张卡片直接从页面消失，
       // 用户分不清是「没绑过」还是「请求失败」
-      console.error('获取关联账号失败:', err);
+      console.error("Could not load linked accounts:", err);
       setError(err);
     } finally {
       setLoading(false);
     }
   }, []);
-
   useEffect(() => {
     fetchAccounts();
   }, [fetchAccounts]);
@@ -56,17 +60,15 @@ export function useLinkedAccounts() {
   const rows = useMemo(() => {
     const linked = data?.accounts ?? [];
     const linkable = data?.linkableProviders ?? [];
-    const linkedMap = new Map(linked.map((item) => [item.provider, item]));
-
+    const linkedMap = new Map(linked.map(item => [item.provider, item]));
     const merged = new Map();
-
     for (const provider of enabledProviders) {
       merged.set(provider.provider, {
         provider: provider.provider,
-        displayName: provider.displayName || getProviderName(provider.provider),
+        displayName: provider.displayName || getProviderName(provider.provider, pbnT),
         displayOrder: provider.displayOrder ?? 0,
         isEnabled: true,
-        account: linkedMap.get(provider.provider) || null,
+        account: linkedMap.get(provider.provider) || null
       });
     }
 
@@ -75,85 +77,70 @@ export function useLinkedAccounts() {
       if (merged.has(account.provider)) continue;
       merged.set(account.provider, {
         provider: account.provider,
-        displayName: account.displayName || getProviderName(account.provider),
+        displayName: account.displayName || getProviderName(account.provider, pbnT),
         displayOrder: account.displayOrder ?? 999,
         isEnabled: false,
-        account,
+        account
       });
     }
-
-    return Array.from(merged.values())
-      .map((row) => ({
-        ...row,
-        // 平台需同时「已启用」且「后端支持 Web 关联」才给关联入口
-        canLink: row.isEnabled && linkable.includes(row.provider),
-        canUnlink: !!row.account && !!data?.canUnlink,
-      }))
-      // 未关联且不可关联的平台（如 Apple）没有任何可操作项，不必占位
-      .filter((row) => row.account || row.canLink)
-      .sort((a, b) => a.displayOrder - b.displayOrder);
+    return Array.from(merged.values()).map(row => ({
+      ...row,
+      // 平台需同时「已启用」且「后端支持 Web 关联」才给关联入口
+      canLink: row.isEnabled && linkable.includes(row.provider),
+      canUnlink: !!row.account && !!data?.canUnlink
+    }))
+    // 未关联且不可关联的平台（如 Apple）没有任何可操作项，不必占位
+    .filter(row => row.account || row.canLink).sort((a, b) => a.displayOrder - b.displayOrder);
   }, [data, enabledProviders]);
 
   /**
    * 发起关联：拿授权链接后整页跳转，回调落在 /auth/[provider]/callback
    */
-  const handleLink = useCallback(async (provider) => {
+  const handleLink = useCallback(async provider => {
     try {
       setLinkingProvider(provider);
-      const { authorizationUri } = await authApi.getOAuthLinkUrl(provider);
+      const {
+        authorizationUri
+      } = await authApi.getOAuthLinkUrl(provider);
       window.location.href = authorizationUri;
     } catch (error) {
-      console.error('发起账号关联失败:', error);
-      toast.error(error.message || '发起关联失败');
+      console.error("Could not start account linking:", error);
+      toast.error(error.message || pbnT("m2145"));
       setLinkingProvider(null);
     }
   }, []);
 
   // ===== 解绑对话框 =====
-  const openUnlinkDialog = useCallback((row) => {
+  const openUnlinkDialog = useCallback(row => {
     setUnlinkTarget(row);
     setPassword('');
   }, []);
-
   const closeUnlinkDialog = useCallback(() => {
     setUnlinkTarget(null);
     setPassword('');
   }, []);
-
   const requiresPassword = !!data?.unlinkRequiresPassword;
-
   const handleUnlink = useCallback(async () => {
     if (!unlinkTarget) return;
-
     if (requiresPassword && !password) {
-      toast.error('请输入当前密码');
+      toast.error(pbnT("m1059"));
       return;
     }
-
     setSubmitting(true);
     try {
-      await authApi.unlinkOAuthAccount(
-        unlinkTarget.provider,
-        requiresPassword ? password : undefined
-      );
-      toast.success(`已解除 ${unlinkTarget.displayName} 关联`);
+      await authApi.unlinkOAuthAccount(unlinkTarget.provider, requiresPassword ? password : undefined);
+      toast.success(pbnT("m2146", {
+        arg0: unlinkTarget.displayName
+      }));
       closeUnlinkDialog();
       await Promise.all([fetchAccounts(), refreshUser()]);
     } catch (error) {
-      console.error('解除关联失败:', error);
-      toast.error(error.message || '解除关联失败');
+      console.error("Could not unlink:", error);
+      toast.error(error.message || pbnT("m2148"));
     } finally {
       setSubmitting(false);
     }
-  }, [
-    unlinkTarget,
-    requiresPassword,
-    password,
-    closeUnlinkDialog,
-    fetchAccounts,
-    refreshUser,
-  ]);
-
+  }, [unlinkTarget, requiresPassword, password, closeUnlinkDialog, fetchAccounts, refreshUser]);
   return {
     user,
     rows,
@@ -172,6 +159,6 @@ export function useLinkedAccounts() {
     setPassword,
     submitting,
     handleUnlink,
-    refresh: fetchAccounts,
+    refresh: fetchAccounts
   };
 }

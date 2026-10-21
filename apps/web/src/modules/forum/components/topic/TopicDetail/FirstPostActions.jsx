@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Coins, ThumbsUp } from 'lucide-react';
@@ -14,126 +15,68 @@ import { useAuth } from '@/contexts/AuthContext';
  * @param {Object} props
  * @param {string} [props.className] - 容器自定义样式（覆盖对齐方向等）
  */
-export default function FirstPostActions({ className }) {
+export default function FirstPostActions({
+  className
+}) {
+  const pbnT = usePbnTranslations();
   const {
     topic,
     rewardStats,
     isRewardEnabled,
     handleRewardSuccess,
     toggleFirstPostLike,
-    actionLoading,
+    actionLoading
   } = useTopicContext();
-
-  const { user, isAuthenticated, openLoginDialog } = useAuth();
-
+  const {
+    user,
+    isAuthenticated,
+    openLoginDialog
+  } = useAuth();
   const [rewardDialogOpen, setRewardDialogOpen] = useState(false);
   const [rewardListOpen, setRewardListOpen] = useState(false);
-
   if (!topic.firstPostId) return null;
-
-  return (
-    <>
+  return <>
       <div className={className || 'flex items-center justify-end gap-2'}>
         {/* 点赞按钮 */}
-        <Button
-          variant='ghost'
-          size='sm'
-          onClick={toggleFirstPostLike}
-          disabled={actionLoading.like}
-          className={`${
-            topic.isFirstPostLiked
-              ? 'text-destructive hover:text-destructive/80 bg-destructive/5'
-              : 'text-muted-foreground hover:text-destructive hover:bg-destructive/5'
-          }`}
-          title={topic.isFirstPostLiked ? '取消点赞' : '点赞'}
-        >
-          {actionLoading.like ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
-          ) : (
-            <>
-              <ThumbsUp
-                className={`h-4 w-4 ${
-                  topic.isFirstPostLiked ? 'fill-current' : ''
-                }`}
-              />
+        <Button variant='ghost' size='sm' onClick={toggleFirstPostLike} disabled={actionLoading.like} className={`${topic.isFirstPostLiked ? 'text-destructive hover:text-destructive/80 bg-destructive/5' : 'text-muted-foreground hover:text-destructive hover:bg-destructive/5'}`} title={topic.isFirstPostLiked ? pbnT("m2318") : pbnT("m128")}>
+          {actionLoading.like ? <Loader2 className='h-4 w-4 animate-spin' /> : <>
+              <ThumbsUp className={`h-4 w-4 ${topic.isFirstPostLiked ? 'fill-current' : ''}`} />
               <span className='text-sm'>
-                {topic.firstPostLikeCount > 0
-                  ? topic.firstPostLikeCount
-                  : '点赞'}
+                {topic.firstPostLikeCount > 0 ? topic.firstPostLikeCount : pbnT("m128")}
               </span>
-            </>
-          )}
+            </>}
         </Button>
 
         {/* 打赏按钮 */}
-        {(isRewardEnabled && user?.id !== topic.userId) && (
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={() => {
-              if (!isAuthenticated) {
-                openLoginDialog();
-                return;
-              }
-              setRewardDialogOpen(true);
-            }}
-            className={`gap-1.5 transition-colors ${
-              (rewardStats[topic.firstPostId]?.totalAmount || 0) > 0
-                ? 'text-amber-600 bg-amber-50 hover:bg-amber-100 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 border-amber-200/50 dark:border-amber-900/50'
-                : 'text-muted-foreground hover:text-yellow-600 hover:bg-yellow-500/10'
-            }`}
-            title='打赏'
-          >
+        {isRewardEnabled && user?.id !== topic.userId && <Button variant='ghost' size='sm' onClick={() => {
+        if (!isAuthenticated) {
+          openLoginDialog();
+          return;
+        }
+        setRewardDialogOpen(true);
+      }} className={`gap-1.5 transition-colors ${(rewardStats[topic.firstPostId]?.totalAmount || 0) > 0 ? 'text-amber-600 bg-amber-50 hover:bg-amber-100 dark:text-amber-400 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 border-amber-200/50 dark:border-amber-900/50' : 'text-muted-foreground hover:text-yellow-600 hover:bg-yellow-500/10'}`} title={pbnT("m1920")}>
             <Coins className='h-4 w-4' />
-            {(rewardStats[topic.firstPostId]?.totalAmount || 0) > 0 ? (
-              <span className='text-sm font-medium'>
+            {(rewardStats[topic.firstPostId]?.totalAmount || 0) > 0 ? <span className='text-sm font-medium'>
                 {rewardStats[topic.firstPostId].totalAmount}
-              </span>
-            ) : (
-              <span className='text-sm'>
-                打赏
-              </span>
-            )}
-          </Button>
-        )}
+              </span> : <span className='text-sm'>{pbnT("m1920")}</span>}
+          </Button>}
 
         {/* 查看打赏记录 */}
-        {(isRewardEnabled && user?.id === topic.userId && (rewardStats[topic.firstPostId]?.totalCount || 0) > 0) && (
-           <Button
-            variant='ghost'
-            size='sm'
-            onClick={() => setRewardListOpen(true)}
-            className='text-muted-foreground hover:text-foreground'
-            title='查看打赏记录'
-           >
+        {isRewardEnabled && user?.id === topic.userId && (rewardStats[topic.firstPostId]?.totalCount || 0) > 0 && <Button variant='ghost' size='sm' onClick={() => setRewardListOpen(true)} className='text-muted-foreground hover:text-foreground' title={pbnT("m2319")}>
              <span className="text-xs">
-               {rewardStats[topic.firstPostId].totalCount} 次打赏
-             </span>
-           </Button>
-        )}
+               {rewardStats[topic.firstPostId].totalCount}{" "}{pbnT("m2320")}</span>
+           </Button>}
       </div>
 
       {/* 打赏对话框 */}
-      <RewardDialog
-        open={rewardDialogOpen}
-        onOpenChange={setRewardDialogOpen}
-        postId={topic.firstPostId}
-        postAuthor={topic.userName || topic.username}
-        onSuccess={(amount) => {
-          handleRewardSuccess(topic.firstPostId, amount);
-        }}
-        onViewHistory={() => {
-          setRewardDialogOpen(false);
-          setRewardListOpen(true);
-        }}
-      />
+      <RewardDialog open={rewardDialogOpen} onOpenChange={setRewardDialogOpen} postId={topic.firstPostId} postAuthor={topic.userName || topic.username} onSuccess={amount => {
+      handleRewardSuccess(topic.firstPostId, amount);
+    }} onViewHistory={() => {
+      setRewardDialogOpen(false);
+      setRewardListOpen(true);
+    }} />
 
       {/* 打赏记录对话框 */}
-      <RewardListDialog
-        open={rewardListOpen}
-        onOpenChange={setRewardListOpen}
-        postId={topic.firstPostId}
-      />
-    </>
-  );
+      <RewardListDialog open={rewardListOpen} onOpenChange={setRewardListOpen} postId={topic.firstPostId} />
+    </>;
 }

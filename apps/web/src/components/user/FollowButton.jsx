@@ -1,45 +1,52 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { userApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { Loader2, UserPlus, UserMinus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-
-export default function FollowButton({ username, initialIsFollowing, isFollowing: isFollowingProp, onFollowChange, className }) {
-  const { user, isAuthenticated, openLoginDialog } = useAuth();
+export default function FollowButton({
+  username,
+  initialIsFollowing,
+  isFollowing: isFollowingProp,
+  onFollowChange,
+  className
+}) {
+  const pbnT = usePbnTranslations();
+  const {
+    user,
+    isAuthenticated,
+    openLoginDialog
+  } = useAuth();
   const externalValue = initialIsFollowing ?? isFollowingProp ?? false;
   const [isFollowing, setIsFollowing] = useState(externalValue);
   const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     setIsFollowing(externalValue);
   }, [externalValue]);
-
   const handleToggleFollow = async () => {
     if (!isAuthenticated) {
       openLoginDialog();
       return;
     }
-
     setLoading(true);
-
     try {
       if (isFollowing) {
         await userApi.unfollowUser(username);
         setIsFollowing(false);
-        toast.success('已取消关注');
+        toast.success(pbnT("m1527"));
         onFollowChange?.(false);
       } else {
         await userApi.followUser(username);
         setIsFollowing(true);
-        toast.success('关注成功');
+        toast.success(pbnT("m1528"));
         onFollowChange?.(true);
       }
     } catch (error) {
-      console.error('关注操作失败:', error);
-      toast.error(error.message || '操作失败');
+      console.error("Follow action failed:", error);
+      toast.error(error.message || pbnT("m568"));
     } finally {
       setLoading(false);
     }
@@ -49,34 +56,13 @@ export default function FollowButton({ username, initialIsFollowing, isFollowing
   if (user && user.username === username) {
     return null;
   }
-
   if (!isAuthenticated) {
     return null;
   }
-
-  return (
-    <Button
-      onClick={handleToggleFollow}
-      disabled={loading}
-      variant={isFollowing ? 'outline' : 'default'}
-      className={className}
-    >
-      {loading ? (
-        <>
-          <Loader2 className='h-4 w-4 animate-spin' />
-          处理中...
-        </>
-      ) : isFollowing ? (
-        <>
-          <UserMinus className='h-4 w-4' />
-          取消关注
-        </>
-      ) : (
-        <>
-          <UserPlus className='h-4 w-4' />
-          关注
-        </>
-      )}
-    </Button>
-  );
+  return <Button onClick={handleToggleFollow} disabled={loading} variant={isFollowing ? 'outline' : 'default'} className={className}>
+      {loading ? <>
+          <Loader2 className='h-4 w-4 animate-spin' />{pbnT("m1025")}</> : isFollowing ? <>
+          <UserMinus className='h-4 w-4' />{pbnT("m1530")}</> : <>
+          <UserPlus className='h-4 w-4' />{pbnT("m131")}</>}
+    </Button>;
 }

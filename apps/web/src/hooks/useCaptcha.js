@@ -11,10 +11,8 @@ export function useCaptchaConfig() {
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   useEffect(() => {
     let mounted = true;
-
     const fetchConfig = async () => {
       try {
         const data = await captchaConfigApi.getConfig();
@@ -24,7 +22,7 @@ export function useCaptchaConfig() {
       } catch (err) {
         if (mounted) {
           setError(err);
-          console.error('[useCaptchaConfig] 获取配置失败:', err);
+          console.error("[useCaptchaConfig] Could not load configuration:", err);
         }
       } finally {
         if (mounted) {
@@ -32,9 +30,7 @@ export function useCaptchaConfig() {
         }
       }
     };
-
     fetchConfig();
-
     return () => {
       mounted = false;
     };
@@ -43,18 +39,16 @@ export function useCaptchaConfig() {
   /**
    * 检查指定场景是否需要验证
    */
-  const isRequired = (scene) => {
+  const isRequired = scene => {
     if (!config || !config.enabled) return false;
     return config.enabledScenes?.[scene] === true;
   };
-
   return {
     config,
     loading,
     error,
     isRequired,
-    enabled: config?.enabled || false,
+    enabled: config?.enabled || false
   };
 }
-
 export default useCaptchaConfig;

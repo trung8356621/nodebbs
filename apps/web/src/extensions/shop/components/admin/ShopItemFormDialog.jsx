@@ -1,15 +1,10 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { ITEM_TYPES, getItemTypeLabel } from '../../utils/itemTypes';
@@ -28,7 +23,6 @@ const CSS_FRAME_EXAMPLE = JSON.stringify({
   shadow: "0 0 10px gold",
   animation: "glow"
 }, null, 2);
-
 const IMAGE_FRAME_EXAMPLE = JSON.stringify({
   type: "image",
   imageUrl: "/uploads/frames/xxx.png",
@@ -50,7 +44,15 @@ const IMAGE_FRAME_EXAMPLE = JSON.stringify({
  * @param {Function} props.onSubmit - 表单提交时的回调
  * @param {boolean} props.submitting - 提交进行中
  */
-export function ShopItemFormDialog({ open, onOpenChange, mode, initialData, onSubmit, submitting }) {
+export function ShopItemFormDialog({
+  open,
+  onOpenChange,
+  mode,
+  initialData,
+  onSubmit,
+  submitting
+}) {
+  const pbnT = usePbnTranslations();
   const [formData, setFormData] = useState({
     type: ITEM_TYPES.AVATAR_FRAME,
     consumeType: 'non_consumable',
@@ -63,10 +65,11 @@ export function ShopItemFormDialog({ open, onOpenChange, mode, initialData, onSu
     displayOrder: 0,
     isActive: true,
     metadata: '',
-    currencyCode: DEFAULT_CURRENCY_CODE,
+    currencyCode: DEFAULT_CURRENCY_CODE
   });
-
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [currencies, setCurrencies] = useState([]);
   const [badges, setBadges] = useState([]);
   const [loadingBadges, setLoadingBadges] = useState(false);
@@ -77,7 +80,6 @@ export function ShopItemFormDialog({ open, onOpenChange, mode, initialData, onSu
       fetchBadges();
     }
   }, [open, formData.type]);
-
   const fetchBadges = async () => {
     try {
       setLoadingBadges(true);
@@ -89,8 +91,7 @@ export function ShopItemFormDialog({ open, onOpenChange, mode, initialData, onSu
       setLoadingBadges(false);
     }
   };
-
-  const handleBadgeSelect = (badgeId) => {
+  const handleBadgeSelect = badgeId => {
     const badge = badges.find(b => b.id.toString() === badgeId.toString());
     if (badge) {
       setFormData(prev => ({
@@ -98,7 +99,9 @@ export function ShopItemFormDialog({ open, onOpenChange, mode, initialData, onSu
         name: badge.name,
         description: badge.description || '',
         imageUrl: badge.iconUrl,
-        metadata: JSON.stringify({ badgeId: badge.id }),
+        metadata: JSON.stringify({
+          badgeId: badge.id
+        })
       }));
     }
   };
@@ -106,14 +109,11 @@ export function ShopItemFormDialog({ open, onOpenChange, mode, initialData, onSu
   // Fetch currencies on mount/open
   useEffect(() => {
     if (open) {
-      ledgerApi.getCurrencies()
-        .then(items => {
-           setCurrencies(items.filter(c => c.isActive));
-        })
-        .catch(console.error);
+      ledgerApi.getCurrencies().then(items => {
+        setCurrencies(items.filter(c => c.isActive));
+      }).catch(console.error);
     }
   }, [open]);
-
   useEffect(() => {
     if (mode === 'edit' && initialData) {
       setFormData({
@@ -128,7 +128,7 @@ export function ShopItemFormDialog({ open, onOpenChange, mode, initialData, onSu
         maxOwn: initialData.maxOwn,
         displayOrder: initialData.displayOrder || 0,
         isActive: initialData.isActive,
-        metadata: initialData.metadata || '',
+        metadata: initialData.metadata || ''
       });
     } else if (mode === 'create') {
       setFormData({
@@ -143,52 +143,33 @@ export function ShopItemFormDialog({ open, onOpenChange, mode, initialData, onSu
         maxOwn: null,
         displayOrder: 0,
         isActive: true,
-        metadata: '',
+        metadata: ''
       });
     }
   }, [mode, initialData, open]);
-
   const handleSubmit = () => {
     if (!formData.name.trim()) {
       return;
     }
     onSubmit(formData);
   };
-
-  return (
-    <FormDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title={mode === 'create' ? '新建商品' : '编辑商品'}
-      description={mode === 'create' ? '创建一个新的商城商品' : '修改商品信息'}
-      maxWidth="sm:max-w-2xl"
-      submitText={mode === 'create' ? '创建' : '更新'}
-      loading={submitting}
-      onSubmit={handleSubmit}
-      disabled={!formData.name.trim()}
-    >
+  return <FormDialog open={open} onOpenChange={onOpenChange} title={mode === 'create' ? pbnT("m1940") : pbnT("m1941")} description={mode === 'create' ? pbnT("m1942") : pbnT("m1943")} maxWidth="sm:max-w-2xl" submitText={mode === 'create' ? pbnT("m209") : pbnT("m877")} loading={submitting} onSubmit={handleSubmit} disabled={!formData.name.trim()}>
         <div className="space-y-4 py-4">
           {/* 商品类型 */}
           <div className="space-y-2">
-            <Label htmlFor="type">商品类型 *</Label>
-            <Select
-              value={formData.type}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, type: value }))
-              }
-            >
+            <Label htmlFor="type">{pbnT("m1944")}</Label>
+            <Select value={formData.type} onValueChange={value => setFormData(prev => ({
+          ...prev,
+          type: value
+        }))}>
               <SelectTrigger>
-                <SelectValue placeholder="选择商品类型" />
+                <SelectValue placeholder={pbnT("m1945")} />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(ITEM_TYPES).map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {getItemTypeLabel(type)}
-                  </SelectItem>
-                ))}
-                {!Object.values(ITEM_TYPES).includes('badge') && (
-                    <SelectItem value="badge">勋章</SelectItem>
-                )}
+                {Object.values(ITEM_TYPES).map(type => <SelectItem key={type} value={type}>
+                    {getItemTypeLabel(type, pbnT)}
+                  </SelectItem>)}
+                {!Object.values(ITEM_TYPES).includes('badge') && <SelectItem value="badge">{pbnT("m264")}</SelectItem>}
               </SelectContent>
             </Select>
           </div>
@@ -214,281 +195,174 @@ export function ShopItemFormDialog({ open, onOpenChange, mode, initialData, onSu
               {formData.consumeType === 'non_consumable' && '用户只能拥有一个，如头像框、勋章'}
               {formData.consumeType === 'consumable' && '用户可重复购买，使用后数量减少，如改名卡、置顶卡'}
             </p>
-          </div> */}
+           </div> */}
 
           {/* 头像框预览 */}
-          {formData.type === ITEM_TYPES.AVATAR_FRAME && (
-            <div className="flex items-center gap-4 p-4 bg-background rounded-lg border">
+          {formData.type === ITEM_TYPES.AVATAR_FRAME && <div className="flex items-center gap-4 p-4 bg-background rounded-lg border">
               <div className="flex-1 space-y-1">
-                <Label>头像框预览</Label>
-                <p className="text-xs text-muted-foreground">
-                  基于下方“元数据”配置的实时效果预览。
-                </p>
+                <Label>{pbnT("m1946")}</Label>
+                <p className="text-xs text-muted-foreground">{pbnT("m1947")}</p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex flex-col items-center gap-1">
-                   <UserAvatar 
-                      name={user?.name || user?.username || 'Preview'} 
-                      size="lg" 
-                      url={user?.avatar}
-                      frameMetadata={formData.metadata || null} 
-                   />
-                   <span className="text-xs text-muted-foreground">大图</span>
+                   <UserAvatar name={user?.name || user?.username || 'Preview'} size="lg" url={user?.avatar} frameMetadata={formData.metadata || null} />
+                   <span className="text-xs text-muted-foreground">{pbnT("m1948")}</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                   <UserAvatar 
-                      name={user?.name || user?.username || 'Preview'} 
-                      size="md" 
-                      url={user?.avatar}
-                      frameMetadata={formData.metadata || null} 
-                   />
-                   <span className="text-xs text-muted-foreground">中图</span>
+                   <UserAvatar name={user?.name || user?.username || 'Preview'} size="md" url={user?.avatar} frameMetadata={formData.metadata || null} />
+                   <span className="text-xs text-muted-foreground">{pbnT("m1949")}</span>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* 勋章选择器（仅限勋章类型） */}
-          {formData.type === 'badge' && (
-            <div className="space-y-2 p-4 bg-muted rounded-lg border">
-              <Label>关联勋章</Label>
-              <Select
-                value={(() => {
-                  try {
-                    const meta = formData.metadata ? JSON.parse(formData.metadata) : {};
-                    return meta.badgeId ? String(meta.badgeId) : undefined;
-                  } catch (e) {
-                    return undefined;
-                  }
-                })()}
-                onValueChange={handleBadgeSelect}
-              >
+          {formData.type === 'badge' && <div className="space-y-2 p-4 bg-muted rounded-lg border">
+              <Label>{pbnT("m1950")}</Label>
+              <Select value={(() => {
+          try {
+            const meta = formData.metadata ? JSON.parse(formData.metadata) : {};
+            return meta.badgeId ? String(meta.badgeId) : undefined;
+          } catch (e) {
+            return undefined;
+          }
+        })()} onValueChange={handleBadgeSelect}>
                 <SelectTrigger className='bg-background'>
-                  <SelectValue placeholder="选择一个现有勋章..." />
+                  <SelectValue placeholder={pbnT("m1951")} />
                 </SelectTrigger>
                 <SelectContent>
-                   {loadingBadges ? (
-                       <div className="p-2 text-center text-sm text-muted-foreground">加载中...</div>
-                   ) : badges.length > 0 ? (
-                       badges.map(badge => (
-                           <SelectItem key={badge.id} value={badge.id.toString()}>
+                   {loadingBadges ? <div className="p-2 text-center text-sm text-muted-foreground">{pbnT("m71")}</div> : badges.length > 0 ? badges.map(badge => <SelectItem key={badge.id} value={badge.id.toString()}>
                                <div className="flex items-center gap-2">
                                    <img src={badge.iconUrl} className="w-4 h-4 object-contain" alt="" />
                                    <span>{badge.name}</span>
                                </div>
-                           </SelectItem>
-                       ))
-                   ) : (
-                       <div className="p-2 text-center text-sm text-muted-foreground">暂无可用勋章</div>
-                   )}
+                           </SelectItem>) : <div className="p-2 text-center text-sm text-muted-foreground">{pbnT("m1952")}</div>}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                选择勋章会自动填充名称、图片和元数据。
-              </p>
-            </div>
-          )}
+              <p className="text-xs text-muted-foreground">{pbnT("m1953")}</p>
+            </div>}
 
           {/* 名称 */}
           <div className="space-y-2">
-            <Label htmlFor="name">商品名称 *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, name: e.target.value }))
-              }
-              placeholder="输入商品名称"
-            />
+            <Label htmlFor="name">{pbnT("m1954")}</Label>
+            <Input id="name" value={formData.name} onChange={e => setFormData(prev => ({
+          ...prev,
+          name: e.target.value
+        }))} placeholder={pbnT("m1955")} />
           </div>
 
           {/* 描述 */}
           <div className="space-y-2">
-            <Label htmlFor="description">商品描述</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              placeholder="输入商品描述"
-              rows={3}
-              className="resize-none"
-            />
+            <Label htmlFor="description">{pbnT("m1956")}</Label>
+            <Textarea id="description" value={formData.description} onChange={e => setFormData(prev => ({
+          ...prev,
+          description: e.target.value
+        }))} placeholder={pbnT("m1957")} rows={3} className="resize-none" />
           </div>
 
           {/* 数值网格 */}
           <div className="grid grid-cols-3 gap-4">
             {/* 价格与货币 */}
             <div className="col-span-1 space-y-2">
-              <Label htmlFor="price">价格</Label>
-              <Input
-                id="price"
-                type="number"
-                min="0"
-                value={formData.price}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, price: e.target.value }))
-                }
-                placeholder="0"
-              />
+              <Label htmlFor="price">{pbnT("m1958")}</Label>
+              <Input id="price" type="number" min="0" value={formData.price} onChange={e => setFormData(prev => ({
+            ...prev,
+            price: e.target.value
+          }))} placeholder="0" />
             </div>
 
              <div className="col-span-1 space-y-2">
-              <Label htmlFor="currency">货币</Label>
-              <Select
-                value={formData.currencyCode}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, currencyCode: value }))
-                }
-              >
+              <Label htmlFor="currency">{pbnT("m1827")}</Label>
+              <Select value={formData.currencyCode} onValueChange={value => setFormData(prev => ({
+            ...prev,
+            currencyCode: value
+          }))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="选择货币" />
+                  <SelectValue placeholder={pbnT("m1825")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {currencies.map((currency) => (
-                    <SelectItem key={currency.code} value={currency.code}>
+                  {currencies.map(currency => <SelectItem key={currency.code} value={currency.code}>
                       {currency.symbol} {currency.name}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
             {/* 库存 */}
             <div className="space-y-2">
-              <Label htmlFor="stock">库存</Label>
-              <Input
-                id="stock"
-                type="number"
-                min="0"
-                value={formData.stock === null ? '' : formData.stock}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    stock: e.target.value === '' ? null : e.target.value,
-                  }))
-                }
-                placeholder="不限"
-              />
+              <Label htmlFor="stock">{pbnT("m1959")}</Label>
+              <Input id="stock" type="number" min="0" value={formData.stock === null ? '' : formData.stock} onChange={e => setFormData(prev => ({
+            ...prev,
+            stock: e.target.value === '' ? null : e.target.value
+          }))} placeholder={pbnT("m1960")} />
             </div>
 
             {/* 持有上限（消耗品时显示） */}
-            {formData.consumeType !== 'non_consumable' && (
-              <div className="space-y-2">
-                <Label htmlFor="maxOwn">持有上限</Label>
-                <Input
-                  id="maxOwn"
-                  type="number"
-                  min="1"
-                  value={formData.maxOwn === null ? '' : formData.maxOwn}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      maxOwn: e.target.value === '' ? null : e.target.value,
-                    }))
-                  }
-                  placeholder="不限"
-                />
-              </div>
-            )}
+            {formData.consumeType !== 'non_consumable' && <div className="space-y-2">
+                <Label htmlFor="maxOwn">{pbnT("m1961")}</Label>
+                <Input id="maxOwn" type="number" min="1" value={formData.maxOwn === null ? '' : formData.maxOwn} onChange={e => setFormData(prev => ({
+            ...prev,
+            maxOwn: e.target.value === '' ? null : e.target.value
+          }))} placeholder={pbnT("m1960")} />
+              </div>}
 
             {/* 显示顺序 */}
             <div className="space-y-2">
-              <Label htmlFor="displayOrder">显示排序</Label>
-              <Input
-                id="displayOrder"
-                type="number"
-                value={formData.displayOrder}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    displayOrder: e.target.value,
-                  }))
-                }
-                placeholder="0"
-              />
+              <Label htmlFor="displayOrder">{pbnT("m1962")}</Label>
+              <Input id="displayOrder" type="number" value={formData.displayOrder} onChange={e => setFormData(prev => ({
+            ...prev,
+            displayOrder: e.target.value
+          }))} placeholder="0" />
             </div>
           </div>
 
           {/* 图片上传 */}
           <div className="space-y-2">
-            <Label htmlFor="imageUrl">商品图片</Label>
-            <ImageUpload
-              value={formData.imageUrl}
-              onChange={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
-              category={formData.type === ITEM_TYPES.AVATAR_FRAME ? 'frames' : 'items'}
-              placeholder="上传商品图片"
-            />
+            <Label htmlFor="imageUrl">{pbnT("m1963")}</Label>
+            <ImageUpload value={formData.imageUrl} onChange={url => setFormData(prev => ({
+          ...prev,
+          imageUrl: url
+        }))} category={formData.type === ITEM_TYPES.AVATAR_FRAME ? 'frames' : 'items'} placeholder={pbnT("m1964")} />
             <div className="flex gap-2">
-              <Input
-                id="imageUrl"
-                value={formData.imageUrl}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, imageUrl: e.target.value }))
-                }
-                placeholder="或手动输入图片 URL"
-                className="text-xs h-8"
-              />
+              <Input id="imageUrl" value={formData.imageUrl} onChange={e => setFormData(prev => ({
+            ...prev,
+            imageUrl: e.target.value
+          }))} placeholder={pbnT("m1965")} className="text-xs h-8" />
             </div>
           </div>
 
           {/* 元数据 */}
           <div className="space-y-2">
-            <Label htmlFor="metadata">元数据（JSON格式）</Label>
-            <Textarea
-              id="metadata"
-              value={formData.metadata}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, metadata: e.target.value }))
-              }
-              placeholder="输入 JSON 格式的元数据..."
-              rows={4}
-              className="font-mono text-xs resize-none field-sizing-fixed"
-            />
-            {formData.type === ITEM_TYPES.AVATAR_FRAME && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <CopyButton
-                  value={CSS_FRAME_EXAMPLE}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs gap-1.5"
-                >
-                  {({ copied }) => copied ? '已复制' : '复制 CSS 样式示例'}
+            <Label htmlFor="metadata">{pbnT("m1966")}</Label>
+            <Textarea id="metadata" value={formData.metadata} onChange={e => setFormData(prev => ({
+          ...prev,
+          metadata: e.target.value
+        }))} placeholder={pbnT("m1967")} rows={4} className="font-mono text-xs resize-none field-sizing-fixed" />
+            {formData.type === ITEM_TYPES.AVATAR_FRAME && <div className="flex items-center gap-2 flex-wrap">
+                <CopyButton value={CSS_FRAME_EXAMPLE} variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+                  {({
+              copied
+            }) => copied ? pbnT("m154") : pbnT("m1968")}
                 </CopyButton>
-                <CopyButton
-                  value={IMAGE_FRAME_EXAMPLE}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs gap-1.5"
-                >
-                  {({ copied }) => copied ? '已复制' : '复制图片头像框示例'}
+                <CopyButton value={IMAGE_FRAME_EXAMPLE} variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+                  {({
+              copied
+            }) => copied ? pbnT("m154") : pbnT("m1969")}
                 </CopyButton>
-                <span className="text-xs text-muted-foreground">修改此处可实时预览上方效果</span>
-              </div>
-            )}
+                <span className="text-xs text-muted-foreground">{pbnT("m1970")}</span>
+              </div>}
           </div>
 
           {/* 是否上架 */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="isActive">是否上架</Label>
-              <p className="text-xs text-muted-foreground">
-                下架后用户将无法看到和购买此商品
-              </p>
+              <Label htmlFor="isActive">{pbnT("m1971")}</Label>
+              <p className="text-xs text-muted-foreground">{pbnT("m1972")}</p>
             </div>
-            <Switch
-              id="isActive"
-              checked={formData.isActive}
-              onCheckedChange={(checked) =>
-                setFormData((prev) => ({ ...prev, isActive: checked }))
-              }
-            />
+            <Switch id="isActive" checked={formData.isActive} onCheckedChange={checked => setFormData(prev => ({
+          ...prev,
+          isActive: checked
+        }))} />
           </div>
         </div>
-    </FormDialog>
-  );
+    </FormDialog>;
 }

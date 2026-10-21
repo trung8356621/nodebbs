@@ -1,5 +1,7 @@
+import { getPbnTranslations } from "@/i18n/server";
 import './globals.css';
-
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale } from 'next-intl/server';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -10,7 +12,6 @@ import { EmojiProvider } from '@/components/common/Emoji/EmojiProvider';
 // 根布局直接引用 forum 模块的 AppLayout——这是有意的、与后端 modules/index.js 一致的组合根耦合；
 // 换业务系统时在复制阶段改这一行（及 modules 注册），而非运行时切换。
 import { AppLayout as AppLayoutComponent } from '@/modules/forum/ui';
-
 import AutoCheckIn from '@/extensions/rewards/components/AutoCheckIn';
 import ProgressBar from '@/components/common/ProgressBar';
 import { getLayoutData, generateThemeScript, getLayoutMetadata } from '@/lib/server/layout';
@@ -19,49 +20,59 @@ import { ConfirmPopoverPortal } from '@/components/common/ConfirmPopover';
 import { AdsProvider } from '@/extensions/ads/components';
 import { ChineseNewYear } from '@/components/effects/ChineseNewYear';
 
-
 // 强制动态渲染，因为需要读取 cookies
 export const dynamic = 'force-dynamic';
-
-export async function generateMetadata({ params }) {
-  return await getLayoutMetadata();
+export async function generateMetadata({
+  params
+}) {
+  const pbnT = await getPbnTranslations();
+  return await getLayoutMetadata(pbnT);
 }
-
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  userScalable: false,
+  userScalable: false
 };
-
-function AppLayout({ children, apiInfo }) {
+function AppLayout({
+  children,
+  apiInfo
+}) {
   return <AppLayoutComponent apiInfo={apiInfo}>{children}</AppLayoutComponent>;
 }
-
-export default async function RootLayout({ children }) {
+export default async function RootLayout({
+  children
+}) {
+  const pbnT = await getPbnTranslations();
+  const locale = await getLocale();
   // 获取所有 SSR 数据 (并行)
-  const { settings, apiInfo, user, activeCurrencies } = await getLayoutData();
+  const {
+    settings,
+    apiInfo,
+    user,
+    activeCurrencies
+  } = await getLayoutData(pbnT);
 
   // 生成初始化脚本
-  const initScript = generateThemeScript();
+  const initScript = generateThemeScript(pbnT);
 
   // 准备统计脚本
   const analyticsScript = settings?.site_analytics_scripts?.value || '';
-
-  return (
-    <html lang='en' suppressHydrationWarning className='overflow-y-scroll'>
+  return <html lang={locale} suppressHydrationWarning className='overflow-y-scroll'>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: initScript }} />
+        <script dangerouslySetInnerHTML={{
+        __html: initScript
+      }} />
       </head>
       <body className={`antialiased`}>
         {/* 自定义统计脚本注入 */}
-        {analyticsScript && (
-          <div 
-             style={{ display: 'none' }} 
-             dangerouslySetInnerHTML={{ __html: analyticsScript }} 
-          />
-        )}
+        {analyticsScript && <div style={{
+        display: 'none'
+      }} dangerouslySetInnerHTML={{
+        __html: analyticsScript
+      }} />}
 
+        <NextIntlClientProvider>
         <ThemeProvider>
           <SettingsProvider initialSettings={settings}>
             <AuthProvider initialUser={user}>
@@ -81,7 +92,7 @@ export default async function RootLayout({ children }) {
             </AuthProvider>
           </SettingsProvider>
         </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
-    </html>
-  );
+    </html>;
 }

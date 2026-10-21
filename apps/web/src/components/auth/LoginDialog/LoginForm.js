@@ -1,9 +1,9 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FormMessage } from './FormMessage';
 import { CaptchaWidget } from '@/components/captcha/CaptchaWidget';
-
 export function LoginForm({
   formData,
   error,
@@ -12,53 +12,25 @@ export function LoginForm({
   onChange,
   onForgotPassword,
   onCaptchaVerify,
-  phoneLoginEnabled,
+  phoneLoginEnabled
 }) {
-  const identifierLabel = phoneLoginEnabled ? '用户名、邮箱或手机号 *' : '用户名或邮箱 *';
-  const identifierPlaceholder = phoneLoginEnabled ? '请输入用户名、邮箱或手机号' : '请输入用户名或邮箱';
-
-  return (
-    <form onSubmit={onSubmit}>
+  const pbnT = usePbnTranslations();
+  const identifierLabel = phoneLoginEnabled ? pbnT("m1225") : pbnT("m1226");
+  const identifierPlaceholder = phoneLoginEnabled ? pbnT("m1227") : pbnT("m1228");
+  return <form onSubmit={onSubmit}>
       <div className="grid gap-4 py-4">
         <FormMessage error={error} />
 
         <div className="grid gap-2">
           <Label htmlFor="identifier">{identifierLabel}</Label>
-          <Input
-            id="identifier"
-            name="identifier"
-            type="text"
-            placeholder={identifierPlaceholder}
-            value={formData.identifier}
-            onChange={onChange}
-            disabled={isLoading}
-            required
-          />
+          <Input id="identifier" name="identifier" type="text" placeholder={identifierPlaceholder} value={formData.identifier} onChange={onChange} disabled={isLoading} required />
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="password">密码 *</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="请输入密码"
-            value={formData.password}
-            onChange={onChange}
-            disabled={isLoading}
-            required
-          />
+          <Label htmlFor="password">{pbnT("m1229")}</Label>
+          <Input id="password" name="password" type="password" placeholder={pbnT("m1230")} value={formData.password} onChange={onChange} disabled={isLoading} required />
           <div className="flex justify-end">
-            <Button
-              type="button"
-              variant="link"
-              className="p-0 h-auto text-xs font-normal"
-              onClick={onForgotPassword}
-              disabled={isLoading}
-              tabIndex={-1}
-            >
-              忘记密码？
-            </Button>
+            <Button type="button" variant="link" className="p-0 h-auto text-xs font-normal" onClick={onForgotPassword} disabled={isLoading} tabIndex={-1}>{pbnT("m1231")}</Button>
           </div>
         </div>
 
@@ -68,10 +40,8 @@ export function LoginForm({
 
       <div className="pt-2">
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? '登录中...' : '登录'}
+          {isLoading ? pbnT("m1232") : pbnT("m4")}
         </Button>
       </div>
-    </form>
-  );
+    </form>;
 }
-

@@ -1,18 +1,5 @@
-import {
-  BadgeCheck,
-  Coins,
-  FileArchive,
-  FileAudio,
-  FileCode,
-  FileImage,
-  FileSpreadsheet,
-  FileText,
-  FileVideo,
-  File,
-  Lock,
-  MessageSquare,
-  ShieldAlert,
-} from 'lucide-react';
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
+import { BadgeCheck, Coins, FileArchive, FileAudio, FileCode, FileImage, FileSpreadsheet, FileText, FileVideo, File, Lock, MessageSquare, ShieldAlert } from 'lucide-react';
 
 /**
  * 话题附件的展示层工具（纯函数 + 常量，无副作用）。
@@ -20,53 +7,53 @@ import {
  */
 
 /** 下载策略元信息，顺序即表单里的展示顺序；首项为默认值 */
-export const ATTACHMENT_POLICIES = [
-  {
-    value: 'none',
-    label: '无限制',
-    description: '任何人都能下载，包括未登录的访客',
-  },
-  {
-    value: 'login',
-    label: '登录后可下载',
-    description: '任何已登录用户都能下载',
-  },
-  {
-    value: 'reply',
-    label: '回复本话题后可下载',
-    description: '用户需要在本话题下发表过回复',
-  },
-  {
-    value: 'points',
-    label: '积分购买',
-    description: '扣除购买者积分并转给话题作者，一次购买永久有效',
-  },
-  {
-    value: 'role',
-    label: '限定角色可下载',
-    description: '只有指定角色的用户能下载',
-  },
-];
-
-const POLICY_LABELS = Object.fromEntries(
-  ATTACHMENT_POLICIES.map((p) => [p.value, p.label])
-);
+export const ATTACHMENT_POLICIES = (pbnT = pbnRuntimeT) => [{
+  value: 'none',
+  label: pbnT("m2470"),
+  description: pbnT("m2471")
+}, {
+  value: 'login',
+  label: pbnT("m2472"),
+  description: pbnT("m2473")
+}, {
+  value: 'reply',
+  label: pbnT("m2474"),
+  description: pbnT("m2475")
+}, {
+  value: 'points',
+  label: pbnT("m2476"),
+  description: pbnT("m2477")
+}, {
+  value: 'role',
+  label: pbnT("m2478"),
+  description: pbnT("m2479")
+}];
+const POLICY_LABELS = (pbnT = pbnRuntimeT) => Object.fromEntries(ATTACHMENT_POLICIES(pbnT).map(p => [p.value, p.label]));
 
 /**
  * 取策略的中文标签
  * @param {string} policy
  * @returns {string}
  */
-export function getPolicyLabel(policy) {
-  return POLICY_LABELS[policy] || '未知策略';
+export function getPolicyLabel(policy, pbnT = pbnRuntimeT) {
+  return POLICY_LABELS(pbnT)[policy] || pbnT("m2480");
 }
 
 /** 各受限策略在附件卡片上的短标识（'none' 无需标识，故不在表内） */
-const POLICY_BADGES = {
-  login: { label: '登录可下载', Icon: Lock },
-  reply: { label: '回复可下载', Icon: MessageSquare },
-  role: { label: '限定角色', Icon: ShieldAlert },
-};
+const POLICY_BADGES = (pbnT = pbnRuntimeT) => ({
+  login: {
+    label: pbnT("m2481"),
+    Icon: Lock
+  },
+  reply: {
+    label: pbnT("m2482"),
+    Icon: MessageSquare
+  },
+  role: {
+    label: pbnT("m2483"),
+    Icon: ShieldAlert
+  }
+});
 
 /**
  * 取附件卡片上的策略标识。
@@ -82,15 +69,28 @@ const POLICY_BADGES = {
  * @returns {{label: string, Icon: import('react').ComponentType, variant: string}|null}
  *          policy='none' 返回 null（无限制，无可标识）
  */
-export function getPolicyBadge(policy, { purchased = false, pointsCost = 0 } = {}) {
+export function getPolicyBadge(policy, {
+  purchased = false,
+  pointsCost = 0
+} = {}, pbnT = pbnRuntimeT) {
   if (policy === 'points') {
-    return purchased
-      ? { label: '已购买', Icon: BadgeCheck, variant: 'default' }
-      : { label: `${pointsCost} 积分`, Icon: Coins, variant: 'secondary' };
+    return purchased ? {
+      label: pbnT("m2484"),
+      Icon: BadgeCheck,
+      variant: 'default'
+    } : {
+      label: pbnT("m1387", {
+        arg0: pointsCost
+      }),
+      Icon: Coins,
+      variant: 'secondary'
+    };
   }
-
-  const meta = POLICY_BADGES[policy];
-  return meta ? { ...meta, variant: 'secondary' } : null;
+  const meta = POLICY_BADGES(pbnT)[policy];
+  return meta ? {
+    ...meta,
+    variant: 'secondary'
+  } : null;
 }
 
 /**
@@ -103,13 +103,11 @@ export function getAttachmentIcon(mimetype = '', filename = '') {
   if (mimetype.startsWith('image/')) return FileImage;
   if (mimetype.startsWith('video/')) return FileVideo;
   if (mimetype.startsWith('audio/')) return FileAudio;
-
   const ext = filename.split('.').pop()?.toLowerCase() || '';
   if (['zip', 'rar', '7z', 'gz', 'tar'].includes(ext)) return FileArchive;
   if (['xls', 'xlsx', 'csv'].includes(ext)) return FileSpreadsheet;
   if (['json', 'xml', 'yml', 'yaml'].includes(ext)) return FileCode;
   if (['pdf', 'doc', 'docx', 'txt', 'md'].includes(ext)) return FileText;
-
   return File;
 }
 

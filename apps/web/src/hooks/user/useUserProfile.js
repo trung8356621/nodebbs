@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -11,10 +12,15 @@ export function useUserProfile({
   user,
   initialFollowerCount = 0,
   initialFollowingCount = 0,
-  initialIsFollowing = false,
+  initialIsFollowing = false
 }) {
-  const { user: currentUser, isAuthenticated, openLoginDialog, loading: authLoading } = useAuth();
-  
+  const pbnT = usePbnTranslations();
+  const {
+    user: currentUser,
+    isAuthenticated,
+    openLoginDialog,
+    loading: authLoading
+  } = useAuth();
   const [followerCount, setFollowerCount] = useState(initialFollowerCount);
   const [followingCount, setFollowingCount] = useState(initialFollowingCount);
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
@@ -22,10 +28,10 @@ export function useUserProfile({
   /**
    * 处理关注状态变化
    */
-  const handleFollowChange = useCallback((newIsFollowing) => {
+  const handleFollowChange = useCallback(newIsFollowing => {
     setIsFollowing(newIsFollowing);
     // 更新粉丝数
-    setFollowerCount((prev) => (newIsFollowing ? prev + 1 : prev - 1));
+    setFollowerCount(prev => newIsFollowing ? prev + 1 : prev - 1);
   }, []);
 
   /**
@@ -38,7 +44,6 @@ export function useUserProfile({
     if (currentUser && currentUser.id === user?.id) {
       return true;
     }
-
     switch (visibility) {
       case 'everyone':
         return true;
@@ -56,19 +61,18 @@ export function useUserProfile({
    */
   const accessMessage = useMemo(() => {
     const visibility = user?.contentVisibility || 'everyone';
-
     switch (visibility) {
       case 'authenticated':
         return {
-          title: '需要登录',
-          description: '该用户设置了仅登录用户可查看其内容',
-          showLoginButton: true,
+          title: pbnT("m1262"),
+          description: pbnT("m2192"),
+          showLoginButton: true
         };
       case 'private':
         return {
-          title: '内容已隐藏',
-          description: '该用户设置了仅自己可查看其内容',
-          showLoginButton: false,
+          title: pbnT("m2193"),
+          description: pbnT("m2194"),
+          showLoginButton: false
         };
       default:
         return null;
@@ -79,12 +83,10 @@ export function useUserProfile({
    * 是否需要等待认证状态加载
    */
   const needsAuthCheck = user?.contentVisibility && user.contentVisibility !== 'everyone';
-
   return {
     // ===== 用户基本信息 =====
     /** 用户名 */
     username: user?.username,
-
     // ===== 关注相关 =====
     /** 粉丝数量 */
     followerCount,
@@ -94,7 +96,6 @@ export function useUserProfile({
     isFollowing,
     /** 关注状态变化回调 */
     handleFollowChange,
-
     // ===== 内容访问权限 =====
     /** 是否可以查看用户内容 */
     canViewContent,
@@ -105,6 +106,6 @@ export function useUserProfile({
     /** 认证状态加载中 */
     authLoading,
     /** 打开登录对话框 */
-    openLoginDialog,
+    openLoginDialog
   };
 }

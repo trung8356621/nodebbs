@@ -1,3 +1,5 @@
+import { getPbnTranslations } from "@/i18n/server";
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
 import { cache } from 'react';
 import { fetchData } from '@/lib/server/api';
 
@@ -21,37 +23,36 @@ import { fetchData } from '@/lib/server/api';
  * @param {string} params.status - 状态
  * @returns {Promise<Object>} 话题列表数据
  */
-export async function getTopicsData(params = {}) {
+export async function getTopicsData(params = {}, pbnT = pbnRuntimeT) {
   const {
     page = 1,
     limit = 20,
     sort = 'latest',
     categoryId,
     tag,
-    status,
+    status
   } = params;
-
   const queryParams = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
-    sort,
+    sort
   });
-
   if (categoryId) {
     queryParams.set('categoryId', categoryId);
   }
-
   if (tag) {
     queryParams.set('tag', tag);
   }
-
   if (status) {
     queryParams.set('status', status);
   }
-
   return fetchData(`/topics?${queryParams}`, {
-    fallback: { items: [], total: 0, limit: 20 },
-  });
+    fallback: {
+      items: [],
+      total: 0,
+      limit: 20
+    }
+  }, pbnT);
 }
 
 /**
@@ -61,22 +62,23 @@ export async function getTopicsData(params = {}) {
  * @param {string} params.search - 搜索关键词
  * @returns {Promise<Array>} 分类列表
  */
-export async function getCategoriesData(params = {}) {
-  const { isFeatured, search } = params;
+export async function getCategoriesData(params = {}, pbnT = pbnRuntimeT) {
+  const {
+    isFeatured,
+    search
+  } = params;
   const queryParams = new URLSearchParams();
-
   if (isFeatured !== undefined) {
     queryParams.set('isFeatured', isFeatured.toString());
   }
-
   if (search) {
     queryParams.set('search', search);
   }
-
   const queryString = queryParams.toString();
   const url = queryString ? `/categories?${queryString}` : '/categories';
-
-  return fetchData(url, { fallback: [] });
+  return fetchData(url, {
+    fallback: []
+  }, pbnT);
 }
 
 /**
@@ -84,20 +86,29 @@ export async function getCategoriesData(params = {}) {
  * @param {string} slug - 分类slug
  * @returns {Promise<Object|null>} 分类数据
  */
-export async function getCategoryBySlug(slug) {
-  return fetchData(`/categories/${slug}`, { fallback: null });
+export async function getCategoryBySlug(slug, pbnT = pbnRuntimeT) {
+  return fetchData(`/categories/${slug}`, {
+    fallback: null
+  }, pbnT);
 }
 
 /**
  * 服务端获取统计数据
  * @returns {Promise<Object>} 统计数据
  */
-export async function getStatsData() {
+export async function getStatsData(pbnT = pbnRuntimeT) {
   // 成功但无数据时返回 null（沿用原行为）；失败兜底为零值统计对象
   return fetchData('/stats', {
-    fallback: { totalTopics: 0, totalPosts: 0, totalUsers: 0, online: { total: 0 } },
-    select: (data) => data || null,
-  });
+    fallback: {
+      totalTopics: 0,
+      totalPosts: 0,
+      totalUsers: 0,
+      online: {
+        total: 0
+      }
+    },
+    select: data => data || null
+  }, pbnT);
 }
 
 /**
@@ -106,12 +117,14 @@ export async function getStatsData() {
  * @param {number} params.limit - 数量
  * @returns {Promise<Array>} 标签列表
  */
-export async function getTagsData(params = {}) {
-  const { limit = 20 } = params;
+export async function getTagsData(params = {}, pbnT = pbnRuntimeT) {
+  const {
+    limit = 20
+  } = params;
   return fetchData(`/tags?limit=${limit}`, {
     fallback: [],
-    select: (data) => data?.items || [],
-  });
+    select: data => data?.items || []
+  }, pbnT);
 }
 
 /**
@@ -120,8 +133,11 @@ export async function getTagsData(params = {}) {
  * @param {number|string} id - 话题ID
  * @returns {Promise<Object|null>} 话题数据
  */
-export const getTopicData = cache(async (id) => {
-  return fetchData(`/topics/${id}`, { fallback: null });
+export const getTopicData = cache(async id => {
+  const pbnT = await getPbnTranslations();
+  return fetchData(`/topics/${id}`, {
+    fallback: null
+  }, pbnT);
 });
 
 /**
@@ -131,14 +147,18 @@ export const getTopicData = cache(async (id) => {
  * @param {number} limit - 每页数量
  * @returns {Promise<Object>} 回复列表数据
  */
-export async function getPostsData(topicId, page = 1, limit = 20) {
+export async function getPostsData(topicId, page = 1, limit = 20, pbnT = pbnRuntimeT) {
   const params = new URLSearchParams({
     topicId: topicId.toString(),
     page: page.toString(),
-    limit: limit.toString(),
+    limit: limit.toString()
   });
-
-  return fetchData(`/posts?${params}`, { fallback: { items: [], total: 0 } });
+  return fetchData(`/posts?${params}`, {
+    fallback: {
+      items: [],
+      total: 0
+    }
+  }, pbnT);
 }
 
 /**
@@ -146,8 +166,10 @@ export async function getPostsData(topicId, page = 1, limit = 20) {
  * @param {string} slug - 标签slug
  * @returns {Promise<Object|null>} 标签数据
  */
-export async function getTagData(slug) {
-  return fetchData(`/tags/${slug}`, { fallback: null });
+export async function getTagData(slug, pbnT = pbnRuntimeT) {
+  return fetchData(`/tags/${slug}`, {
+    fallback: null
+  }, pbnT);
 }
 
 /**
@@ -158,11 +180,12 @@ export async function getTagData(slug) {
 export function buildCategoryTree(data) {
   const categoryMap = new Map();
   const rootCategories = [];
-
   data.forEach(cat => {
-    categoryMap.set(cat.id, { ...cat, subcategories: [] });
+    categoryMap.set(cat.id, {
+      ...cat,
+      subcategories: []
+    });
   });
-
   data.forEach(cat => {
     const category = categoryMap.get(cat.id);
     if (cat.parentId) {
@@ -174,9 +197,8 @@ export function buildCategoryTree(data) {
       rootCategories.push(category);
     }
   });
-
   const sortByName = (a, b) => a.name.localeCompare(b.name);
-  const sortCategories = (cats) => {
+  const sortCategories = cats => {
     cats.sort(sortByName);
     cats.forEach(cat => {
       if (cat.subcategories.length > 0) {
@@ -185,8 +207,7 @@ export function buildCategoryTree(data) {
     });
   };
   sortCategories(rootCategories);
-
-  const calculateTotalStats = (category) => {
+  const calculateTotalStats = category => {
     let topics = category.topicCount || 0;
     let posts = category.postCount || 0;
     let views = category.viewCount || 0;
@@ -202,10 +223,13 @@ export function buildCategoryTree(data) {
     category.totalTopics = topics;
     category.totalPosts = posts;
     category.totalViews = views;
-    return { topics, posts, views };
+    return {
+      topics,
+      posts,
+      views
+    };
   };
   rootCategories.forEach(calculateTotalStats);
-
   return rootCategories;
 }
 
@@ -213,7 +237,7 @@ export function buildCategoryTree(data) {
  * 服务端获取分类树形数据（获取 + 组装）
  * @returns {Promise<Array>} 树形分类列表
  */
-export async function getCategoriesTree() {
-  const data = await getCategoriesData();
+export async function getCategoriesTree(pbnT = pbnRuntimeT) {
+  const data = await getCategoriesData(undefined, pbnT);
   return buildCategoryTree(data);
 }

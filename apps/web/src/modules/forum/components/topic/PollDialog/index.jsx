@@ -1,12 +1,8 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import PollFormTab from './PollFormTab';
 import DraftsTab from './DraftsTab';
@@ -25,12 +21,18 @@ import BoundTab from './BoundTab';
  * @param {(pollId:number)=>void} props.onCreated - 插入到编辑器的回调
  * @param {number|undefined} props.topicId - 仅编辑现有话题时传入
  */
-export default function PollDialog({ open, onOpenChange, onCreated, topicId, onCloseAutoFocus }) {
+export default function PollDialog({
+  open,
+  onOpenChange,
+  onCreated,
+  topicId,
+  onCloseAutoFocus
+}) {
+  const pbnT = usePbnTranslations();
   const [activeTab, setActiveTab] = useState('new');
   const [editingDraft, setEditingDraft] = useState(null);
   const [draftsRefreshKey, setDraftsRefreshKey] = useState(0);
-
-  const handleOpenChange = (next) => {
+  const handleOpenChange = next => {
     // 关闭时不重置 state — 让淡出动画播完，否则会闪烁
     onOpenChange?.(next);
   };
@@ -42,66 +44,52 @@ export default function PollDialog({ open, onOpenChange, onCreated, topicId, onC
       setEditingDraft(null);
     }
   }, [open]);
-
   const handleFormSubmitted = (pollId, wasEditing) => {
     if (wasEditing) {
       setEditingDraft(null);
-      setDraftsRefreshKey((k) => k + 1);
+      setDraftsRefreshKey(k => k + 1);
     } else {
       onCreated?.(pollId);
       handleOpenChange(false);
     }
   };
-
-  const handleEditDraft = (draft) => {
+  const handleEditDraft = draft => {
     setEditingDraft(draft);
     setActiveTab('new');
   };
-
-  const handleInsert = (pollId) => {
+  const handleInsert = pollId => {
     onCreated?.(pollId);
     handleOpenChange(false);
   };
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+  return <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg" onCloseAutoFocus={onCloseAutoFocus}>
         <DialogHeader>
           <DialogTitle>
-            {editingDraft ? `编辑草稿 #${editingDraft.id}` : '插入投票'}
+            {editingDraft ? pbnT("m2212", {
+            arg0: editingDraft.id
+          }) : pbnT("m1348")}
           </DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className={topicId ? 'grid grid-cols-3 w-full' : 'grid grid-cols-2 w-full'}>
-            <TabsTrigger value="new">新建</TabsTrigger>
-            <TabsTrigger value="drafts">草稿</TabsTrigger>
-            {topicId && <TabsTrigger value="bound">本话题已有</TabsTrigger>}
+            <TabsTrigger value="new">{pbnT("m2260")}</TabsTrigger>
+            <TabsTrigger value="drafts">{pbnT("m409")}</TabsTrigger>
+            {topicId && <TabsTrigger value="bound">{pbnT("m2213")}</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="new">
-            <PollFormTab
-              editingDraft={editingDraft}
-              onSubmitted={handleFormSubmitted}
-              onCancelEdit={() => setEditingDraft(null)}
-            />
+            <PollFormTab editingDraft={editingDraft} onSubmitted={handleFormSubmitted} onCancelEdit={() => setEditingDraft(null)} />
           </TabsContent>
 
           <TabsContent value="drafts">
-            <DraftsTab
-              refreshKey={draftsRefreshKey}
-              onInsert={handleInsert}
-              onEdit={handleEditDraft}
-            />
+            <DraftsTab refreshKey={draftsRefreshKey} onInsert={handleInsert} onEdit={handleEditDraft} />
           </TabsContent>
 
-          {topicId && (
-            <TabsContent value="bound">
+          {topicId && <TabsContent value="bound">
               <BoundTab topicId={topicId} onInsert={handleInsert} />
-            </TabsContent>
-          )}
+            </TabsContent>}
         </Tabs>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }

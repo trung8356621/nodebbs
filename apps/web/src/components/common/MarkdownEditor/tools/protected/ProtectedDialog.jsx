@@ -1,14 +1,8 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,7 +17,14 @@ import { Textarea } from '@/components/ui/textarea';
  * @param {(content:string)=>void} props.onConfirm - 确认后回调，参数为去除首尾空白的内容
  * @param {(e:Event)=>void} props.onCloseAutoFocus - 关闭且焦点锁解除后触发，调用方在此执行插入
  */
-export default function ProtectedDialog({ open, onOpenChange, initialContent = '', onConfirm, onCloseAutoFocus }) {
+export default function ProtectedDialog({
+  open,
+  onOpenChange,
+  initialContent = '',
+  onConfirm,
+  onCloseAutoFocus
+}) {
+  const pbnT = usePbnTranslations();
   const [content, setContent] = useState('');
 
   // 每次打开时同步预填内容（关闭时不重置，避免淡出动画期间闪烁）
@@ -32,7 +33,6 @@ export default function ProtectedDialog({ open, onOpenChange, initialContent = '
       setContent(initialContent);
     }
   }, [open, initialContent]);
-
   const handleConfirm = () => {
     const trimmed = content.trim();
     if (!trimmed) return;
@@ -40,46 +40,29 @@ export default function ProtectedDialog({ open, onOpenChange, initialContent = '
   };
 
   // 多行输入：Enter 换行，Ctrl / ⌘ + Enter 确认
-  const handleKeyDown = (e) => {
+  const handleKeyDown = e => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
       handleConfirm();
     }
   };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg" onCloseAutoFocus={onCloseAutoFocus}>
         <DialogHeader>
-          <DialogTitle>插入回复可见内容</DialogTitle>
-          <DialogDescription>
-            读者回复本话题后才能看到这段内容，作者与管理员始终可见。
-          </DialogDescription>
+          <DialogTitle>{pbnT("m1350")}</DialogTitle>
+          <DialogDescription>{pbnT("m1351")}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
-          <Label htmlFor="protected-content">隐藏内容</Label>
-          <Textarea
-            id="protected-content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="输入需要隐藏的内容，支持 Markdown"
-            className="min-h-40 max-h-[50vh] overflow-y-auto"
-            autoFocus
-          />
-          <p className="text-xs text-muted-foreground">Ctrl / ⌘ + Enter 快速插入</p>
+          <Label htmlFor="protected-content">{pbnT("m1352")}</Label>
+          <Textarea id="protected-content" value={content} onChange={e => setContent(e.target.value)} onKeyDown={handleKeyDown} placeholder={pbnT("m1353")} className="min-h-40 max-h-[50vh] overflow-y-auto" autoFocus />
+          <p className="text-xs text-muted-foreground">{pbnT("m1354")}</p>
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>
-            取消
-          </Button>
-          <Button type="button" onClick={handleConfirm} disabled={!content.trim()}>
-            插入
-          </Button>
+          <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>{pbnT("m486")}</Button>
+          <Button type="button" onClick={handleConfirm} disabled={!content.trim()}>{pbnT("m1346")}</Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }

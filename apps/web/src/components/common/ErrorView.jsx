@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
@@ -18,24 +19,23 @@ import { parseRateLimitError } from '@/lib/rate-limit-error';
  * @param {string}   [title]     非限速错误的标题
  * @param {string}   [description] 非限速错误的描述
  */
-export default function ErrorView({
-  error,
-  reset,
-  logLabel = '[页面错误]',
-  title = '出错了',
-  description = '页面加载时出现错误，请重试或稍后再试。',
-}) {
+export default function ErrorView(pbnArgument0) {
+  const pbnT = usePbnTranslations();
+  const {
+    error,
+    reset,
+    logLabel = pbnT("m914"),
+    title = pbnT("m1290"),
+    description = pbnT("m1291")
+  } = pbnArgument0;
   useEffect(() => {
     console.error(logLabel, error);
   }, [logLabel, error]);
-
   const rateLimitInfo = parseRateLimitError(error);
   if (rateLimitInfo) {
     return <RateLimitView resetTime={rateLimitInfo.resetTime} />;
   }
-
-  return (
-    <div className='flex-1 flex items-center justify-center px-4 py-16'>
+  return <div className='flex-1 flex items-center justify-center px-4 py-16'>
       <div className='max-w-md w-full text-center'>
         <div className='flex justify-center mb-6'>
           <div className='rounded-full bg-destructive/10 p-5'>
@@ -51,28 +51,21 @@ export default function ErrorView({
           {description}
         </p>
 
-        {process.env.NODE_ENV === 'development' && error?.message && (
-          <div className='mb-8 p-4 bg-muted rounded-lg text-left mx-auto max-w-sm'>
+        {process.env.NODE_ENV === 'development' && error?.message && <div className='mb-8 p-4 bg-muted rounded-lg text-left mx-auto max-w-sm'>
             <p className='text-xs font-mono text-destructive break-all'>
               {error.message}
             </p>
-          </div>
-        )}
+          </div>}
 
         <div className='flex items-center justify-center gap-3'>
           <Button variant='default' size='sm' onClick={() => reset()}>
-            <RefreshCw className='h-4 w-4' />
-            重试
-          </Button>
+            <RefreshCw className='h-4 w-4' />{pbnT("m927")}</Button>
 
           <Button asChild variant='outline' size='sm'>
             <Link href='/'>
-              <Home className='h-4 w-4' />
-              返回首页
-            </Link>
+              <Home className='h-4 w-4' />{pbnT("m1292")}</Link>
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }

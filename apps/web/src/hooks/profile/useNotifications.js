@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { notificationApi } from '@/lib/api';
@@ -10,7 +11,10 @@ import { toast } from 'sonner';
  * 管理通知列表、筛选、标记已读、删除等状态和逻辑
  */
 export function useNotifications() {
-  const { user } = useAuth();
+  const pbnT = usePbnTranslations();
+  const {
+    user
+  } = useAuth();
 
   // ===== 列表状态 =====
   const [notifications, setNotifications] = useState([]);
@@ -26,27 +30,22 @@ export function useNotifications() {
   // ===== 获取通知列表 =====
   const fetchNotifications = useCallback(async () => {
     if (!user?.id) return;
-
     setLoading(true);
     setError(null);
-
     try {
       const unreadOnly = filter === 'unread';
       const response = await notificationApi.getList(page, pageSize, unreadOnly);
-
       let items = response.items || [];
-
       if (filter === 'read') {
-        items = items.filter((n) => n.isRead);
+        items = items.filter(n => n.isRead);
       }
-
       setNotifications(items);
       setTotal(response.total || 0);
       setUnreadCount(response.unreadCount || 0);
     } catch (err) {
-      console.error('获取通知失败:', err);
+      console.error("Could not load notifications:", err);
       setError(err.message);
-      toast.error(err.message || '获取通知失败');
+      toast.error(err.message || pbnT("m2150"));
     } finally {
       setLoading(false);
     }
@@ -60,18 +59,19 @@ export function useNotifications() {
   }, [user, fetchNotifications]);
 
   // ===== 标记单条为已读 =====
-  const markAsRead = useCallback(async (id) => {
+  const markAsRead = useCallback(async id => {
     setActionLoading(`read-${id}`);
     try {
       await notificationApi.markAsRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-      toast.success('已标记为已读');
+      setNotifications(prev => prev.map(n => n.id === id ? {
+        ...n,
+        isRead: true
+      } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+      toast.success(pbnT("m2151"));
     } catch (err) {
-      console.error('标记已读失败:', err);
-      toast.error(err.message || '操作失败');
+      console.error("Could not mark as read:", err);
+      toast.error(err.message || pbnT("m568"));
     } finally {
       setActionLoading(null);
     }
@@ -82,27 +82,29 @@ export function useNotifications() {
     setActionLoading('read-all');
     try {
       const result = await notificationApi.markAllAsRead();
-      toast.success(`已标记 ${result.count} 条通知为已读`);
+      toast.success(pbnT("m2153", {
+        arg0: result.count
+      }));
       await fetchNotifications();
     } catch (err) {
-      console.error('批量标记已读失败:', err);
-      toast.error(err.message || '操作失败');
+      console.error("Could not mark notifications in bulk:", err);
+      toast.error(err.message || pbnT("m568"));
     } finally {
       setActionLoading(null);
     }
   }, [fetchNotifications]);
 
   // ===== 删除单条通知 =====
-  const deleteNotification = useCallback(async (id) => {
+  const deleteNotification = useCallback(async id => {
     setActionLoading(`delete-${id}`);
     try {
       await notificationApi.delete(id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      setTotal((prev) => prev - 1);
-      toast.success('通知已删除');
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      setTotal(prev => prev - 1);
+      toast.success(pbnT("m2155"));
     } catch (err) {
-      console.error('删除通知失败:', err);
-      toast.error(err.message || '删除失败');
+      console.error("Could not delete notification:", err);
+      toast.error(err.message || pbnT("m249"));
     } finally {
       setActionLoading(null);
     }
@@ -113,18 +115,20 @@ export function useNotifications() {
     setActionLoading('delete-all-read');
     try {
       const result = await notificationApi.deleteAllRead();
-      toast.success(`已删除 ${result.count} 条已读通知`);
+      toast.success(pbnT("m2157", {
+        arg0: result.count
+      }));
       await fetchNotifications();
     } catch (err) {
-      console.error('批量删除失败:', err);
-      toast.error(err.message || '操作失败');
+      console.error("Bulk deletion failed:", err);
+      toast.error(err.message || pbnT("m568"));
     } finally {
       setActionLoading(null);
     }
   }, [fetchNotifications]);
 
   // ===== 切换筛选 =====
-  const handleFilterChange = useCallback((newFilter) => {
+  const handleFilterChange = useCallback(newFilter => {
     setFilter(newFilter);
     setPage(1);
   }, []);
@@ -134,10 +138,9 @@ export function useNotifications() {
   const readCount = total - unreadCount;
 
   /** 检查特定操作是否加载中 */
-  const isActionLoading = useCallback((actionId) => {
+  const isActionLoading = useCallback(actionId => {
     return actionLoading === actionId;
   }, [actionLoading]);
-
   return {
     // ===== 列表数据 =====
     /** 通知列表 */
@@ -160,7 +163,6 @@ export function useNotifications() {
     filter,
     /** 设置页码 */
     setPage,
-
     // ===== 操作函数 =====
     /** 刷新通知列表 */
     fetchNotifications,
@@ -174,9 +176,8 @@ export function useNotifications() {
     deleteAllRead,
     /** 切换筛选 */
     handleFilterChange,
-
     // ===== 加载状态 =====
     /** 检查操作是否加载中 */
-    isActionLoading,
+    isActionLoading
   };
 }

@@ -1,12 +1,8 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import LotteryFormTab from './LotteryFormTab';
 import DraftsTab from './DraftsTab';
@@ -16,12 +12,18 @@ import BoundTab from './BoundTab';
  * 抽奖创建/编辑/复用对话框
  * Tab 式布局，与 PollDialog 同结构。
  */
-export default function LotteryDialog({ open, onOpenChange, onCreated, topicId, onCloseAutoFocus }) {
+export default function LotteryDialog({
+  open,
+  onOpenChange,
+  onCreated,
+  topicId,
+  onCloseAutoFocus
+}) {
+  const pbnT = usePbnTranslations();
   const [activeTab, setActiveTab] = useState('new');
   const [editingDraft, setEditingDraft] = useState(null);
   const [draftsRefreshKey, setDraftsRefreshKey] = useState(0);
-
-  const handleOpenChange = (next) => {
+  const handleOpenChange = next => {
     // 关闭时不重置 state — 让淡出动画播完，否则会闪烁
     onOpenChange?.(next);
   };
@@ -33,66 +35,52 @@ export default function LotteryDialog({ open, onOpenChange, onCreated, topicId, 
       setEditingDraft(null);
     }
   }, [open]);
-
   const handleFormSubmitted = (lotteryId, wasEditing) => {
     if (wasEditing) {
       setEditingDraft(null);
-      setDraftsRefreshKey((k) => k + 1);
+      setDraftsRefreshKey(k => k + 1);
     } else {
       onCreated?.(lotteryId);
       handleOpenChange(false);
     }
   };
-
-  const handleEditDraft = (draft) => {
+  const handleEditDraft = draft => {
     setEditingDraft(draft);
     setActiveTab('new');
   };
-
-  const handleInsert = (lotteryId) => {
+  const handleInsert = lotteryId => {
     onCreated?.(lotteryId);
     handleOpenChange(false);
   };
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+  return <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto" onCloseAutoFocus={onCloseAutoFocus}>
         <DialogHeader>
           <DialogTitle>
-            {editingDraft ? `编辑草稿 #${editingDraft.id}` : '插入抽奖'}
+            {editingDraft ? pbnT("m2212", {
+            arg0: editingDraft.id
+          }) : pbnT("m1339")}
           </DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className={topicId ? 'grid grid-cols-3 w-full' : 'grid grid-cols-2 w-full'}>
-            <TabsTrigger value="new">新建</TabsTrigger>
-            <TabsTrigger value="drafts">草稿</TabsTrigger>
-            {topicId && <TabsTrigger value="bound">本话题已有</TabsTrigger>}
+            <TabsTrigger value="new">{pbnT("m2260")}</TabsTrigger>
+            <TabsTrigger value="drafts">{pbnT("m409")}</TabsTrigger>
+            {topicId && <TabsTrigger value="bound">{pbnT("m2213")}</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="new">
-            <LotteryFormTab
-              editingDraft={editingDraft}
-              onSubmitted={handleFormSubmitted}
-              onCancelEdit={() => setEditingDraft(null)}
-            />
+            <LotteryFormTab editingDraft={editingDraft} onSubmitted={handleFormSubmitted} onCancelEdit={() => setEditingDraft(null)} />
           </TabsContent>
 
           <TabsContent value="drafts">
-            <DraftsTab
-              refreshKey={draftsRefreshKey}
-              onInsert={handleInsert}
-              onEdit={handleEditDraft}
-            />
+            <DraftsTab refreshKey={draftsRefreshKey} onInsert={handleInsert} onEdit={handleEditDraft} />
           </TabsContent>
 
-          {topicId && (
-            <TabsContent value="bound">
+          {topicId && <TabsContent value="bound">
               <BoundTab topicId={topicId} onInsert={handleInsert} />
-            </TabsContent>
-          )}
+            </TabsContent>}
         </Tabs>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }

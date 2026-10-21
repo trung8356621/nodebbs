@@ -1,12 +1,7 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,10 +10,25 @@ import { toast } from 'sonner';
 import { FormDialog } from '@/components/common/FormDialog';
 import { ImageUpload } from '@/components/common/ImageUpload';
 import { useDefaultCurrencyName } from '@/extensions/ledger/contexts/LedgerContext';
-
-export function BadgeFormDialog({ open, onOpenChange, mode, initialData, onSubmit }) {
+export function BadgeFormDialog({
+  open,
+  onOpenChange,
+  mode,
+  initialData,
+  onSubmit
+}) {
+  const pbnT = usePbnTranslations();
   const currencyName = useDefaultCurrencyName();
-  const { register, handleSubmit, control, reset, watch, formState: { errors } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    watch,
+    formState: {
+      errors
+    }
+  } = useForm({
     defaultValues: {
       name: '',
       slug: '',
@@ -27,12 +37,12 @@ export function BadgeFormDialog({ open, onOpenChange, mode, initialData, onSubmi
       category: 'general',
       unlockCondition: '{}',
       displayOrder: 0,
-      isActive: true,
-    },
+      isActive: true
+    }
   });
 
   // 解析条件的辅助函数
-  const parseCondition = (jsonStr) => {
+  const parseCondition = jsonStr => {
     try {
       const parsed = JSON.parse(jsonStr || '{}');
       return {
@@ -40,25 +50,26 @@ export function BadgeFormDialog({ open, onOpenChange, mode, initialData, onSubmi
         threshold: parsed.threshold || 0
       };
     } catch {
-      return { type: 'manual', threshold: 0 };
+      return {
+        type: 'manual',
+        threshold: 0
+      };
     }
   };
 
   // 解析元数据的辅助函数
-  const parseMetadata = (jsonStr) => {
+  const parseMetadata = jsonStr => {
     try {
-      return typeof jsonStr === 'string' ? JSON.parse(jsonStr) : (jsonStr || {});
+      return typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr || {};
     } catch {
       return {};
     }
   };
-
   useEffect(() => {
     if (open && mode === 'edit' && initialData) {
       const parsedCondition = parseCondition(initialData.unlockCondition);
       const parsedMetadata = parseMetadata(initialData.metadata);
       const effects = parsedMetadata.effects || {};
-
       reset({
         name: initialData.name,
         slug: initialData.slug,
@@ -73,9 +84,8 @@ export function BadgeFormDialog({ open, onOpenChange, mode, initialData, onSubmi
         _effectCheckInBonus: effects.checkInBonus || 0,
         _effectCheckInBonusPercent: effects.checkInBonusPercent || 0,
         _effectReplyCostReduction: effects.replyCostReductionPercent || 0,
-        
         displayOrder: initialData.displayOrder || 0,
-        isActive: initialData.isActive !== false,
+        isActive: initialData.isActive !== false
       });
     } else if (open && mode === 'create') {
       reset({
@@ -91,260 +101,192 @@ export function BadgeFormDialog({ open, onOpenChange, mode, initialData, onSubmi
         _effectCheckInBonus: 0,
         _effectCheckInBonusPercent: 0,
         _effectReplyCostReduction: 0,
-        
         displayOrder: 0,
-        isActive: true,
+        isActive: true
       });
     }
   }, [open, mode, initialData, reset]);
-
-  const onFormSubmit = async (data) => {
+  const onFormSubmit = async data => {
     try {
       // 从 UI 字段构建 JSON (Condition)
       const conditionObj = {
-        type: data._conditionType,
+        type: data._conditionType
       };
-      
       if (data._conditionType !== 'manual') {
         conditionObj.threshold = Number(data._threshold);
       }
-      
+
       // 构建 Metadata (Effects)
       let currentMetadata = {};
       if (mode === 'edit' && initialData && initialData.metadata) {
-         currentMetadata = parseMetadata(initialData.metadata);
+        currentMetadata = parseMetadata(initialData.metadata);
       }
-      
       const effects = {};
       if (data._effectCheckInBonus > 0) effects.checkInBonus = data._effectCheckInBonus;
       if (data._effectCheckInBonusPercent > 0) effects.checkInBonusPercent = data._effectCheckInBonusPercent;
       if (data._effectReplyCostReduction > 0) effects.replyCostReductionPercent = data._effectReplyCostReduction;
-
       const metadataObj = {
         ...currentMetadata,
         effects: Object.keys(effects).length > 0 ? effects : undefined
       };
-      
       const finalData = {
         ...data,
         unlockCondition: JSON.stringify(conditionObj),
         metadata: JSON.stringify(metadataObj)
       };
-      
+
       // 移除辅助字段
       delete finalData._conditionType;
       delete finalData._threshold;
       delete finalData._effectCheckInBonus;
       delete finalData._effectCheckInBonusPercent;
       delete finalData._effectReplyCostReduction;
-
       await onSubmit(finalData);
     } catch (error) {
-       // handled by parent
-       console.error("Form submit error", error);
+      // handled by parent
+      console.error("Form submit error", error);
     }
   };
-  
+
   // 监听条件类型以有条件地显示阈值
-  const conditionType = useForm().watch ? useForm().watch('_conditionType') : 'manual'; 
-
-
-  return (
-    <FormDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title={mode === 'create' ? '新建勋章' : '编辑勋章'}
-      maxWidth="md:max-w-3xl"
-      submitText={mode === 'create' ? '创建' : '保存'}
-      onSubmit={handleSubmit(onFormSubmit)}
-    >
+  const conditionType = watch('_conditionType') || 'manual';
+  return <FormDialog open={open} onOpenChange={onOpenChange} title={mode === 'create' ? pbnT("m1677") : pbnT("m1678")} maxWidth="md:max-w-3xl" submitText={mode === 'create' ? pbnT("m209") : pbnT("m210")} onSubmit={handleSubmit(onFormSubmit)}>
         <form className="space-y-6 p-1">
           {/* 基本信息 */}
           <div className="space-y-4">
-            <h4 className="text-sm font-medium text-muted-foreground border-b pb-1">基本信息</h4>
+            <h4 className="text-sm font-medium text-muted-foreground border-b pb-1">{pbnT("m1679")}</h4>
             <div className="gap-4 grid grid-cols-1 md:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="name">名称</Label>
-                <Input 
-                  id="name" 
-                  placeholder="勋章名称"
-                  {...register('name', { required: '请输入勋章名称' })} 
-                />
+                <Label htmlFor="name">{pbnT("m230")}</Label>
+                <Input id="name" placeholder={pbnT("m1680")} {...register('name', {
+              required: pbnT("m1681")
+            })} />
                 {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="slug">Slug (唯一标识)</Label>
-                <Input 
-                  id="slug" 
-                  placeholder="例如: checkin-master" 
-                  {...register('slug', { required: '请输入唯一标识 (Slug)' })} 
-                />
+                <Label htmlFor="slug">{pbnT("m1682")}</Label>
+                <Input id="slug" placeholder={pbnT("m1683")} {...register('slug', {
+              required: pbnT("m1684")
+            })} />
                 {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
               </div>
 
                <div className="space-y-2">
-                <Label htmlFor="category">分类</Label>
-                <Controller
-                  name="category"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                <Label htmlFor="category">{pbnT("m44")}</Label>
+                <Controller name="category" control={control} render={({
+              field
+            }) => <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                       <SelectTrigger>
-                        <SelectValue placeholder="选择分类" />
+                        <SelectValue placeholder={pbnT("m1685")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="general">通用 (General)</SelectItem>
-                        <SelectItem value="achievement">成就 (Achievement)</SelectItem>
-                        <SelectItem value="event">活动 (Event)</SelectItem>
-                        <SelectItem value="manual">人工 (Manual)</SelectItem>
+                        <SelectItem value="general">{pbnT("m1686")}</SelectItem>
+                        <SelectItem value="achievement">{pbnT("m1687")}</SelectItem>
+                        <SelectItem value="event">{pbnT("m1688")}</SelectItem>
+                        <SelectItem value="manual">{pbnT("m1689")}</SelectItem>
                       </SelectContent>
-                    </Select>
-                  )}
-                />
+                    </Select>} />
               </div>
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="iconUrl">图标</Label>
-                <Controller
-                  name="iconUrl"
-                  control={control}
-                  rules={{ required: '请上传图标' }}
-                  render={({ field }) => (
-                    <div className="space-y-2">
-                      <ImageUpload
-                        value={field.value}
-                        onChange={field.onChange}
-                        category="badges"
-                        placeholder="上传勋章图标"
-                      />
-                      <Input 
-                        id="iconUrl" 
-                        placeholder="或输入图片 URL" 
-                        value={field.value}
-                        onChange={field.onChange}
-                        className="text-xs h-8"
-                      />
-                    </div>
-                  )}
-                />
+                <Label htmlFor="iconUrl">{pbnT("m1690")}</Label>
+                <Controller name="iconUrl" control={control} rules={{
+            required: pbnT("m1691")
+          }} render={({
+            field
+          }) => <div className="space-y-2">
+                      <ImageUpload value={field.value} onChange={field.onChange} category="badges" placeholder={pbnT("m1692")} />
+                      <Input id="iconUrl" placeholder={pbnT("m1693")} value={field.value} onChange={field.onChange} className="text-xs h-8" />
+                    </div>} />
                 {errors.iconUrl && <p className="text-sm text-destructive">{errors.iconUrl.message}</p>}
               </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">描述</Label>
-              <Textarea 
-                id="description" 
-                placeholder="简短描述该勋章的获取方式"
-                className="resize-none h-20"
-                {...register('description')} 
-              />
+              <Label htmlFor="description">{pbnT("m218")}</Label>
+              <Textarea id="description" placeholder={pbnT("m1694")} className="resize-none h-20" {...register('description')} />
             </div>
           </div>
 
           {/* 解锁条件 */}
           <div className="space-y-4">
-            <h4 className="text-sm font-medium text-muted-foreground border-b pb-1">解锁条件配置</h4>
+            <h4 className="text-sm font-medium text-muted-foreground border-b pb-1">{pbnT("m1695")}</h4>
             <div className="space-y-4 border p-4 rounded-lg bg-muted/30">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                 <div className="space-y-2">
-                  <Label htmlFor="_conditionType" className="text-xs">条件类型</Label>
-                  <Controller
-                    name="_conditionType"
-                    control={control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                  <Label htmlFor="_conditionType" className="text-xs">{pbnT("m1696")}</Label>
+                  <Controller name="_conditionType" control={control} render={({
+                field
+              }) => <Select onValueChange={field.onChange} value={field.value}>
                         <SelectTrigger className="bg-background">
-                          <SelectValue placeholder="选择类型" />
+                          <SelectValue placeholder={pbnT("m718")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="manual">人工发放 (Manual)</SelectItem>
-                          <SelectItem value="post_count">发帖数量 (Post Count)</SelectItem>
-                          <SelectItem value="topic_count">话题数量 (Topic Count)</SelectItem>
-                          <SelectItem value="like_received_count">获赞数量 (Likes Received)</SelectItem>
-                          <SelectItem value="checkin_streak">连续签到 (Check-in Streak)</SelectItem>
-                          <SelectItem value="registration_days">注册天数 (Days Registered)</SelectItem>
+                          <SelectItem value="manual">{pbnT("m1697")}</SelectItem>
+                          <SelectItem value="post_count">{pbnT("m1698")}</SelectItem>
+                          <SelectItem value="topic_count">{pbnT("m1699")}</SelectItem>
+                          <SelectItem value="like_received_count">{pbnT("m1700")}</SelectItem>
+                          <SelectItem value="checkin_streak">{pbnT("m1701")}</SelectItem>
+                          <SelectItem value="registration_days">{pbnT("m1702")}</SelectItem>
                         </SelectContent>
-                      </Select>
-                    )}
-                  />
+                      </Select>} />
                 </div>
 
-                {watch('_conditionType') !== 'manual' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="_threshold" className="text-xs">阈值</Label>
-                    <Input 
-                      id="_threshold" 
-                      type="number" 
-                      className="bg-background"
-                      placeholder="例如: 10" 
-                      {...register('_threshold', { 
-                          required: watch('_conditionType') !== 'manual' ? '请输入阈值' : false,
-                          valueAsNumber: true 
-                      })} 
-                    />
-                  </div>
-                )}
+                {watch('_conditionType') !== 'manual' && <div className="space-y-2">
+                    <Label htmlFor="_threshold" className="text-xs">{pbnT("m1703")}</Label>
+                    <Input id="_threshold" type="number" className="bg-background" placeholder={pbnT("m1704")} {...register('_threshold', {
+                required: watch('_conditionType') !== 'manual' ? pbnT("m1705") : false,
+                valueAsNumber: true
+              })} />
+                  </div>}
               </div>
               
-               {watch('_conditionType') !== 'manual' && (
-                  <div className="text-xs text-muted-foreground font-mono bg-background p-2 rounded border truncate">
-                  预览: {JSON.stringify({
-                      type: watch('_conditionType') || 'manual',
-                      threshold: Number(watch('_threshold') || 0)
-                  })}
-                  </div>
-               )}
+               {watch('_conditionType') !== 'manual' && <div className="text-xs text-muted-foreground font-mono bg-background p-2 rounded border truncate">{pbnT("m1706")}{" "}{JSON.stringify({
+              type: watch('_conditionType') || 'manual',
+              threshold: Number(watch('_threshold') || 0)
+            })}
+                  </div>}
             </div>
           </div>
 
           {/* 被动效果 */}
           <div className="space-y-4">
-            <h4 className="text-sm font-medium text-muted-foreground border-b pb-1">被动效果 (可选)</h4>
+            <h4 className="text-sm font-medium text-muted-foreground border-b pb-1">{pbnT("m1707")}</h4>
             <div className="space-y-4 rounded-md border p-4 bg-muted/10">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="_effectCheckInBonus">签到额外{currencyName}</Label>
+                  <Label htmlFor="_effectCheckInBonus">{pbnT("m1708")}{" "}{currencyName}</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      id="_effectCheckInBonus"
-                      type="number"
-                      placeholder="5"
-                      {...register('_effectCheckInBonus', { valueAsNumber: true })}
-                    />
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">分</span>
+                    <Input id="_effectCheckInBonus" type="number" placeholder="5" {...register('_effectCheckInBonus', {
+                  valueAsNumber: true
+                })} />
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">{pbnT("m338")}</span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">固定数值，例: +5分</p>
+                  <p className="text-[10px] text-muted-foreground">{pbnT("m1709")}</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="_effectCheckInBonusPercent">签到{currencyName}加成</Label>
+                  <Label htmlFor="_effectCheckInBonusPercent">{pbnT("m1710")}{" "}{currencyName}{" "}{pbnT("m1711")}</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      id="_effectCheckInBonusPercent"
-                      type="number"
-                      placeholder="10"
-                      {...register('_effectCheckInBonusPercent', { valueAsNumber: true })}
-                    />
+                    <Input id="_effectCheckInBonusPercent" type="number" placeholder="10" {...register('_effectCheckInBonusPercent', {
+                  valueAsNumber: true
+                })} />
                     <span className="text-sm text-muted-foreground whitespace-nowrap">%</span>
                   </div>
-                   <p className="text-[10px] text-muted-foreground">百分比，例: +10%</p>
+                   <p className="text-[10px] text-muted-foreground">{pbnT("m1712")}</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="_effectReplyCostReduction">回复扣费减免</Label>
+                  <Label htmlFor="_effectReplyCostReduction">{pbnT("m1713")}</Label>
                    <div className="flex items-center gap-2">
-                    <Input
-                      id="_effectReplyCostReduction"
-                      type="number"
-                      placeholder="50"
-                      max="100"
-                      {...register('_effectReplyCostReduction', { valueAsNumber: true, max: 100 })}
-                    />
+                    <Input id="_effectReplyCostReduction" type="number" placeholder="50" max="100" {...register('_effectReplyCostReduction', {
+                  valueAsNumber: true,
+                  max: 100
+                })} />
                     <span className="text-sm text-muted-foreground whitespace-nowrap">%</span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">百分比，例: -50%费用</p>
+                  <p className="text-[10px] text-muted-foreground">{pbnT("m1714")}</p>
                 </div>
               </div>
             </div>
@@ -352,38 +294,27 @@ export function BadgeFormDialog({ open, onOpenChange, mode, initialData, onSubmi
 
           {/* 其他设置 */}
           <div className="space-y-4">
-             <h4 className="text-sm font-medium text-muted-foreground border-b pb-1">其他设置</h4>
+             <h4 className="text-sm font-medium text-muted-foreground border-b pb-1">{pbnT("m1715")}</h4>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="displayOrder">排序权重</Label>
-                <Input 
-                  id="displayOrder" 
-                  type="number" 
-                  {...register('displayOrder', { valueAsNumber: true })} 
-                />
-                <p className="text-[10px] text-muted-foreground">数字越小排序越靠前</p>
+                <Label htmlFor="displayOrder">{pbnT("m1716")}</Label>
+                <Input id="displayOrder" type="number" {...register('displayOrder', {
+              valueAsNumber: true
+            })} />
+                <p className="text-[10px] text-muted-foreground">{pbnT("m1717")}</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="isActive">启用状态</Label>
+                <Label htmlFor="isActive">{pbnT("m1718")}</Label>
                 <div className="flex h-10 items-center justify-between rounded-md border px-3 shadow-sm bg-background/50">
-                  <span className="text-sm text-muted-foreground">是否开启</span>
-                  <Controller
-                    name="isActive"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch
-                        id="isActive"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    )}
-                  />
+                  <span className="text-sm text-muted-foreground">{pbnT("m1719")}</span>
+                  <Controller name="isActive" control={control} render={({
+                field
+              }) => <Switch id="isActive" checked={field.value} onCheckedChange={field.onChange} />} />
                 </div>
               </div>
             </div>
           </div>
         </form>
-    </FormDialog>
-  );
+    </FormDialog>;
 }

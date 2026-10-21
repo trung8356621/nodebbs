@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -8,106 +9,98 @@ import { SearchSelect } from '@/components/common/SearchSelect';
 import { ledgerApi } from '../../api';
 import { userApi } from '@/lib/api';
 import { toast } from 'sonner';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 export function LedgerTransactions() {
-    const [transactions, setTransactions] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [currencies, setCurrencies] = useState([]);
-    
-    // Filters
-    const [filterUser, setFilterUser] = useState(null);
-    const [filterCurrency, setFilterCurrency] = useState('all');
-    const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0 });
+  const pbnT = usePbnTranslations();
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [currencies, setCurrencies] = useState([]);
 
-    // Load available currencies for filter
-    useEffect(() => {
-        const loadCurrencies = async () => {
-            try {
-                const data = await ledgerApi.getCurrencies();
-                setCurrencies(data);
-            } catch (error) {
-                console.error('Failed to load currencies for filter', error);
-            }
-        };
-        loadCurrencies();
-    }, []);
+  // Filters
+  const [filterUser, setFilterUser] = useState(null);
+  const [filterCurrency, setFilterCurrency] = useState('all');
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0
+  });
 
-    const fetchTransactions = async () => {
-        setLoading(true);
-        try {
-            const params = {
-                page: pagination.page,
-                limit: pagination.limit
-            };
-            if (filterCurrency && filterCurrency !== 'all') {
-                params.currency = filterCurrency;
-            }
-            if (filterUser?.id) {
-                params.userId = filterUser.id;
-            }
-            const data = await ledgerApi.getTransactions(params);
-            setTransactions(data.items);
-            setPagination(prev => ({ ...prev, total: data.total }));
-        } catch (error) {
-            console.error(error);
-            toast.error('获取交易记录失败');
-        } finally {
-            setLoading(false);
-        }
+  // Load available currencies for filter
+  useEffect(() => {
+    const loadCurrencies = async () => {
+      try {
+        const data = await ledgerApi.getCurrencies();
+        setCurrencies(data);
+      } catch (error) {
+        console.error('Failed to load currencies for filter', error);
+      }
     };
-
-    useEffect(() => {
-        fetchTransactions();
-    }, [pagination.page, filterCurrency, filterUser]);
-
-    return (
-        <div className="space-y-4">
+    loadCurrencies();
+  }, []);
+  const fetchTransactions = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        page: pagination.page,
+        limit: pagination.limit
+      };
+      if (filterCurrency && filterCurrency !== 'all') {
+        params.currency = filterCurrency;
+      }
+      if (filterUser?.id) {
+        params.userId = filterUser.id;
+      }
+      const data = await ledgerApi.getTransactions(params);
+      setTransactions(data.items);
+      setPagination(prev => ({
+        ...prev,
+        total: data.total
+      }));
+    } catch (error) {
+      console.error(error);
+      toast.error(pbnT("m1860"));
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchTransactions();
+  }, [pagination.page, filterCurrency, filterUser]);
+  return <div className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4 mb-4 items-end">
                 <div className="w-full sm:w-75">
-                    <SearchSelect
-                      value={filterUser}
-                      onChange={setFilterUser}
-                      searchFn={async (query) => {
-                        const data = await userApi.getList({ search: query, limit: 10 });
-                        return data.items || [];
-                      }}
-                      transformData={(user) => ({ id: user.id, label: user.name || user.username, description: user.username })}
-                      label="选择用户"
-                      placeholder="搜索用户名或邮箱"
-                    />
+                    <SearchSelect value={filterUser} onChange={setFilterUser} searchFn={async query => {
+          const data = await userApi.getList({
+            search: query,
+            limit: 10
+          });
+          return data.items || [];
+        }} transformData={user => ({
+          id: user.id,
+          label: user.name || user.username,
+          description: user.username
+        })} label={pbnT("m1670")} placeholder={pbnT("m1671")} />
                 </div>
                 <div className="w-full sm:w-50 space-y-2">
-                     <Label>筛选货币</Label>
+                     <Label>{pbnT("m1861")}</Label>
                      <Select value={filterCurrency} onValueChange={setFilterCurrency}>
                         <SelectTrigger>
-                            <SelectValue placeholder="全部货币" />
+                            <SelectValue placeholder={pbnT("m1862")} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">全部货币</SelectItem>
-                            {currencies.map(c => (
-                                <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>
-                            ))}
+                            <SelectItem value="all">{pbnT("m1862")}</SelectItem>
+                            {currencies.map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
             </div>
 
-            <LedgerTransactionTable 
-                transactions={transactions}
-                loading={loading}
-                pagination={{
-                    ...pagination,
-                    onPageChange: (page) => setPagination(prev => ({ ...prev, page }))
-                }}
-                showUserColumn={true}
-            />
-        </div>
-    );
+            <LedgerTransactionTable transactions={transactions} loading={loading} pagination={{
+      ...pagination,
+      onPageChange: page => setPagination(prev => ({
+        ...prev,
+        page
+      }))
+    }} showUserColumn={true} />
+        </div>;
 }

@@ -1,3 +1,4 @@
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
 // 客户端用户名「结构性」校验，仅用于注册表单的即时反馈：
 // - 3~20 个字符
 // - 仅允许小写字母、数字、下划线
@@ -24,19 +25,21 @@ export function normalizeUsername(username) {
  * @param {string} username 原始用户名
  * @returns {{ valid: boolean, error?: string }} 验证结果
  */
-export function validateUsername(username) {
+export function validateUsername(username, pbnT = pbnRuntimeT) {
   const normalized = normalizeUsername(username);
-
   if (normalized.length < 3 || normalized.length > 20) {
-    return { valid: false, error: '用户名长度应在 3~20 个字符之间' };
+    return {
+      valid: false,
+      error: pbnT("m2485")
+    };
   }
-
   if (!USERNAME_REGEX.test(normalized)) {
     return {
       valid: false,
-      error: '用户名仅能包含小写字母、数字或下划线，且需包含至少一个字母',
+      error: pbnT("m2486")
     };
   }
-
-  return { valid: true };
+  return {
+    valid: true
+  };
 }

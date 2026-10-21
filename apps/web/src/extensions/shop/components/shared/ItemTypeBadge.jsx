@@ -1,3 +1,4 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { Badge } from '@/components/ui/badge';
 import { getItemTypeLabel } from '../../utils/itemTypes';
 
@@ -7,12 +8,13 @@ import { getItemTypeLabel } from '../../utils/itemTypes';
  * @param {string} props.type - Item type
  * @param {string} props.variant - Badge variant
  */
-export function ItemTypeBadge({ type, variant = 'default' }) {
-  const label = getItemTypeLabel(type);
-
-  return (
-    <Badge variant={variant}>
+export function ItemTypeBadge({
+  type,
+  variant = 'default'
+}) {
+  const pbnT = usePbnTranslations();
+  const label = getItemTypeLabel(type, pbnT);
+  return <Badge variant={variant}>
       {label}
-    </Badge>
-  );
+    </Badge>;
 }

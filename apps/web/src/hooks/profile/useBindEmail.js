@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -11,8 +12,14 @@ import { toast } from 'sonner';
  * 管理无邮箱用户的邮箱绑定流程（简化为2步，无需验证旧邮箱）
  */
 export function useBindEmail() {
-  const { user, refreshUser } = useAuth();
-  const { settings } = useSettings();
+  const pbnT = usePbnTranslations();
+  const {
+    user,
+    refreshUser
+  } = useAuth();
+  const {
+    settings
+  } = useSettings();
 
   // ===== 对话框状态 =====
   const [showDialog, setShowDialog] = useState(false);
@@ -23,7 +30,7 @@ export function useBindEmail() {
     email: '',
     code: '',
     password: '',
-    codeSent: false,
+    codeSent: false
   });
 
   // ===== 加载状态 =====
@@ -35,7 +42,7 @@ export function useBindEmail() {
       email: '',
       code: '',
       password: '',
-      codeSent: false,
+      codeSent: false
     });
     setStep(1);
   }, []);
@@ -55,26 +62,25 @@ export function useBindEmail() {
   // ===== 发送验证码 =====
   const sendCode = useCallback(async () => {
     if (!formData.email.trim()) {
-      toast.error('请输入邮箱地址');
+      toast.error(pbnT("m1212"));
       return;
     }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      toast.error('请输入有效的邮箱地址');
+      toast.error(pbnT("m1213"));
       return;
     }
-
     setLoading(true);
-
     try {
       const result = await authApi.sendCode(formData.email, 'email_bind');
-
-      toast.success(result.message || '验证码已发送');
-      setFormData((prev) => ({ ...prev, codeSent: true }));
+      toast.success(result.message || pbnT("m2054"));
+      setFormData(prev => ({
+        ...prev,
+        codeSent: true
+      }));
     } catch (err) {
-      console.error('发送验证码失败:', err);
-      toast.error(err.message || '发送验证码失败');
+      console.error("Could not send verification code:", err);
+      toast.error(err.message || pbnT("m2055"));
     } finally {
       setLoading(false);
     }
@@ -83,40 +89,30 @@ export function useBindEmail() {
   // ===== 提交绑定 =====
   const handleSubmit = useCallback(async () => {
     if (!formData.email.trim()) {
-      toast.error('请输入邮箱地址');
+      toast.error(pbnT("m1212"));
       return;
     }
-
     if (!formData.code.trim()) {
-      toast.error('请输入验证码');
+      toast.error(pbnT("m1203"));
       return;
     }
-
     if (settings.email_change_requires_password?.value && user?.hasPassword && !formData.password) {
-      toast.error('请输入当前密码');
+      toast.error(pbnT("m1059"));
       return;
     }
-
     setLoading(true);
-
     try {
-      const result = await userApi.bindEmail(
-        formData.email,
-        formData.code,
-        formData.password
-      );
-
-      toast.success(result.message || '邮箱绑定成功');
+      const result = await userApi.bindEmail(formData.email, formData.code, formData.password);
+      toast.success(result.message || pbnT("m2125"));
       closeDialog();
       refreshUser();
     } catch (err) {
-      console.error('邮箱绑定失败:', err);
-      toast.error(err.message || '邮箱绑定失败');
+      console.error("Could not link email:", err);
+      toast.error(err.message || pbnT("m2127"));
     } finally {
       setLoading(false);
     }
   }, [formData, settings, user, closeDialog, refreshUser]);
-
   return {
     user,
     settings,
@@ -130,6 +126,6 @@ export function useBindEmail() {
     setFormData,
     sendCode,
     handleSubmit,
-    loading,
+    loading
   };
 }

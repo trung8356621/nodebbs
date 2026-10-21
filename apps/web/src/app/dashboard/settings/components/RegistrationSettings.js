@@ -1,35 +1,24 @@
 'use client';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { usePbnTranslations } from "@/i18n/useTranslations";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SettingSection, SettingItem } from '@/components/common/SettingLayout';
-
-export function RegistrationSettings({ settings, handleChange, saving }) {
+export function RegistrationSettings({
+  settings,
+  handleChange,
+  saving
+}) {
+  const pbnT = usePbnTranslations();
   if (!settings.registration_mode) return null;
-
-  return (
-    <div className='space-y-6'>
+  return <div className='space-y-6'>
       <SettingSection>
-        <SettingItem
-          title="注册模式"
-          description={settings.registration_mode.description}
-          layout="responsive"
-        >
-          <Select
-            value={settings.registration_mode.value}
-            onValueChange={(value) => handleChange('registration_mode', value)}
-            disabled={saving}
-          >
+        <SettingItem title={pbnT("m659")} description={pbnT("m659")} layout="responsive">
+          <Select value={settings.registration_mode.value} onValueChange={value => handleChange('registration_mode', value)} disabled={saving}>
             <SelectTrigger className='w-full sm:w-48'>
               <SelectValue>
-                {settings.registration_mode.value === 'open' && '开放注册'}
-                {settings.registration_mode.value === 'invitation' && '邀请注册'}
-                {settings.registration_mode.value === 'closed' && '关闭注册'}
+                {settings.registration_mode.value === 'open' && pbnT("m660")}
+                {settings.registration_mode.value === 'invitation' && pbnT("m196")}
+                {settings.registration_mode.value === 'closed' && pbnT("m661")}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -37,8 +26,8 @@ export function RegistrationSettings({ settings, handleChange, saving }) {
                 <div className='flex items-center gap-2'>
                   <span>🌐</span>
                   <div>
-                    <div className='font-medium'>开放注册</div>
-                    <div className='text-xs text-muted-foreground'>任何人都可以注册</div>
+                    <div className='font-medium'>{pbnT("m660")}</div>
+                    <div className='text-xs text-muted-foreground'>{pbnT("m662")}</div>
                   </div>
                 </div>
               </SelectItem>
@@ -46,8 +35,8 @@ export function RegistrationSettings({ settings, handleChange, saving }) {
                 <div className='flex items-center gap-2'>
                   <span>🎫</span>
                   <div>
-                    <div className='font-medium'>邀请码注册</div>
-                    <div className='text-xs text-muted-foreground'>需要邀请码才能注册</div>
+                    <div className='font-medium'>{pbnT("m663")}</div>
+                    <div className='text-xs text-muted-foreground'>{pbnT("m664")}</div>
                   </div>
                 </div>
               </SelectItem>
@@ -55,8 +44,8 @@ export function RegistrationSettings({ settings, handleChange, saving }) {
                 <div className='flex items-center gap-2'>
                   <span>🔒</span>
                   <div>
-                    <div className='font-medium'>关闭注册</div>
-                    <div className='text-xs text-muted-foreground'>暂停所有新用户注册</div>
+                    <div className='font-medium'>{pbnT("m661")}</div>
+                    <div className='text-xs text-muted-foreground'>{pbnT("m665")}</div>
                   </div>
                 </div>
               </SelectItem>
@@ -64,6 +53,5 @@ export function RegistrationSettings({ settings, handleChange, saving }) {
           </Select>
         </SettingItem>
       </SettingSection>
-    </div>
-  );
+    </div>;
 }

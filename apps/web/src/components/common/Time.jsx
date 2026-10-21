@@ -4,11 +4,12 @@ import { useMemo, useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
-import 'dayjs/locale/zh-cn';
+import { useLocale } from 'next-intl';
+import 'dayjs/locale/vi';
+import 'dayjs/locale/en';
 
 dayjs.extend(relativeTime);
 dayjs.extend(localizedFormat);
-dayjs.locale('zh-cn');
 
 /**
  * Time 组件 - 显示格式化或相对时间（可自动刷新）
@@ -27,6 +28,7 @@ export default function Time({
   fromNow = false,
   refreshInterval = 60000,
 }) {
+  const locale = useLocale();
   const [tick, setTick] = useState(0);
 
   // 自动刷新（仅在 fromNow 模式下生效）
@@ -38,14 +40,14 @@ export default function Time({
 
   const obj = useMemo(() => {
     if (!date) return null;
-    const d = dayjs(date);
+    const d = dayjs(date).locale(locale === 'vi-VN' ? 'vi' : 'en');
     if (!d.isValid()) return null;
 
     return {
       title: d.format('YYYY-MM-DD HH:mm:ss'),
       value: fromNow ? d.fromNow() : d.format(format),
     };
-  }, [date, format, fromNow, tick]);
+  }, [date, format, fromNow, tick, locale]);
 
   if (!obj) return null;
 

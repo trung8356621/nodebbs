@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -11,8 +12,14 @@ import { toast } from 'sonner';
  * 管理无手机号用户的手机号绑定流程（简化为2步，无需验证旧手机号）
  */
 export function useBindPhone() {
-  const { user, refreshUser } = useAuth();
-  const { settings } = useSettings();
+  const pbnT = usePbnTranslations();
+  const {
+    user,
+    refreshUser
+  } = useAuth();
+  const {
+    settings
+  } = useSettings();
 
   // ===== 对话框状态 =====
   const [showDialog, setShowDialog] = useState(false);
@@ -23,7 +30,7 @@ export function useBindPhone() {
     phone: '',
     code: '',
     password: '',
-    codeSent: false,
+    codeSent: false
   });
 
   // ===== 加载状态 =====
@@ -35,7 +42,7 @@ export function useBindPhone() {
       phone: '',
       code: '',
       password: '',
-      codeSent: false,
+      codeSent: false
     });
     setStep(1);
   }, []);
@@ -55,26 +62,25 @@ export function useBindPhone() {
   // ===== 发送验证码 =====
   const sendCode = useCallback(async () => {
     if (!formData.phone.trim()) {
-      toast.error('请输入手机号');
+      toast.error(pbnT("m1236"));
       return;
     }
-
     const phoneRegex = /^1[3-9]\d{9}$/;
     if (!phoneRegex.test(formData.phone)) {
-      toast.error('请输入有效的手机号');
+      toast.error(pbnT("m2053"));
       return;
     }
-
     setLoading(true);
-
     try {
       const result = await authApi.sendCode(formData.phone, 'phone_bind');
-
-      toast.success(result.message || '验证码已发送');
-      setFormData((prev) => ({ ...prev, codeSent: true }));
+      toast.success(result.message || pbnT("m2054"));
+      setFormData(prev => ({
+        ...prev,
+        codeSent: true
+      }));
     } catch (err) {
-      console.error('发送验证码失败:', err);
-      toast.error(err.message || '发送验证码失败');
+      console.error("Could not send verification code:", err);
+      toast.error(err.message || pbnT("m2055"));
     } finally {
       setLoading(false);
     }
@@ -83,40 +89,30 @@ export function useBindPhone() {
   // ===== 提交绑定 =====
   const handleSubmit = useCallback(async () => {
     if (!formData.phone.trim()) {
-      toast.error('请输入手机号');
+      toast.error(pbnT("m1236"));
       return;
     }
-
     if (!formData.code.trim()) {
-      toast.error('请输入验证码');
+      toast.error(pbnT("m1203"));
       return;
     }
-
     if (settings.phone_change_requires_password?.value && user?.hasPassword && !formData.password) {
-      toast.error('请输入当前密码');
+      toast.error(pbnT("m1059"));
       return;
     }
-
     setLoading(true);
-
     try {
-      const result = await userApi.bindPhone(
-        formData.phone,
-        formData.code,
-        formData.password
-      );
-
-      toast.success(result.message || '手机号绑定成功');
+      const result = await userApi.bindPhone(formData.phone, formData.code, formData.password);
+      toast.success(result.message || pbnT("m2128"));
       closeDialog();
       refreshUser();
     } catch (err) {
-      console.error('手机号绑定失败:', err);
-      toast.error(err.message || '手机号绑定失败');
+      console.error("Could not link phone:", err);
+      toast.error(err.message || pbnT("m2130"));
     } finally {
       setLoading(false);
     }
   }, [formData, settings, user, closeDialog, refreshUser]);
-
   return {
     user,
     settings,
@@ -130,6 +126,6 @@ export function useBindPhone() {
     setFormData,
     sendCode,
     handleSubmit,
-    loading,
+    loading
   };
 }

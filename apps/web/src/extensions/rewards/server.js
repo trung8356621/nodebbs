@@ -1,3 +1,4 @@
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
 import { request, rethrowIfRateLimit } from '@/lib/server/api';
 import { DEFAULT_CURRENCY_CODE } from '@/extensions/ledger/constants';
 import { isCurrencyActive } from '@/extensions/ledger/server';
@@ -14,12 +15,12 @@ import { isCurrencyActive } from '@/extensions/ledger/server';
  * 可单独调用用于并行优化
  * @returns {Promise<boolean>} 是否启用
  */
-export async function getRewardEnabledStatus() {
+export async function getRewardEnabledStatus(pbnT = pbnRuntimeT) {
   try {
-    return await isCurrencyActive(DEFAULT_CURRENCY_CODE);
+    return await isCurrencyActive(DEFAULT_CURRENCY_CODE, pbnT);
   } catch (error) {
     rethrowIfRateLimit(error);
-    console.error('检查积分系统状态失败:', error);
+    console.error("Could not check credit system status:", error);
     return false;
   }
 }
@@ -30,19 +31,21 @@ export async function getRewardEnabledStatus() {
  * @param {Array} posts - 帖子列表
  * @returns {Promise<Object>} 打赏统计 Map
  */
-export async function getRewardStats(topic, posts) {
+export async function getRewardStats(topic, posts, pbnT = pbnRuntimeT) {
   try {
     const postIds = [topic.firstPostId, ...posts.map(p => p.id)].filter(Boolean);
     if (postIds.length > 0) {
       const stats = await request('/rewards/posts/batch', {
         method: 'POST',
-        body: JSON.stringify({ postIds })
-      });
+        body: JSON.stringify({
+          postIds
+        })
+      }, pbnT);
       return stats || {};
     }
   } catch (error) {
     rethrowIfRateLimit(error);
-    console.error('获取打赏统计失败:', error);
+    console.error("Could not load tip statistics:", error);
   }
   return {};
 }

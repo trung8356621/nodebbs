@@ -1,32 +1,14 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
 import { useState, Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'sonner';
-import {
-  Settings,
-  KeyRound,
-  Shield,
-  ShieldCheck,
-  Bot,
-  Fingerprint,
-  Users,
-  ShieldAlert,
-  Gauge,
-  Unplug,
-  Send,
-  HardDrive,
-  Webhook
-} from 'lucide-react';
+import { Settings, KeyRound, Shield, ShieldCheck, Bot, Fingerprint, Users, ShieldAlert, Gauge, Unplug, Send, HardDrive, Webhook } from 'lucide-react';
 import { Loading } from '@/components/common/Loading';
 
 // 导入所有重构后或原有的配置子组件
@@ -45,86 +27,128 @@ import { StorageSettings } from './components/StorageProviderCard';
 import { WebhookSettings } from './components/WebhookSettings';
 
 // 扁平化的全局导航菜单
-const navigationGroups = [
-  {
-    group: '基础配置',
-    items: [
-      { id: 'general', label: '通用设置', icon: Settings, description: '站点名称、Logo 与 SEO' },
-    ]
-  },
-  {
-    group: '用户与权限',
-    items: [
-      { id: 'registration', label: '注册设置', icon: KeyRound, description: '开放注册与首选验证方式' },
-      { id: 'user-management', label: '账户资料', icon: Users, description: '用户名、邮箱、手机号修改与账号注销' },
-    ]
-  },
-  {
-    group: '安全与防护',
-    items: [
-      { id: 'security', label: '邮箱验证', icon: Shield, description: '要求验证邮箱后才能发帖、回复、私信' },
-      { id: 'content-moderation', label: '内容审核', icon: ShieldCheck, description: '全站审核开关与分类型策略' },
-      { id: 'spam-protection', label: '垃圾拦截', icon: ShieldAlert, description: '防垃圾注册(StopForumSpam)' },
-      { id: 'rate-limit', label: '访问限速', icon: Gauge, description: 'API 调用频率限制' },
-      { id: 'captcha', label: '人机验证', icon: Bot, description: 'Cloudflare Turnstile 验证配置' },
-    ]
-  },
-  {
-    group: '认证与集成',
-    items: [
-      { id: 'authentication', label: '认证方式', icon: Fingerprint, description: '扫码登录与手机号登录' },
-      { id: 'oauth', label: '三方登录', icon: Unplug, description: 'GitHub、Google 等 SSO 接入' },
-    ]
-  },
-  {
-    group: '外部服务',
-    items: [
-      { id: 'message', label: '消息服务', icon: Send, description: '邮件(SMTP/Resend)与短信通道' },
-      { id: 'storage', label: '存储服务', icon: HardDrive, description: '本地存储与 S3 兼容对象存储' },
-      { id: 'webhook', label: 'Webhook 集成', icon: Webhook, description: '事件通知与外部系统集成' },
-    ]
-  }
-];
+const navigationGroups = (pbnT = pbnRuntimeT) => [{
+  group: pbnT("m788"),
+  items: [{
+    id: 'general',
+    label: pbnT("m789"),
+    icon: Settings,
+    description: pbnT("m790")
+  }]
+}, {
+  group: pbnT("m791"),
+  items: [{
+    id: 'registration',
+    label: pbnT("m792"),
+    icon: KeyRound,
+    description: pbnT("m793")
+  }, {
+    id: 'user-management',
+    label: pbnT("m794"),
+    icon: Users,
+    description: pbnT("m795")
+  }]
+}, {
+  group: pbnT("m796"),
+  items: [{
+    id: 'security',
+    label: pbnT("m797"),
+    icon: Shield,
+    description: pbnT("m798")
+  }, {
+    id: 'content-moderation',
+    label: pbnT("m180"),
+    icon: ShieldCheck,
+    description: pbnT("m799")
+  }, {
+    id: 'spam-protection',
+    label: pbnT("m800"),
+    icon: ShieldAlert,
+    description: pbnT("m801")
+  }, {
+    id: 'rate-limit',
+    label: pbnT("m802"),
+    icon: Gauge,
+    description: pbnT("m803")
+  }, {
+    id: 'captcha',
+    label: pbnT("m186"),
+    icon: Bot,
+    description: pbnT("m804")
+  }]
+}, {
+  group: pbnT("m805"),
+  items: [{
+    id: 'authentication',
+    label: pbnT("m806"),
+    icon: Fingerprint,
+    description: pbnT("m807")
+  }, {
+    id: 'oauth',
+    label: pbnT("m808"),
+    icon: Unplug,
+    description: pbnT("m809")
+  }]
+}, {
+  group: pbnT("m810"),
+  items: [{
+    id: 'message',
+    label: pbnT("m811"),
+    icon: Send,
+    description: pbnT("m812")
+  }, {
+    id: 'storage',
+    label: pbnT("m813"),
+    icon: HardDrive,
+    description: pbnT("m814")
+  }, {
+    id: 'webhook',
+    label: pbnT("m815"),
+    icon: Webhook,
+    description: pbnT("m816")
+  }]
+}];
 
 // 提取所有 items 为一维数组方便查找
-const flatNavigationItems = navigationGroups.flatMap(group => group.items);
-
+const flatNavigationItems = (pbnT = pbnRuntimeT) => navigationGroups(pbnT).flatMap(group => group.items);
 function SystemSettingsContent() {
-  const { settings, loading, updateSetting } = useSettings();
+  const pbnT = usePbnTranslations();
+  const {
+    settings,
+    loading,
+    updateSetting
+  } = useSettings();
   const [saving, setSaving] = useState(false);
-  
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeTab = searchParams.get('tab') || 'general';
-
-  const setActiveTab = (tabId) => {
+  const setActiveTab = tabId => {
     const params = new URLSearchParams(searchParams?.toString() || '');
     params.set('tab', tabId);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    router.replace(`${pathname}?${params.toString()}`, {
+      scroll: false
+    });
   };
-
   const handleSave = async (key, value) => {
     setSaving(true);
     try {
       const result = await updateSetting(key, value);
       if (result.success) {
-        toast.success('配置已保存');
+        toast.success(pbnT("m565"));
       } else {
-        toast.error('保存配置失败');
+        toast.error(pbnT("m590"));
       }
     } catch (error) {
       console.error('Failed to save setting:', error);
-      toast.error('保存配置失败');
+      toast.error(pbnT("m590"));
     } finally {
       setSaving(false);
     }
   };
-
   const handleChange = (key, rawValue) => {
     const setting = settings[key];
     if (!setting) return;
-
     let value = rawValue;
     if (setting.valueType === 'number') {
       value = parseFloat(rawValue);
@@ -134,7 +158,6 @@ function SystemSettingsContent() {
     } else {
       value = String(rawValue).trim();
     }
-
     if (setting.value !== value) {
       handleSave(key, value);
     }
@@ -145,21 +168,16 @@ function SystemSettingsContent() {
     const raw = e.target.value.trim();
     const setting = settings[key];
     if (!setting) return;
-
     if (setting.valueType === 'number' && raw === '') {
       e.target.value = setting.value ?? '';
       return;
     }
-
     handleChange(key, raw);
   };
-
   if (loading) {
-    return <Loading text='加载中...' className='min-h-100' />;
+    return <Loading text={pbnT("m71")} className='min-h-100' />;
   }
-
-  const activeItem = flatNavigationItems.find(item => item.id === activeTab);
-
+  const activeItem = flatNavigationItems(pbnT).find(item => item.id === activeTab);
   const renderContent = () => {
     switch (activeTab) {
       case 'general':
@@ -192,91 +210,64 @@ function SystemSettingsContent() {
         return null;
     }
   };
-
-  return (
-    <div className='space-y-6'>
+  return <div className='space-y-6'>
 
       {/* 移动端选择器 */}
       <div className='lg:hidden'>
         <Select value={activeTab} onValueChange={setActiveTab}>
           <SelectTrigger className='w-full bg-card h-12'>
             <SelectValue>
-              {activeItem && (
-                <div className='flex items-center gap-3'>
+              {activeItem && <div className='flex items-center gap-3'>
                   <activeItem.icon className='h-5 w-5 text-primary' />
                   <span className="font-medium">{activeItem.label}</span>
-                </div>
-              )}
+                </div>}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {navigationGroups.map((group, groupIdx) => (
-              <div key={groupIdx}>
+            {navigationGroups(pbnT).map((group, groupIdx) => <div key={groupIdx}>
                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground/70 tracking-wider">
                   {group.group}
                 </div>
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <SelectItem key={item.id} value={item.id}>
+                {group.items.map(item => {
+              const Icon = item.icon;
+              return <SelectItem key={item.id} value={item.id}>
                       <div className='flex items-center gap-3 py-1'>
                         <Icon className='h-4.5 w-4.5 opacity-70' />
                         <div>
                           <div className='font-medium'>{item.label}</div>
                         </div>
                       </div>
-                    </SelectItem>
-                  );
-                })}
-              </div>
-            ))}
+                    </SelectItem>;
+            })}
+              </div>)}
           </SelectContent>
         </Select>
       </div>
 
       {/* 桌面端：左侧边栏 + 右侧内容 */}
       <div className='flex flex-col lg:flex-row gap-8 items-start'>
-        
+
         {/* 左侧导航：极简透明风格 */}
         <aside className='hidden lg:block w-56 shrink-0 sticky top-[var(--header-offset)] self-start'>
           <nav className='space-y-6 lg:pr-6 lg:border-r lg:border-border/40'>
-            {navigationGroups.map((group, groupIdx) => (
-              <div key={groupIdx}>
+            {navigationGroups(pbnT).map((group, groupIdx) => <div key={groupIdx}>
                 <h4 className="px-2 mb-2 text-[11px] font-semibold text-muted-foreground/60 tracking-wider">
                   {group.group}
                 </h4>
                 <div className="space-y-0.5">
-                  {group.items.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = activeTab === item.id;
-
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => setActiveTab(item.id)}
-                        className={cn(
-                          'w-full flex items-center gap-3 px-2 py-2 rounded-md text-left transition-colors group relative',
-                          isActive
-                            ? 'text-foreground font-medium'
-                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                        )}
-                      >
-                        {isActive && (
-                          <div className="absolute left-0 -ml-2 h-full w-0.75 rounded-r-full bg-primary" />
-                        )}
-                        <Icon className={cn(
-                          'h-4 w-4 shrink-0 transition-colors',
-                          isActive ? 'text-primary' : 'group-hover:text-foreground'
-                        )} />
+                  {group.items.map(item => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return <button key={item.id} onClick={() => setActiveTab(item.id)} className={cn('w-full flex items-center gap-3 px-2 py-2 rounded-md text-left transition-colors group relative', isActive ? 'text-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground')}>
+                        {isActive && <div className="absolute left-0 -ml-2 h-full w-0.75 rounded-r-full bg-primary" />}
+                        <Icon className={cn('h-4 w-4 shrink-0 transition-colors', isActive ? 'text-primary' : 'group-hover:text-foreground')} />
                         <span className="flex-1 text-[13px] truncate">
                           {item.label}
                         </span>
-                      </button>
-                    );
-                  })}
+                      </button>;
+              })}
                 </div>
-              </div>
-            ))}
+              </div>)}
           </nav>
         </aside>
 
@@ -292,14 +283,11 @@ function SystemSettingsContent() {
           </div>
         </main>
       </div>
-    </div>
-  );
+    </div>;
 }
-
 export default function SystemSettingsPage() {
-  return (
-    <Suspense fallback={<Loading text='加载中...' className='min-h-100' />}>
+  const pbnT = usePbnTranslations();
+  return <Suspense fallback={<Loading text={pbnT("m71")} className='min-h-100' />}>
       <SystemSettingsContent />
-    </Suspense>
-  );
+    </Suspense>;
 }

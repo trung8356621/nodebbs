@@ -1,36 +1,37 @@
 "use client";
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-export const Lantern = ({ 
-  size = 120, // default visible size
-  delay = 0, 
-  duration = 4, 
+export const Lantern = ({
+  size = 120,
+  // default visible size
+  delay = 0,
+  duration = 4,
   className = "",
   swing = 8 // degrees - reduced for heavier feel
 }) => {
-  return (
-    <div className={cn("relative select-none pointer-events-none", className)} style={{ width: size, height: size * 1.6 }}>
-      <motion.div
-        className="w-full h-full origin-top"
-        initial={{ rotate: -swing }}
-        animate={{ rotate: swing }}
-        transition={{
-          duration: duration,
-          repeat: Infinity,
-          repeatType: "reverse",
-          ease: "easeInOut",
-          delay: delay,
-        }}
-        style={{ transformOrigin: "50% 0px" }}
-      >
-        <svg
-          viewBox="0 0 200 300"
-          className="w-full h-full drop-shadow-2xl"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{ filter: "drop-shadow(0 10px 20px rgba(185, 28, 28, 0.4))" }}
-        >
+  const pbnT = usePbnTranslations();
+  return <div className={cn("relative select-none pointer-events-none", className)} style={{
+    width: size,
+    height: size * 1.6
+  }}>
+      <motion.div className="w-full h-full origin-top" initial={{
+      rotate: -swing
+    }} animate={{
+      rotate: swing
+    }} transition={{
+      duration: duration,
+      repeat: Infinity,
+      repeatType: "reverse",
+      ease: "easeInOut",
+      delay: delay
+    }} style={{
+      transformOrigin: "50% 0px"
+    }}>
+        <svg viewBox="0 0 200 300" className="w-full h-full drop-shadow-2xl" xmlns="http://www.w3.org/2000/svg" style={{
+        filter: "drop-shadow(0 10px 20px rgba(185, 28, 28, 0.4))"
+      }}>
           <defs>
             {/* Satin Red Gradient for Body */}
             <radialGradient id="lanternBody" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
@@ -62,12 +63,7 @@ export const Lantern = ({
           <g transform="translate(0, 20)">
             
             {/* Top Cap (Gold) */}
-            <path 
-              d="M70 0 H130 L135 15 H65 Z" 
-              fill="url(#goldGradient)" 
-              stroke="#b45309" 
-              strokeWidth="0.5"
-            />
+            <path d="M70 0 H130 L135 15 H65 Z" fill="url(#goldGradient)" stroke="#b45309" strokeWidth="0.5" />
             {/* Top Decorative Ring */}
              <rect x="92" y="15" width="16" height="4" fill="#b91c1c" />
 
@@ -83,40 +79,19 @@ export const Lantern = ({
             <path d="M140 25 Q 160 85 140 145" stroke="#7f1d1d" strokeWidth="1" fill="none" opacity="0.3" />
 
             {/* Gold Diamond Container for Character */}
-            <rect 
-              x="72" y="57" 
-              width="56" height="56" 
-              transform="rotate(45 100 85)" 
-              fill="#991b1b" 
-              stroke="url(#goldGradient)" 
-              strokeWidth="2"
-            />
+            <rect x="72" y="57" width="56" height="56" transform="rotate(45 100 85)" fill="#991b1b" stroke="url(#goldGradient)" strokeWidth="2" />
 
             {/* Character: 福 (Fu) - Prosperity - SVG Path */}
             {/* Character: 福 (Fu) - Prosperity - Text for better alignment */}
-            <text
-              x="100"
-              y="85"
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize="40"
-              fill="#fbbf24"
-              fontWeight="bold"
-              style={{ fontFamily: '"Ma Shan Zheng", "STKaiti", "KaiTi", "SimKai", "Serif", serif' }}
-            >
-              福
-            </text>
+            <text x="100" y="85" textAnchor="middle" dominantBaseline="central" fontSize="40" fill="#fbbf24" fontWeight="bold" style={{
+            fontFamily: '"Ma Shan Zheng", "STKaiti", "KaiTi", "SimKai", "Serif", serif'
+          }}>{pbnT("m1497")}</text>
             
             {/* Optional inverted "Fu" (Dao Fu) for extra luck */}
             {/* transform="rotate(180 100 85)" */}
 
             {/* Bottom Cap (Gold) */}
-            <path 
-              d="M75 155 H125 L120 165 H80 Z" 
-              fill="url(#goldGradient)" 
-              stroke="#b45309" 
-              strokeWidth="0.5"
-            />
+            <path d="M75 155 H125 L120 165 H80 Z" fill="url(#goldGradient)" stroke="#b45309" strokeWidth="0.5" />
 
             {/* Tassel Knot (Red) */}
             <circle cx="100" cy="170" r="6" fill="#b91c1c" />
@@ -134,6 +109,5 @@ export const Lantern = ({
           </g>
         </svg>
       </motion.div>
-    </div>
-  );
+    </div>;
 };

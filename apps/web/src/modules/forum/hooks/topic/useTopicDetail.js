@@ -1,3 +1,4 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { postApi, topicApi } from '@/lib/api';
@@ -21,15 +22,18 @@ export function useTopicDetail({
   initialRewardStats = {},
   initialIsRewardEnabled = false,
   currentPage,
-  limit,
+  limit
 }) {
+  const pbnT = usePbnTranslations();
   const router = useRouter();
-  const { isAuthenticated, openLoginDialog } = useAuth();
-  
+  const {
+    isAuthenticated,
+    openLoginDialog
+  } = useAuth();
   const isRewardEnabled = initialIsRewardEnabled;
   const [topic, setTopic] = useState(initialTopic);
   const [rewardStats, setRewardStats] = useState(initialRewardStats);
-  
+
   // 统一的操作 loading 状态管理
   const [actionLoading, setActionLoading] = useState({
     bookmark: false,
@@ -37,7 +41,7 @@ export function useTopicDetail({
     toggleStatus: false,
     togglePin: false,
     delete: false,
-    like: false,
+    like: false
   });
 
   // 监听 initialRewardStats 变化
@@ -49,17 +53,23 @@ export function useTopicDetail({
    * 更新话题数据的通用方法
    * @param {Object} updates - 要更新的字段
    */
-  const updateTopic = (updates) => {
-    setTopic((prev) => ({ ...prev, ...updates }));
+  const updateTopic = updates => {
+    setTopic(prev => ({
+      ...prev,
+      ...updates
+    }));
   };
-  
+
   /**
    * 更新指定操作的 loading 状态
    * @param {string} action - 操作名称
    * @param {boolean} loading - loading 状态
    */
   const setLoading = (action, loading) => {
-    setActionLoading(prev => ({ ...prev, [action]: loading }));
+    setActionLoading(prev => ({
+      ...prev,
+      [action]: loading
+    }));
   };
 
   // --- 动作处理 (Actions) ---
@@ -73,22 +83,25 @@ export function useTopicDetail({
 
     // 乐观更新
     const previousState = topic.isBookmarked;
-    updateTopic({ isBookmarked: !previousState });
+    updateTopic({
+      isBookmarked: !previousState
+    });
     setLoading('bookmark', true);
-
     try {
       if (previousState) {
         await topicApi.unbookmark(topic.id);
-        toast.success('已取消收藏');
+        toast.success(pbnT("m2421"));
       } else {
         await topicApi.bookmark(topic.id);
-        toast.success('收藏成功');
+        toast.success(pbnT("m2422"));
       }
     } catch (err) {
       // 回滚
-      updateTopic({ isBookmarked: previousState });
-      console.error('收藏操作失败:', err);
-      toast.error(err.message || '操作失败');
+      updateTopic({
+        isBookmarked: previousState
+      });
+      console.error("Bookmark action failed:", err);
+      toast.error(err.message || pbnT("m568"));
     } finally {
       setLoading('bookmark', false);
     }
@@ -100,23 +113,25 @@ export function useTopicDetail({
    */
   const toggleSubscribe = async () => {
     if (!isAuthenticated) return openLoginDialog();
-
     const previousState = topic.isSubscribed;
-    updateTopic({ isSubscribed: !previousState });
+    updateTopic({
+      isSubscribed: !previousState
+    });
     setLoading('subscribe', true);
-
     try {
       if (previousState) {
         await topicApi.unsubscribe(topic.id);
-        toast.success('已取消订阅');
+        toast.success(pbnT("m2424"));
       } else {
         await topicApi.subscribe(topic.id);
-        toast.success('订阅成功，有新回复时会收到通知');
+        toast.success(pbnT("m2425"));
       }
     } catch (err) {
-      updateTopic({ isSubscribed: previousState });
-      console.error('订阅操作失败:', err);
-      toast.error(err.message || '操作失败');
+      updateTopic({
+        isSubscribed: previousState
+      });
+      console.error("Subscription action failed:", err);
+      toast.error(err.message || pbnT("m568"));
     } finally {
       setLoading('subscribe', false);
     }
@@ -128,25 +143,25 @@ export function useTopicDetail({
    */
   const toggleTopicStatus = async () => {
     if (!isAuthenticated) return openLoginDialog();
-
     setLoading('toggleStatus', true);
     const previousState = topic.isClosed;
-
     try {
       // 乐观更新
-      updateTopic({ isClosed: !previousState });
-
-      await topicApi.update(topic.id, {
-        isClosed: !previousState,
+      updateTopic({
+        isClosed: !previousState
       });
-
-      toast.success(!previousState ? '话题已关闭' : '话题已重新开启');
+      await topicApi.update(topic.id, {
+        isClosed: !previousState
+      });
+      toast.success(!previousState ? pbnT("m2427") : pbnT("m2428"));
       router.refresh();
     } catch (err) {
       // 回滚
-      updateTopic({ isClosed: previousState });
-      console.error('操作失败:', err);
-      toast.error(err.message || '操作失败');
+      updateTopic({
+        isClosed: previousState
+      });
+      console.error("Action failed:", err);
+      toast.error(err.message || pbnT("m568"));
     } finally {
       setLoading('toggleStatus', false);
     }
@@ -158,25 +173,25 @@ export function useTopicDetail({
    */
   const togglePinTopic = async () => {
     if (!isAuthenticated) return openLoginDialog();
-
     setLoading('togglePin', true);
     const previousState = topic.isPinned;
-
     try {
       // 乐观更新
-      updateTopic({ isPinned: !previousState });
-
-      await topicApi.update(topic.id, {
-        isPinned: !previousState,
+      updateTopic({
+        isPinned: !previousState
       });
-
-      toast.success(!previousState ? '话题已置顶' : '已取消置顶');
+      await topicApi.update(topic.id, {
+        isPinned: !previousState
+      });
+      toast.success(!previousState ? pbnT("m2430") : pbnT("m2391"));
       router.refresh();
     } catch (err) {
       // 回滚
-      updateTopic({ isPinned: previousState });
-      console.error('置顶操作失败:', err);
-      toast.error(err.message || '操作失败');
+      updateTopic({
+        isPinned: previousState
+      });
+      console.error("Pin action failed:", err);
+      toast.error(err.message || pbnT("m568"));
     } finally {
       setLoading('togglePin', false);
     }
@@ -187,17 +202,15 @@ export function useTopicDetail({
    */
   const deleteTopic = async () => {
     if (!isAuthenticated) return openLoginDialog();
-
     setLoading('delete', true);
-
     try {
       await topicApi.delete(topic.id);
-      toast.success('话题已删除');
+      toast.success(pbnT("m2397"));
       // 删除后跳转到首页或分类页
       router.push('/');
     } catch (err) {
-      console.error('删除话题失败:', err);
-      toast.error(err.message || '删除失败');
+      console.error("Could not delete topic:", err);
+      toast.error(err.message || pbnT("m249"));
     } finally {
       setLoading('delete', false);
     }
@@ -209,38 +222,31 @@ export function useTopicDetail({
    */
   const toggleFirstPostLike = async () => {
     if (!isAuthenticated) return openLoginDialog();
-
     const postId = topic.firstPostId;
     if (!postId) return;
-
     setLoading('like', true);
     const wasLiked = topic.isFirstPostLiked;
 
     // 乐观更新
     updateTopic({
       isFirstPostLiked: !wasLiked,
-      firstPostLikeCount: wasLiked
-        ? (topic.firstPostLikeCount || 0) - 1
-        : (topic.firstPostLikeCount || 0) + 1,
+      firstPostLikeCount: wasLiked ? (topic.firstPostLikeCount || 0) - 1 : (topic.firstPostLikeCount || 0) + 1
     });
-
     try {
       if (wasLiked) {
         await postApi.unlike(postId);
       } else {
         await postApi.like(postId);
       }
-      toast.success(wasLiked ? '已取消点赞' : '点赞成功');
+      toast.success(wasLiked ? pbnT("m2406") : pbnT("m2407"));
     } catch (err) {
       // 回滚
       updateTopic({
         isFirstPostLiked: wasLiked,
-        firstPostLikeCount: wasLiked
-          ? (topic.firstPostLikeCount || 0) + 1
-          : (topic.firstPostLikeCount || 0) - 1,
+        firstPostLikeCount: wasLiked ? (topic.firstPostLikeCount || 0) + 1 : (topic.firstPostLikeCount || 0) - 1
       });
-      console.error('点赞操作失败:', err);
-      toast.error(err.message || '操作失败');
+      console.error("Like action failed:", err);
+      toast.error(err.message || pbnT("m568"));
     } finally {
       setLoading('like', false);
     }
@@ -253,14 +259,17 @@ export function useTopicDetail({
    * @param {number} amount - 打赏金额
    */
   const handleRewardSuccess = (postId, amount) => {
-    setRewardStats((prev) => {
-      const currentStats = prev[postId] || { totalAmount: 0, totalCount: 0 };
+    setRewardStats(prev => {
+      const currentStats = prev[postId] || {
+        totalAmount: 0,
+        totalCount: 0
+      };
       return {
         ...prev,
         [postId]: {
           totalAmount: currentStats.totalAmount + amount,
-          totalCount: currentStats.totalCount + 1,
-        },
+          totalCount: currentStats.totalCount + 1
+        }
       };
     });
   };
@@ -269,11 +278,14 @@ export function useTopicDetail({
    * 平滑滚动到指定帖子，并添加高亮效果
    * @param {number} postId - 帖子ID
    */
-  const scrollToPost = (postId) => {
+  const scrollToPost = postId => {
     setTimeout(() => {
       const element = document.getElementById(`post-${postId}`);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
         element.classList.add('highlight-post');
         setTimeout(() => element.classList.remove('highlight-post'), 4000);
       }
@@ -290,7 +302,7 @@ export function useTopicDetail({
         setTopic(freshTopic);
       }
     } catch (err) {
-      console.error('刷新话题数据失败:', err);
+      console.error("Could not refresh topic data:", err);
     }
   };
 
@@ -299,14 +311,16 @@ export function useTopicDetail({
     const hash = window.location.hash;
     const match = hash.match(/^#post-(\d+)$/);
     if (!match) return;
-
     const postId = parseInt(match[1]);
-
     const handleHashNavigation = async () => {
       try {
-        const { page } = await postApi.getPosition(postId, topic.id, limit);
+        const {
+          page
+        } = await postApi.getPosition(postId, topic.id, limit);
         if (page !== currentPage) {
-          router.push(`/topic/${topic.id}?p=${page}#post-${postId}`, { scroll: false });
+          router.push(`/topic/${topic.id}?p=${page}#post-${postId}`, {
+            scroll: false
+          });
           return;
         }
         scrollToPost(postId);
@@ -314,18 +328,14 @@ export function useTopicDetail({
         console.error('Failed to navigate to post:', err);
       }
     };
-
     handleHashNavigation();
-
     const handleHashChange = () => {
       const newMatch = window.location.hash.match(/^#post-(\d+)$/);
       if (newMatch) handleHashNavigation();
     };
-
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, [topic.id, currentPage, limit, router]);
-
   return {
     /** 当前话题数据 */
     topic,
@@ -339,11 +349,9 @@ export function useTopicDetail({
     handleRewardSuccess,
     /** 滚动到指定帖子 */
     scrollToPost,
-    
     // === 操作状态 ===
     /** 操作 loading 状态对象 { bookmark, subscribe, toggleStatus } */
     actionLoading,
-    
     // === Actions ===
     /** 切换收藏方法 */
     toggleBookmark,
@@ -358,6 +366,6 @@ export function useTopicDetail({
     /** 切换首帖点赞方法 */
     toggleFirstPostLike,
     /** 重新获取话题数据 */
-    refreshTopic,
+    refreshTopic
   };
 }

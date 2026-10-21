@@ -1,3 +1,4 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { MapPin, Calendar } from 'lucide-react';
 import Time from '@/components/common/Time';
 import { cn } from '@/lib/utils';
@@ -20,37 +21,33 @@ import { cn } from '@/lib/utils';
  * @param {string} props.className - 容器样式
  * @param {React.ReactNode} props.children - 附加内联项 (如 followers/following 链接)
  */
-export default function UserMetaRow({
-  user,
-  show = { location: true, joined: true },
-  iconClassName = 'h-3.5 w-3.5 shrink-0',
-  joinedFormat = 'YYYY年M月',
-  joinedSuffix = '加入',
-  className,
-  children,
-}) {
+export default function UserMetaRow(pbnArgument0) {
+  const pbnT = usePbnTranslations();
+  const {
+    user,
+    show = {
+      location: true,
+      joined: true
+    },
+    iconClassName = 'h-3.5 w-3.5 shrink-0',
+    joinedFormat = pbnT("m1543"),
+    joinedSuffix = pbnT("m1544"),
+    className,
+    children
+  } = pbnArgument0;
   if (!user) return null;
-
   const showLocation = show.location !== false && user.location;
   const showJoined = show.joined !== false && user.createdAt;
-
   if (!showLocation && !showJoined && !children) return null;
-
-  return (
-    <div className={cn('flex items-center gap-3 flex-wrap', className)}>
-      {showLocation && (
-        <span className='flex items-center gap-1'>
+  return <div className={cn('flex items-center gap-3 flex-wrap', className)}>
+      {showLocation && <span className='flex items-center gap-1'>
           <MapPin className={iconClassName} />
           <span className='break-words'>{user.location}</span>
-        </span>
-      )}
-      {showJoined && (
-        <span className='flex items-center gap-1'>
+        </span>}
+      {showJoined && <span className='flex items-center gap-1'>
           <Calendar className={iconClassName} />
           <Time date={user.createdAt} format={joinedFormat} /> {joinedSuffix}
-        </span>
-      )}
+        </span>}
       {children}
-    </div>
-  );
+    </div>;
 }

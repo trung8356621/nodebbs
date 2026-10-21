@@ -1,3 +1,4 @@
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
 // SSR请求专用
 import { cookies } from 'next/headers';
 import { getApiBaseUrl } from '../api-url';
@@ -5,21 +6,22 @@ import { encodeRateLimitDigest } from '../rate-limit-error';
 
 // 默认超时时间（毫秒）
 const DEFAULT_TIMEOUT = 20000;
-
-export const request = async (endpoint, options = {}) => {
+export const request = async (endpoint, options = {}, pbnT = pbnRuntimeT) => {
   const baseURL = getApiBaseUrl();
   const url = `${baseURL}${endpoint}`;
-  
   const headers = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...options.headers
   };
-
   const cks = await cookies();
   const token = cks.get('auth_token')?.value;
+  const locale = cks.get('pbn-locale')?.value;
   if (token) {
     // headers['Authorization'] = `Bearer ${token}`;
     headers['Cookie'] = `auth_token=${token}`;
+  }
+  if (locale === 'vi-VN' || locale === 'en-US') {
+    headers['Cookie'] = [headers['Cookie'], `pbn-locale=${locale}`].filter(Boolean).join('; ');
   }
 
   // 设置超时控制器
@@ -32,18 +34,20 @@ export const request = async (endpoint, options = {}) => {
   let response;
   try {
     const defaultCache = options.method && options.method !== 'GET' ? 'no-store' : undefined;
-
     response = await fetch(url, {
       ...options,
       // GET 用默认缓存让 Next.js 在同一渲染周期内去重；其它方法用 no-store
       cache: options.cache ?? defaultCache,
       headers,
-      signal: controller.signal,
+      signal: controller.signal
     });
   } catch (error) {
     // 网络错误 / 超时（AbortError）：规整后抛出
     if (error.name === 'AbortError') {
-      throw new Error(`[SSR] 请求超时 (${timeout}ms): ${url}`);
+      throw new Error(pbnT("m2199", {
+        arg0: timeout,
+        arg1: url
+      }));
     }
     throw error;
   } finally {
@@ -54,7 +58,6 @@ export const request = async (endpoint, options = {}) => {
   if (response.status === 404) {
     return null;
   }
-
   if (!response.ok) {
     // 解析错误响应体，提取消息与限速元数据
     let errorMessage = 'Failed to fetch';
@@ -66,7 +69,6 @@ export const request = async (endpoint, options = {}) => {
     } catch {
       // 忽略解析错误
     }
-
     const error = new Error(errorMessage);
     error.status = response.status;
     error.resetTime = resetTime;
@@ -75,12 +77,12 @@ export const request = async (endpoint, options = {}) => {
     // 生产构建下 Next.js 会脱敏 error.message 并丢弃自定义属性，唯独
     // error.digest 被原样保留，故把 429 元数据编码进 digest。
     if (response.status === 429) {
-      error.digest = encodeRateLimitDigest({ resetTime });
+      error.digest = encodeRateLimitDigest({
+        resetTime
+      });
     }
-
     throw error;
   }
-
   return await response.json();
 };
 
@@ -112,10 +114,14 @@ export function rethrowIfRateLimit(error) {
  * @param {object} [opts.options] 透传给 request 的选项（method/body/cache/timeout 等）
  * @param {(data:any)=>any} [opts.select] 对成功数据的整形（如取 .items、空值归一）
  */
-export async function fetchData(endpoint, { fallback = null, options, select } = {}) {
+export async function fetchData(endpoint, {
+  fallback = null,
+  options,
+  select
+} = {}, pbnT = pbnRuntimeT) {
   try {
-    const data = await request(endpoint, options);
-    return select ? select(data) : (data ?? fallback);
+    const data = await request(endpoint, options, pbnT);
+    return select ? select(data) : data ?? fallback;
   } catch (error) {
     rethrowIfRateLimit(error);
     console.error(`[fetchData] ${endpoint}`, error);
@@ -126,29 +132,25 @@ export async function fetchData(endpoint, { fallback = null, options, select } =
 // 增强用户对象，添加权限辅助属性（与 AuthContext 中的 enhanceUser 保持一致）
 function enhanceUser(user) {
   if (!user) return null;
-
   const enhanced = {
     ...user,
     // 基于 RBAC 的 isAdmin 属性（不依赖旧 role 字段）
-    isAdmin: user.userRoles?.some(r => r.slug === 'admin') ?? false,
+    isAdmin: user.userRoles?.some(r => r.slug === 'admin') ?? false
   };
-
   return enhanced;
 }
 
 // 获取当前登录用户 (SSR专用)
 // 优化：只有在存在 auth_token cookie 时才发请求
 // /auth/me 接口已包含 RBAC 权限数据 (userRoles, permissions, displayRole)
-export const getCurrentUser = async () => {
+export const getCurrentUser = async (pbnT = pbnRuntimeT) => {
   const cookieStore = await cookies();
   const hasToken = cookieStore.has('auth_token');
-
   if (!hasToken) {
     return null;
   }
-
   try {
-    const user = await request('/auth/me');
+    const user = await request('/auth/me', undefined, pbnT);
     return enhanceUser(user);
   } catch (error) {
     // token 过期/无效等情况，静默返回 null（视为未登录）

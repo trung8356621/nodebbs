@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart } from 'lucide-react';
@@ -13,28 +14,36 @@ import { PurchaseDialog } from '../../components/user/PurchaseDialog';
 import { ItemPurchaseSuccessDialog } from '../../components/user/ItemPurchaseSuccessDialog';
 import { BadgeUnlockDialog } from '../../components/user/BadgeUnlockDialog';
 import { ShopItemGrid } from '../../components/user/ShopItemGrid';
-
 export default function UserShopPage() {
+  const pbnT = usePbnTranslations();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const {
+    isAuthenticated
+  } = useAuth();
   const currencyName = useDefaultCurrencyName();
   const [itemType, setItemType] = useState('all');
   const [selectedItem, setSelectedItem] = useState(null);
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
   const [buyMode, setBuyMode] = useState('buy');
   const [isBuying, setIsBuying] = useState(false);
-  
+
   // 勋章解锁状态
   const [unlockedBadge, setUnlockedBadge] = useState(null);
   const [showUnlockDialog, setShowUnlockDialog] = useState(false);
-  
+
   // 购买成功跳转状态
   const [showViewItemsDialog, setShowViewItemsDialog] = useState(false);
   const [purchasedItem, setPurchasedItem] = useState(null); // Track purchased item for success dialog
 
   const [accounts, setAccounts] = useState([]);
-  const { items, loading, refetch: refetchItems, setItems } = useShopItems({ type: itemType });
-  
+  const {
+    items,
+    loading,
+    refetch: refetchItems,
+    setItems
+  } = useShopItems({
+    type: itemType
+  });
   const fetchAccounts = async () => {
     try {
       if (isAuthenticated) {
@@ -42,36 +51,37 @@ export default function UserShopPage() {
         setAccounts(data);
       }
     } catch (error) {
-       console.error('Failed to fetch accounts', error);
+      console.error('Failed to fetch accounts', error);
     }
   };
-
   useEffect(() => {
     fetchAccounts();
   }, [isAuthenticated]);
-
   const handleBuyClick = (item, mode = 'buy') => {
     if (!isAuthenticated) {
-      toast.error('请先登录');
+      toast.error(pbnT("m1376"));
       return;
     }
     setSelectedItem(item);
     setBuyMode(mode);
     setBuyDialogOpen(true);
   };
-
   const handleBuy = async (data = {}) => {
     if (!selectedItem) return;
-    const { isGift, receiverId, message, quantity = 1 } = data;
-
+    const {
+      isGift,
+      receiverId,
+      message,
+      quantity = 1
+    } = data;
     setIsBuying(true);
     try {
       if (isGift) {
         await shopApi.giftItem(selectedItem.id, receiverId, message, quantity);
-        toast.success('赠送成功！');
+        toast.success(pbnT("m2048"));
       } else {
         await shopApi.buyItem(selectedItem.id, quantity);
-        
+
         // 显示成功反馈
         if (selectedItem.type === 'badge') {
           setUnlockedBadge(selectedItem);
@@ -81,42 +91,38 @@ export default function UserShopPage() {
           setShowViewItemsDialog(true);
         }
       }
-      
+
       // 关闭购买对话框
       setBuyDialogOpen(false);
-      
+
       // 刷新余额
       fetchAccounts();
 
       // 乐观更新：手动更新本地商品状态
       if (!isGift && selectedItem) {
-          setItems(prevItems => prevItems.map(item => {
-              if (item.id === selectedItem.id) {
-                  const newStock = item.stock !== null ? Math.max(0, item.stock - quantity) : null;
-                  const consumeType = item.consumeType || 'non_consumable';
-                  return {
-                      ...item,
-                      stock: newStock,
-                      owned: true,
-                      ownedCount: (item.ownedCount || 0) + (consumeType !== 'non_consumable' ? quantity : 1),
-                  };
-              }
-              return item;
-          }));
+        setItems(prevItems => prevItems.map(item => {
+          if (item.id === selectedItem.id) {
+            const newStock = item.stock !== null ? Math.max(0, item.stock - quantity) : null;
+            const consumeType = item.consumeType || 'non_consumable';
+            return {
+              ...item,
+              stock: newStock,
+              owned: true,
+              ownedCount: (item.ownedCount || 0) + (consumeType !== 'non_consumable' ? quantity : 1)
+            };
+          }
+          return item;
+        }));
       }
-
       setSelectedItem(null);
     } catch (error) {
-      toast.error(error.message || '购买失败');
+      toast.error(error.message || pbnT("m1359"));
     } finally {
       setIsBuying(false);
     }
   };
-
   const currentPointsBalance = accounts.find(a => a.currency.code === DEFAULT_CURRENCY_CODE)?.balance || 0;
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Hero Header - Compact & Theme Consistent */}
       <div className="relative overflow-hidden rounded-2xl bg-muted/30 border border-border/50 p-6">
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start text-center md:text-left justify-between gap-6">
@@ -126,67 +132,37 @@ export default function UserShopPage() {
               <span className="p-2 rounded-lg bg-primary/10 text-primary">
                  <ShoppingCart className="h-5 w-5" />
               </span>
-              {currencyName}商城
-            </h1>
-            <p className="text-muted-foreground text-sm md:text-base max-w-lg">
-              探索独家装扮，定制您的个性化形象。使用{currencyName}兑换专属商品。
-            </p>
+              {currencyName}{" "}{pbnT("m2049")}</h1>
+            <p className="text-muted-foreground text-sm md:text-base max-w-lg">{pbnT("m2050")}{" "}{currencyName}{" "}{pbnT("m2051")}</p>
           </div>
 
           {/* 余额卡片 - Compact */}
-          {isAuthenticated && (
-            <div className="shrink-0 w-full md:w-auto">
+          {isAuthenticated && <div className="shrink-0 w-full md:w-auto">
                <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl px-5 py-3 shadow-none min-w-45">
                   <div className="flex flex-col md:items-end items-center gap-1">
-                     <span className="text-xs font-medium text-muted-foreground">当前余额</span>
+                     <span className="text-xs font-medium text-muted-foreground">{pbnT("m1883")}</span>
                      <div className="text-2xl font-bold text-foreground flex items-baseline gap-1">
                         {currentPointsBalance.toLocaleString()}
                         <span className="text-xs font-normal text-muted-foreground">{currencyName}</span>
                      </div>
                   </div>
                </div>
-            </div>
-          )}
+            </div>}
         </div>
       </div>
 
       {/* 商品类型选择器 & 网格 */}
       <ItemTypeSelector value={itemType} onChange={setItemType} excludedTypes={[]}>
-        <ShopItemGrid
-          items={items}
-          accounts={accounts}
-          onPurchase={handleBuyClick}
-          isAuthenticated={isAuthenticated}
-          loading={loading}
-        />
+        <ShopItemGrid items={items} accounts={accounts} onPurchase={handleBuyClick} isAuthenticated={isAuthenticated} loading={loading} />
       </ItemTypeSelector>
 
       {/* 购买对话框 */}
-      <PurchaseDialog
-        open={buyDialogOpen}
-        item={selectedItem}
-        accounts={accounts}
-        onConfirm={handleBuy}
-        onCancel={() => setBuyDialogOpen(false)}
-        initialMode={buyMode}
-        purchasing={isBuying}
-      />
+      <PurchaseDialog open={buyDialogOpen} item={selectedItem} accounts={accounts} onConfirm={handleBuy} onCancel={() => setBuyDialogOpen(false)} initialMode={buyMode} purchasing={isBuying} />
 
       {/* 购买成功跳转对话框 */}
-      <ItemPurchaseSuccessDialog
-        open={showViewItemsDialog}
-        onOpenChange={setShowViewItemsDialog}
-        item={purchasedItem}
-        onView={() => router.push('/profile/items')}
-        onStay={() => setShowViewItemsDialog(false)}
-      />
+      <ItemPurchaseSuccessDialog open={showViewItemsDialog} onOpenChange={setShowViewItemsDialog} item={purchasedItem} onView={() => router.push('/profile/items')} onStay={() => setShowViewItemsDialog(false)} />
 
       {/* 勋章解锁对话框 */}
-      <BadgeUnlockDialog
-        open={showUnlockDialog}
-        onOpenChange={setShowUnlockDialog}
-        badgeItem={unlockedBadge}
-      />
-    </div>
-  );
+      <BadgeUnlockDialog open={showUnlockDialog} onOpenChange={setShowUnlockDialog} badgeItem={unlockedBadge} />
+    </div>;
 }

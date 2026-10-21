@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useRef } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,8 +18,11 @@ function buildProtectedBlock(content) {
   const body = content.replace(/\r\n?/g, '\n').replace(/^:::/gm, '\\:::');
   return `:::protected{type="reply"}\n${body}\n:::\n`;
 }
-
-export function ProtectedTool({ editor, disabled }) {
+export function ProtectedTool({
+  editor,
+  disabled
+}) {
+  const pbnT = usePbnTranslations();
   const [open, setOpen] = useState(false);
   const [initialContent, setInitialContent] = useState('');
   const pendingBlockRef = useRef(null);
@@ -30,7 +34,7 @@ export function ProtectedTool({ editor, disabled }) {
   };
 
   // 只暂存待插入内容并关闭弹窗，真正的插入推迟到 handleCloseAutoFocus
-  const handleConfirm = (content) => {
+  const handleConfirm = content => {
     pendingBlockRef.current = buildProtectedBlock(content);
     setOpen(false);
   };
@@ -39,34 +43,17 @@ export function ProtectedTool({ editor, disabled }) {
   // 落在错误的元素上、退化成直接改 value，从而清空编辑器的撤销历史。
   // 等 FocusScope 卸载（焦点锁已解除）后再插入，并阻止 Radix 把焦点还给触发
   // 按钮，让光标直接回到编辑器
-  const handleCloseAutoFocus = (e) => {
+  const handleCloseAutoFocus = e => {
     const block = pendingBlockRef.current;
     if (!block) return;
     pendingBlockRef.current = null;
     e.preventDefault();
     editor.replaceSelection(block, true);
   };
-
-  return (
-    <>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
-        onClick={handleOpen}
-        disabled={disabled}
-        title="回复可见"
-      >
+  return <>
+      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={handleOpen} disabled={disabled} title={pbnT("m1349")}>
         <ShieldCheck className="h-4 w-4" />
       </Button>
-      <ProtectedDialog
-        open={open}
-        onOpenChange={setOpen}
-        initialContent={initialContent}
-        onConfirm={handleConfirm}
-        onCloseAutoFocus={handleCloseAutoFocus}
-      />
-    </>
-  );
+      <ProtectedDialog open={open} onOpenChange={setOpen} initialContent={initialContent} onConfirm={handleConfirm} onCloseAutoFocus={handleCloseAutoFocus} />
+    </>;
 }

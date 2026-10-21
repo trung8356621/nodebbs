@@ -1,0 +1,1149 @@
+{
+  "metadata": {
+    "name": "PBN UI demo — VOZ-inspired categories",
+    "source": "https://voz.vn/",
+    "source_type": "public category names only",
+    "scraped_at": "2026-10-21",
+    "notice": "Category names sourced from VOZ public forum homepage. All demo topic titles and bodies are newly generated synthetic placeholders; not sourced from VOZ. Development-only seed, not for publication.",
+    "site_scope": "pbn_dev",
+    "idempotency": "upsert by seed_key / stable category key; do not delete non-demo data"
+  },
+  "groups": [
+    {
+      "key": "g01",
+      "name": "Đại sảnh",
+      "slug": "dai-sanh",
+      "order": 1,
+      "categories": [
+        {
+          "key": "g01c01",
+          "name": "Thông báo",
+          "slug": "thong-bao",
+          "order": 1
+        },
+        {
+          "key": "g01c02",
+          "name": "Góp ý",
+          "slug": "gop-y",
+          "order": 2
+        },
+        {
+          "key": "g01c03",
+          "name": "Tin tức iNet",
+          "slug": "tin-tuc-inet",
+          "order": 3
+        },
+        {
+          "key": "g01c04",
+          "name": "Review sản phẩm",
+          "slug": "review-san-pham",
+          "order": 4
+        },
+        {
+          "key": "g01c05",
+          "name": "Chia sẻ kiến thức",
+          "slug": "chia-se-kien-thuc",
+          "order": 5
+        }
+      ]
+    },
+    {
+      "key": "g02",
+      "name": "Máy tính",
+      "slug": "may-tinh",
+      "order": 2,
+      "categories": [
+        {
+          "key": "g02c01",
+          "name": "Tư vấn cấu hình",
+          "slug": "tu-van-cau-hinh",
+          "order": 1
+        },
+        {
+          "key": "g02c02",
+          "name": "Overclocking & Cooling & Modding",
+          "slug": "overclocking-cooling-modding",
+          "order": 2
+        },
+        {
+          "key": "g02c03",
+          "name": "AMD",
+          "slug": "amd",
+          "order": 3
+        },
+        {
+          "key": "g02c04",
+          "name": "Intel",
+          "slug": "intel",
+          "order": 4
+        },
+        {
+          "key": "g02c05",
+          "name": "GPU & Màn hình",
+          "slug": "gpu-man-hinh",
+          "order": 5
+        },
+        {
+          "key": "g02c06",
+          "name": "Phần cứng chung",
+          "slug": "phan-cung-chung",
+          "order": 6
+        },
+        {
+          "key": "g02c07",
+          "name": "Thiết bị ngoại vi & Phụ kiện & Mạng",
+          "slug": "thiet-bi-ngoai-vi-phu-kien-mang",
+          "order": 7
+        },
+        {
+          "key": "g02c08",
+          "name": "Server / NAS / Render Farm",
+          "slug": "server-nas-render-farm",
+          "order": 8
+        },
+        {
+          "key": "g02c09",
+          "name": "Small Form Factor PC",
+          "slug": "small-form-factor-pc",
+          "order": 9
+        },
+        {
+          "key": "g02c10",
+          "name": "Hackintosh",
+          "slug": "hackintosh",
+          "order": 10
+        },
+        {
+          "key": "g02c11",
+          "name": "Máy tính xách tay",
+          "slug": "may-tinh-xach-tay",
+          "order": 11
+        }
+      ]
+    },
+    {
+      "key": "g03",
+      "name": "Phần mềm & Games",
+      "slug": "phan-mem-games",
+      "order": 3,
+      "categories": [
+        {
+          "key": "g03c01",
+          "name": "Phần mềm",
+          "slug": "phan-mem",
+          "order": 1
+        },
+        {
+          "key": "g03c02",
+          "name": "App di động",
+          "slug": "app-di-dong",
+          "order": 2
+        },
+        {
+          "key": "g03c03",
+          "name": "PC Gaming",
+          "slug": "pc-gaming",
+          "order": 3
+        },
+        {
+          "key": "g03c04",
+          "name": "Console Gaming",
+          "slug": "console-gaming",
+          "order": 4
+        }
+      ]
+    },
+    {
+      "key": "g04",
+      "name": "Sản phẩm công nghệ",
+      "slug": "san-pham-cong-nghe",
+      "order": 4,
+      "categories": [
+        {
+          "key": "g04c01",
+          "name": "Android",
+          "slug": "android",
+          "order": 1
+        },
+        {
+          "key": "g04c02",
+          "name": "Apple",
+          "slug": "apple",
+          "order": 2
+        },
+        {
+          "key": "g04c03",
+          "name": "Multimedia",
+          "slug": "multimedia",
+          "order": 3
+        },
+        {
+          "key": "g04c04",
+          "name": "Đồ điện tử & Thiết bị gia dụng",
+          "slug": "do-dien-tu-thiet-bi-gia-dung",
+          "order": 4
+        },
+        {
+          "key": "g04c05",
+          "name": "Chụp ảnh & Quay phim",
+          "slug": "chup-anh-quay-phim",
+          "order": 5
+        },
+        {
+          "key": "g04c06",
+          "name": "Góc chiến lược",
+          "slug": "goc-chien-luoc",
+          "order": 6
+        }
+      ]
+    },
+    {
+      "key": "g05",
+      "name": "Học tập & Sự nghiệp",
+      "slug": "hoc-tap-su-nghiep",
+      "order": 5,
+      "categories": [
+        {
+          "key": "g05c01",
+          "name": "Tuyển dụng - Tìm việc",
+          "slug": "tuyen-dung-tim-viec",
+          "order": 1
+        },
+        {
+          "key": "g05c02",
+          "name": "Ngoại ngữ",
+          "slug": "ngoai-ngu",
+          "order": 2
+        },
+        {
+          "key": "g05c03",
+          "name": "Lập trình / CNTT",
+          "slug": "lap-trinh-cntt",
+          "order": 3
+        },
+        {
+          "key": "g05c04",
+          "name": "Kinh tế / Luật",
+          "slug": "kinh-te-luat",
+          "order": 4
+        },
+        {
+          "key": "g05c05",
+          "name": "Make Money Online",
+          "slug": "make-money-online",
+          "order": 5
+        },
+        {
+          "key": "g05c06",
+          "name": "Tiền điện tử",
+          "slug": "tien-dien-tu",
+          "order": 6
+        }
+      ]
+    },
+    {
+      "key": "g06",
+      "name": "Khu vui chơi giải trí",
+      "slug": "khu-vui-choi-giai-tri",
+      "order": 6,
+      "categories": [
+        {
+          "key": "g06c01",
+          "name": "Chuyện trò linh tinh™",
+          "slug": "chuyen-tro-linh-tinh",
+          "order": 1
+        },
+        {
+          "key": "g06c02",
+          "name": "Điểm báo",
+          "slug": "diem-bao",
+          "order": 2
+        },
+        {
+          "key": "g06c03",
+          "name": "4 bánh",
+          "slug": "4-banh",
+          "order": 3
+        },
+        {
+          "key": "g06c04",
+          "name": "2 bánh",
+          "slug": "2-banh",
+          "order": 4
+        },
+        {
+          "key": "g06c05",
+          "name": "Thể dục thể thao",
+          "slug": "the-duc-the-thao",
+          "order": 5
+        },
+        {
+          "key": "g06c06",
+          "name": "Ẩm thực & Du lịch",
+          "slug": "am-thuc-du-lich",
+          "order": 6
+        },
+        {
+          "key": "g06c07",
+          "name": "Thời trang & Làm đẹp",
+          "slug": "thoi-trang-lam-dep",
+          "order": 7
+        },
+        {
+          "key": "g06c08",
+          "name": "Các thú chơi khác",
+          "slug": "cac-thu-choi-khac",
+          "order": 8
+        }
+      ]
+    },
+    {
+      "key": "g07",
+      "name": "Khu thương mại",
+      "slug": "khu-thuong-mai",
+      "order": 7,
+      "categories": [
+        {
+          "key": "g07c01",
+          "name": "Máy tính để bàn",
+          "slug": "may-tinh-de-ban",
+          "order": 1
+        },
+        {
+          "key": "g07c02",
+          "name": "Máy tính xách tay",
+          "slug": "may-tinh-xach-tay",
+          "order": 2
+        },
+        {
+          "key": "g07c03",
+          "name": "Điện thoại di động",
+          "slug": "dien-thoai-di-dong",
+          "order": 3
+        },
+        {
+          "key": "g07c04",
+          "name": "Xe các loại",
+          "slug": "xe-cac-loai",
+          "order": 4
+        },
+        {
+          "key": "g07c05",
+          "name": "Thời trang & Làm đẹp",
+          "slug": "thoi-trang-lam-dep",
+          "order": 5
+        },
+        {
+          "key": "g07c06",
+          "name": "Bất động sản",
+          "slug": "bat-dong-san",
+          "order": 6
+        },
+        {
+          "key": "g07c07",
+          "name": "Ăn uống & Du lịch",
+          "slug": "an-uong-du-lich",
+          "order": 7
+        },
+        {
+          "key": "g07c08",
+          "name": "SIM số & Đồ phong thuỷ",
+          "slug": "sim-so-do-phong-thuy",
+          "order": 8
+        },
+        {
+          "key": "g07c09",
+          "name": "Sản phẩm & Dịch vụ khác",
+          "slug": "san-pham-dich-vu-khac",
+          "order": 9
+        }
+      ]
+    }
+  ],
+  "demo_topics": [
+    {
+      "seed_key": "demo-g01c01-1",
+      "category_key": "g01c01",
+      "title": "Thảo luận chung về Thông báo",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g01c01-2",
+      "category_key": "g01c01",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Thông báo",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g01c02-1",
+      "category_key": "g01c02",
+      "title": "Thảo luận chung về Góp ý",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g01c02-2",
+      "category_key": "g01c02",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Góp ý",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g01c03-1",
+      "category_key": "g01c03",
+      "title": "Thảo luận chung về Tin tức iNet",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g01c03-2",
+      "category_key": "g01c03",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Tin tức iNet",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g01c03-3",
+      "category_key": "g01c03",
+      "title": "Tổng hợp kiến thức cơ bản về Tin tức iNet",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g01c04-1",
+      "category_key": "g01c04",
+      "title": "Thảo luận chung về Review sản phẩm",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g01c04-2",
+      "category_key": "g01c04",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Review sản phẩm",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g01c05-1",
+      "category_key": "g01c05",
+      "title": "Thảo luận chung về Chia sẻ kiến thức",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g01c05-2",
+      "category_key": "g01c05",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Chia sẻ kiến thức",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c01-1",
+      "category_key": "g02c01",
+      "title": "Thảo luận chung về Tư vấn cấu hình",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c01-2",
+      "category_key": "g02c01",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Tư vấn cấu hình",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c02-1",
+      "category_key": "g02c02",
+      "title": "Thảo luận chung về Overclocking & Cooling & Modding",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c02-2",
+      "category_key": "g02c02",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Overclocking & Cooling & Modding",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c03-1",
+      "category_key": "g02c03",
+      "title": "Thảo luận chung về AMD",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c03-2",
+      "category_key": "g02c03",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: AMD",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c03-3",
+      "category_key": "g02c03",
+      "title": "Tổng hợp kiến thức cơ bản về AMD",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c04-1",
+      "category_key": "g02c04",
+      "title": "Thảo luận chung về Intel",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c04-2",
+      "category_key": "g02c04",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Intel",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c05-1",
+      "category_key": "g02c05",
+      "title": "Thảo luận chung về GPU & Màn hình",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c05-2",
+      "category_key": "g02c05",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: GPU & Màn hình",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c06-1",
+      "category_key": "g02c06",
+      "title": "Thảo luận chung về Phần cứng chung",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c06-2",
+      "category_key": "g02c06",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Phần cứng chung",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c06-3",
+      "category_key": "g02c06",
+      "title": "Tổng hợp kiến thức cơ bản về Phần cứng chung",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c07-1",
+      "category_key": "g02c07",
+      "title": "Thảo luận chung về Thiết bị ngoại vi & Phụ kiện & Mạng",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c07-2",
+      "category_key": "g02c07",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Thiết bị ngoại vi & Phụ kiện & Mạng",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c08-1",
+      "category_key": "g02c08",
+      "title": "Thảo luận chung về Server / NAS / Render Farm",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c08-2",
+      "category_key": "g02c08",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Server / NAS / Render Farm",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c09-1",
+      "category_key": "g02c09",
+      "title": "Thảo luận chung về Small Form Factor PC",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c09-2",
+      "category_key": "g02c09",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Small Form Factor PC",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c09-3",
+      "category_key": "g02c09",
+      "title": "Tổng hợp kiến thức cơ bản về Small Form Factor PC",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c10-1",
+      "category_key": "g02c10",
+      "title": "Thảo luận chung về Hackintosh",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c10-2",
+      "category_key": "g02c10",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Hackintosh",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c11-1",
+      "category_key": "g02c11",
+      "title": "Thảo luận chung về Máy tính xách tay",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g02c11-2",
+      "category_key": "g02c11",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Máy tính xách tay",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g03c01-1",
+      "category_key": "g03c01",
+      "title": "Thảo luận chung về Phần mềm",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g03c01-2",
+      "category_key": "g03c01",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Phần mềm",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g03c02-1",
+      "category_key": "g03c02",
+      "title": "Thảo luận chung về App di động",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g03c02-2",
+      "category_key": "g03c02",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: App di động",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g03c03-1",
+      "category_key": "g03c03",
+      "title": "Thảo luận chung về PC Gaming",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g03c03-2",
+      "category_key": "g03c03",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: PC Gaming",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g03c03-3",
+      "category_key": "g03c03",
+      "title": "Tổng hợp kiến thức cơ bản về PC Gaming",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g03c04-1",
+      "category_key": "g03c04",
+      "title": "Thảo luận chung về Console Gaming",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g03c04-2",
+      "category_key": "g03c04",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Console Gaming",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c01-1",
+      "category_key": "g04c01",
+      "title": "Thảo luận chung về Android",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c01-2",
+      "category_key": "g04c01",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Android",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c02-1",
+      "category_key": "g04c02",
+      "title": "Thảo luận chung về Apple",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c02-2",
+      "category_key": "g04c02",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Apple",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c03-1",
+      "category_key": "g04c03",
+      "title": "Thảo luận chung về Multimedia",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c03-2",
+      "category_key": "g04c03",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Multimedia",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c03-3",
+      "category_key": "g04c03",
+      "title": "Tổng hợp kiến thức cơ bản về Multimedia",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c04-1",
+      "category_key": "g04c04",
+      "title": "Thảo luận chung về Đồ điện tử & Thiết bị gia dụng",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c04-2",
+      "category_key": "g04c04",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Đồ điện tử & Thiết bị gia dụng",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c05-1",
+      "category_key": "g04c05",
+      "title": "Thảo luận chung về Chụp ảnh & Quay phim",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c05-2",
+      "category_key": "g04c05",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Chụp ảnh & Quay phim",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c06-1",
+      "category_key": "g04c06",
+      "title": "Thảo luận chung về Góc chiến lược",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c06-2",
+      "category_key": "g04c06",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Góc chiến lược",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g04c06-3",
+      "category_key": "g04c06",
+      "title": "Tổng hợp kiến thức cơ bản về Góc chiến lược",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c01-1",
+      "category_key": "g05c01",
+      "title": "Thảo luận chung về Tuyển dụng - Tìm việc",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c01-2",
+      "category_key": "g05c01",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Tuyển dụng - Tìm việc",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c02-1",
+      "category_key": "g05c02",
+      "title": "Thảo luận chung về Ngoại ngữ",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c02-2",
+      "category_key": "g05c02",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Ngoại ngữ",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c03-1",
+      "category_key": "g05c03",
+      "title": "Thảo luận chung về Lập trình / CNTT",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c03-2",
+      "category_key": "g05c03",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Lập trình / CNTT",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c03-3",
+      "category_key": "g05c03",
+      "title": "Tổng hợp kiến thức cơ bản về Lập trình / CNTT",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c04-1",
+      "category_key": "g05c04",
+      "title": "Thảo luận chung về Kinh tế / Luật",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c04-2",
+      "category_key": "g05c04",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Kinh tế / Luật",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c05-1",
+      "category_key": "g05c05",
+      "title": "Thảo luận chung về Make Money Online",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c05-2",
+      "category_key": "g05c05",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Make Money Online",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c06-1",
+      "category_key": "g05c06",
+      "title": "Thảo luận chung về Tiền điện tử",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c06-2",
+      "category_key": "g05c06",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Tiền điện tử",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g05c06-3",
+      "category_key": "g05c06",
+      "title": "Tổng hợp kiến thức cơ bản về Tiền điện tử",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c01-1",
+      "category_key": "g06c01",
+      "title": "Thảo luận chung về Chuyện trò linh tinh™",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c01-2",
+      "category_key": "g06c01",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Chuyện trò linh tinh™",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c02-1",
+      "category_key": "g06c02",
+      "title": "Thảo luận chung về Điểm báo",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c02-2",
+      "category_key": "g06c02",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Điểm báo",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c03-1",
+      "category_key": "g06c03",
+      "title": "Thảo luận chung về 4 bánh",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c03-2",
+      "category_key": "g06c03",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: 4 bánh",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c03-3",
+      "category_key": "g06c03",
+      "title": "Tổng hợp kiến thức cơ bản về 4 bánh",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c04-1",
+      "category_key": "g06c04",
+      "title": "Thảo luận chung về 2 bánh",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c04-2",
+      "category_key": "g06c04",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: 2 bánh",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c05-1",
+      "category_key": "g06c05",
+      "title": "Thảo luận chung về Thể dục thể thao",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c05-2",
+      "category_key": "g06c05",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Thể dục thể thao",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c06-1",
+      "category_key": "g06c06",
+      "title": "Thảo luận chung về Ẩm thực & Du lịch",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c06-2",
+      "category_key": "g06c06",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Ẩm thực & Du lịch",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c06-3",
+      "category_key": "g06c06",
+      "title": "Tổng hợp kiến thức cơ bản về Ẩm thực & Du lịch",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c07-1",
+      "category_key": "g06c07",
+      "title": "Thảo luận chung về Thời trang & Làm đẹp",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c07-2",
+      "category_key": "g06c07",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Thời trang & Làm đẹp",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c08-1",
+      "category_key": "g06c08",
+      "title": "Thảo luận chung về Các thú chơi khác",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g06c08-2",
+      "category_key": "g06c08",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Các thú chơi khác",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c01-1",
+      "category_key": "g07c01",
+      "title": "Thảo luận chung về Máy tính để bàn",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c01-2",
+      "category_key": "g07c01",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Máy tính để bàn",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c02-1",
+      "category_key": "g07c02",
+      "title": "Thảo luận chung về Máy tính xách tay",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c02-2",
+      "category_key": "g07c02",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Máy tính xách tay",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c03-1",
+      "category_key": "g07c03",
+      "title": "Thảo luận chung về Điện thoại di động",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c03-2",
+      "category_key": "g07c03",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Điện thoại di động",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c03-3",
+      "category_key": "g07c03",
+      "title": "Tổng hợp kiến thức cơ bản về Điện thoại di động",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c04-1",
+      "category_key": "g07c04",
+      "title": "Thảo luận chung về Xe các loại",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c04-2",
+      "category_key": "g07c04",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Xe các loại",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c05-1",
+      "category_key": "g07c05",
+      "title": "Thảo luận chung về Thời trang & Làm đẹp",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c05-2",
+      "category_key": "g07c05",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Thời trang & Làm đẹp",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c06-1",
+      "category_key": "g07c06",
+      "title": "Thảo luận chung về Bất động sản",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c06-2",
+      "category_key": "g07c06",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Bất động sản",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c06-3",
+      "category_key": "g07c06",
+      "title": "Tổng hợp kiến thức cơ bản về Bất động sản",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c07-1",
+      "category_key": "g07c07",
+      "title": "Thảo luận chung về Ăn uống & Du lịch",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c07-2",
+      "category_key": "g07c07",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Ăn uống & Du lịch",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c08-1",
+      "category_key": "g07c08",
+      "title": "Thảo luận chung về SIM số & Đồ phong thuỷ",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c08-2",
+      "category_key": "g07c08",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: SIM số & Đồ phong thuỷ",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c09-1",
+      "category_key": "g07c09",
+      "title": "Thảo luận chung về Sản phẩm & Dịch vụ khác",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c09-2",
+      "category_key": "g07c09",
+      "title": "Hỏi đáp và chia sẻ kinh nghiệm: Sản phẩm & Dịch vụ khác",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    },
+    {
+      "seed_key": "demo-g07c09-3",
+      "category_key": "g07c09",
+      "title": "Tổng hợp kiến thức cơ bản về Sản phẩm & Dịch vụ khác",
+      "content": "[DỮ LIỆU DEMO] Đây là bài viết giả lập để kiểm tra bố cục, danh sách chủ đề và trang chi tiết. Không phải bài viết lấy từ VOZ.",
+      "synthetic": true
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDebounce } from '@uidotdev/usehooks';
 import { toast } from 'sonner';
@@ -20,8 +21,9 @@ export function useAdminList({
   pageSize = 20,
   defaultFilters = {},
   debounceMs = 500,
-  fetchOnMount = true,
+  fetchOnMount = true
 }) {
+  const pbnT = usePbnTranslations();
   // ===== 列表数据 =====
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(fetchOnMount);
@@ -49,7 +51,7 @@ export function useAdminList({
       isInitialMount.current = false;
       return;
     }
-    setPage((prev) => (prev !== 1 ? 1 : prev));
+    setPage(prev => prev !== 1 ? 1 : prev);
   }, [debouncedSearch]);
 
   // 数据请求
@@ -63,25 +65,24 @@ export function useAdminList({
           activeFilters[key] = value;
         }
       }
-
       const params = {
         page,
         limit: pageSize,
-        ...(debouncedSearch?.trim() ? { search: debouncedSearch.trim() } : {}),
-        ...activeFilters,
+        ...(debouncedSearch?.trim() ? {
+          search: debouncedSearch.trim()
+        } : {}),
+        ...activeFilters
       };
-
       const data = await fetchFnRef.current(params);
       setItems(data.items || []);
       setTotal(data.total || 0);
     } catch (err) {
-      console.error('获取列表数据失败:', err);
-      toast.error(err.message || '获取数据失败');
+      console.error("Could not load list:", err);
+      toast.error(err.message || pbnT("m519"));
     } finally {
       setLoading(false);
     }
   }, [page, pageSize, debouncedSearch, filters]);
-
   useEffect(() => {
     if (!fetchOnMount && !hasFetched.current) {
       hasFetched.current = true;
@@ -93,27 +94,28 @@ export function useAdminList({
 
   // ===== 筛选操作 =====
   const setFilter = useCallback((key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
     setPage(1);
   }, []);
 
   // ===== 乐观更新辅助 =====
   const updateItem = useCallback((id, updates) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
-    );
+    setItems(prev => prev.map(item => item.id === id ? {
+      ...item,
+      ...updates
+    } : item));
   }, []);
-
-  const removeItem = useCallback((id) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-    setTotal((prev) => Math.max(0, prev - 1));
+  const removeItem = useCallback(id => {
+    setItems(prev => prev.filter(item => item.id !== id));
+    setTotal(prev => Math.max(0, prev - 1));
   }, []);
-
-  const prependItem = useCallback((item) => {
-    setItems((prev) => [item, ...prev]);
-    setTotal((prev) => prev + 1);
+  const prependItem = useCallback(item => {
+    setItems(prev => [item, ...prev]);
+    setTotal(prev => prev + 1);
   }, []);
-
   return {
     // 数据
     items,
@@ -124,7 +126,6 @@ export function useAdminList({
     debouncedSearch,
     filters,
     limit: pageSize,
-
     // 设置器
     setSearch,
     setPage,
@@ -132,13 +133,11 @@ export function useAdminList({
     setFilters,
     setItems,
     setTotal,
-
     // 乐观更新
     updateItem,
     removeItem,
     prependItem,
-
     // 动作
-    refreshList: fetchData,
+    refreshList: fetchData
   };
 }

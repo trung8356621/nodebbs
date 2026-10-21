@@ -1,16 +1,7 @@
-import {
-  Bell,
-  MessageCircle,
-  UserPlus,
-  Medal,
-  Gift,
-  Coins,
-  CheckCheck,
-  ThumbsUp,
-  Trophy,
-} from 'lucide-react';
-
-export const getNotificationIcon = (type) => {
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
+import sourceMessages from '@/i18n/source-messages.json';
+import { Bell, MessageCircle, UserPlus, Medal, Gift, Coins, CheckCheck, ThumbsUp, Trophy } from 'lucide-react';
+export const getNotificationIcon = type => {
   switch (type) {
     case 'reply':
     case 'topic_reply':
@@ -49,76 +40,74 @@ export const getNotificationIcon = (type) => {
       return <Bell className='h-4 w-4' />;
   }
 };
-
-export const getNotificationMessage = (notification) => {
+export const getNotificationMessage = (notification, pbnT = pbnRuntimeT) => {
   switch (notification.type) {
     case 'topic_reply':
-      return notification.topicTitle
-        ? `在 "${notification.topicTitle}" 中回复了`
-        : '在话题中回复了';
+      return notification.topicTitle ? pbnT("m1433", {
+        arg0: notification.topicTitle
+      }) : pbnT("m1434");
     case 'reply':
       // reply 类型有两种情况：回复话题 (Reply to Topic) 或 回复人 (Reply to User)
       // 通过检查原始 message 来区分
       // 兼容旧数据 ('帖子') 和新数据 ('回复了你')
-      if (notification.message && (notification.message.includes('帖子') || notification.message.includes('回复了你'))) {
-        return notification.topicTitle
-          ? `在 "${notification.topicTitle}" 中回复了你`
-          : '回复了你';
+      if (notification.message && (notification.message.includes(sourceMessages.m1435) || notification.message.includes(sourceMessages.m1436) || notification.message.includes(pbnT("m1435")) || notification.message.includes(pbnT("m1436")))) {
+        return notification.topicTitle ? pbnT("m1437", {
+          arg0: notification.topicTitle
+        }) : pbnT("m1436");
       }
-      return notification.topicTitle
-        ? `回复了你的话题 "${notification.topicTitle}"`
-        : '回复了你的话题';
-    case 'like': {
-      // like 有两种：赞话题正文(postNumber=1) 或 赞回复；后端 metadata.isTopicContent 区分
-      let isTopicContent = false;
-      try {
-        const meta = typeof notification.metadata === 'string'
-          ? JSON.parse(notification.metadata)
-          : notification.metadata;
-        isTopicContent = !!meta?.isTopicContent;
-      } catch {
-        // metadata 解析失败按回复处理（兼容无 metadata 的旧数据）
+      return notification.topicTitle ? pbnT("m1438", {
+        arg0: notification.topicTitle
+      }) : pbnT("m1439");
+    case 'like':
+      {
+        // like 有两种：赞话题正文(postNumber=1) 或 赞回复；后端 metadata.isTopicContent 区分
+        let isTopicContent = false;
+        try {
+          const meta = typeof notification.metadata === 'string' ? JSON.parse(notification.metadata) : notification.metadata;
+          isTopicContent = !!meta?.isTopicContent;
+        } catch {
+          // metadata 解析失败按回复处理（兼容无 metadata 的旧数据）
+        }
+        if (isTopicContent) {
+          return notification.topicTitle ? pbnT("m1440", {
+            arg0: notification.topicTitle
+          }) : pbnT("m1441");
+        }
+        return notification.topicTitle ? pbnT("m1442", {
+          arg0: notification.topicTitle
+        }) : pbnT("m1443");
       }
-      if (isTopicContent) {
-        return notification.topicTitle
-          ? `赞了你的话题 "${notification.topicTitle}"`
-          : '赞了你的话题';
-      }
-      return notification.topicTitle
-        ? `在 "${notification.topicTitle}" 中赞了你的回复`
-        : '赞了你的回复';
-    }
     case 'mention':
-      return notification.topicTitle
-        ? `在 "${notification.topicTitle}" 中提到了你`
-        : '在回复中提到了你';
+      return notification.topicTitle ? pbnT("m1444", {
+        arg0: notification.topicTitle
+      }) : pbnT("m1445");
     case 'follow':
-      return '关注了你';
+      return pbnT("m1446");
     case 'message':
-      return '给你发送了一条新消息';
+      return pbnT("m1447");
     case 'report_resolved':
-      return '你的举报已处理';
+      return pbnT("m1448");
     case 'report_dismissed':
-      return '你的举报已驳回';
+      return pbnT("m1449");
     case 'badge_earned':
-      return notification.message || '恭喜！你获得了一枚新勋章';
+      return notification.message || pbnT("m1450");
     case 'gift_received':
       return notification.message;
     case 'reward':
-      return '打赏了你的内容';
+      return pbnT("m1451");
     case 'reward_topic':
-      return '打赏了你的话题';
+      return pbnT("m1452");
     case 'reward_reply':
-      return '打赏了你的回复';
+      return pbnT("m1453");
     case 'lottery_won':
     case 'lottery_lost':
     case 'lottery_drawn':
       return notification.message;
     case 'moderation_approved':
-      return notification.message || '你提交的内容已通过审核';
+      return notification.message || pbnT("m1454");
     case 'moderation_rejected':
-      return notification.message || '你提交的内容未通过审核';
+      return notification.message || pbnT("m1455");
     default:
-      return notification.message || '发送了一条通知';
+      return notification.message || pbnT("m1456");
   }
 };

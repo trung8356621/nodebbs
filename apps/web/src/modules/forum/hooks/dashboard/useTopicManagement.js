@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useCallback, useEffect } from 'react';
 import { useAdminList } from '@/hooks/dashboard/useAdminList';
 import { topicApi } from '@/lib/api';
@@ -11,9 +12,13 @@ import { toast } from 'sonner';
  * 组合 useAdminList，添加置顶/关闭/删除/批量删除操作
  */
 export function useTopicManagement() {
+  const pbnT = usePbnTranslations();
   const list = useAdminList({
-    fetchFn: async (params) => {
-      const apiParams = { ...params, dashboard: true };
+    fetchFn: async params => {
+      const apiParams = {
+        ...params,
+        dashboard: true
+      };
 
       // 状态过滤映射
       const sf = params.statusFilter;
@@ -29,14 +34,20 @@ export function useTopicManagement() {
         apiParams.approvalStatus = 'rejected';
       }
       delete apiParams.statusFilter;
-
       return topicApi.getList(apiParams);
     },
     pageSize: 20,
-    defaultFilters: { statusFilter: 'all' },
+    defaultFilters: {
+      statusFilter: 'all'
+    }
   });
-
-  const { removeItem, updateItem, filters, debouncedSearch, refreshList } = list;
+  const {
+    removeItem,
+    updateItem,
+    filters,
+    debouncedSearch,
+    refreshList
+  } = list;
 
   // ===== 批量选择 =====
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -48,107 +59,104 @@ export function useTopicManagement() {
   }, [debouncedSearch, filters.statusFilter]);
 
   // ===== 置顶 =====
-  const handleTogglePin = useCallback(
-    async (topicId, isPinned) => {
-      try {
-        await topicApi.update(topicId, { isPinned: !isPinned });
-        toast.success(isPinned ? '已取消置顶' : '已置顶');
-
-        if (filters.statusFilter === 'pinned' && isPinned) {
-          removeItem(topicId);
-        } else {
-          updateItem(topicId, { isPinned: !isPinned });
-        }
-      } catch (err) {
-        toast.error(err.message || '操作失败');
+  const handleTogglePin = useCallback(async (topicId, isPinned) => {
+    try {
+      await topicApi.update(topicId, {
+        isPinned: !isPinned
+      });
+      toast.success(isPinned ? pbnT("m2391") : pbnT("m2392"));
+      if (filters.statusFilter === 'pinned' && isPinned) {
+        removeItem(topicId);
+      } else {
+        updateItem(topicId, {
+          isPinned: !isPinned
+        });
       }
-    },
-    [filters, removeItem, updateItem]
-  );
+    } catch (err) {
+      toast.error(err.message || pbnT("m568"));
+    }
+  }, [filters, removeItem, updateItem]);
 
   // ===== 关闭/开启 =====
-  const handleToggleClosed = useCallback(
-    async (topicId, isClosed) => {
-      try {
-        await topicApi.update(topicId, { isClosed: !isClosed });
-        toast.success(isClosed ? '已重新开启' : '已关闭');
-
-        if (filters.statusFilter === 'closed' && isClosed) {
-          removeItem(topicId);
-        } else {
-          updateItem(topicId, { isClosed: !isClosed });
-        }
-      } catch (err) {
-        toast.error(err.message || '操作失败');
+  const handleToggleClosed = useCallback(async (topicId, isClosed) => {
+    try {
+      await topicApi.update(topicId, {
+        isClosed: !isClosed
+      });
+      toast.success(isClosed ? pbnT("m2393") : pbnT("m831"));
+      if (filters.statusFilter === 'closed' && isClosed) {
+        removeItem(topicId);
+      } else {
+        updateItem(topicId, {
+          isClosed: !isClosed
+        });
       }
-    },
-    [filters, removeItem, updateItem]
-  );
+    } catch (err) {
+      toast.error(err.message || pbnT("m568"));
+    }
+  }, [filters, removeItem, updateItem]);
 
   // ===== 删除 =====
-  const handleDeleteClick = useCallback(
-    async (e, topic, type) => {
-      const isHard = type === 'hard';
-      const confirmed = await confirm(e, {
-        title: isHard ? '确认彻底删除？' : '确认删除？',
-        description: isHard
-          ? `此操作将彻底删除话题 "${topic.title}"，包括所有回复和相关数据。此操作不可恢复！`
-          : `此操作将逻辑删除话题 "${topic.title}"。删除后话题将不再显示，但数据仍保留在数据库中。`,
-        confirmText: '确认删除',
-        variant: isHard ? 'destructive' : 'default',
-      });
-
-      if (!confirmed) return;
-
-      try {
-        await topicApi.delete(topic.id, isHard);
-        toast.success(isHard ? '话题已彻底删除' : '话题已删除');
-
-        if (isHard) {
+  const handleDeleteClick = useCallback(async (e, topic, type) => {
+    const isHard = type === 'hard';
+    const confirmed = await confirm(e, {
+      title: isHard ? pbnT("m2377") : pbnT("m1797"),
+      description: isHard ? pbnT("m2394", {
+        arg0: topic.title
+      }) : pbnT("m2395", {
+        arg0: topic.title
+      }),
+      confirmText: pbnT("m246"),
+      variant: isHard ? 'destructive' : 'default'
+    });
+    if (!confirmed) return;
+    try {
+      await topicApi.delete(topic.id, isHard);
+      toast.success(isHard ? pbnT("m2396") : pbnT("m2397"));
+      if (isHard) {
+        removeItem(topic.id);
+      } else {
+        const sf = filters.statusFilter;
+        if (sf !== 'all' && sf !== 'deleted') {
           removeItem(topic.id);
         } else {
-          const sf = filters.statusFilter;
-          if (sf !== 'all' && sf !== 'deleted') {
-            removeItem(topic.id);
-          } else {
-            updateItem(topic.id, { isDeleted: true });
-          }
+          updateItem(topic.id, {
+            isDeleted: true
+          });
         }
-      } catch (err) {
-        console.error('删除失败:', err);
-        toast.error(err.message || '删除失败');
       }
-    },
-    [filters, removeItem, updateItem]
-  );
+    } catch (err) {
+      console.error("Could not delete:", err);
+      toast.error(err.message || pbnT("m249"));
+    }
+  }, [filters, removeItem, updateItem]);
 
   // ===== 批量删除 =====
-  const handleBatchDelete = useCallback(
-    async (ids, e) => {
-      const count = ids.size;
-      const confirmed = await confirm(e, {
-        title: `确认批量删除 ${count} 个话题？`,
-        description: '删除后话题将不再显示，但数据仍保留在数据库中。',
-        confirmText: '确认删除',
-        variant: 'destructive',
-      });
-      if (!confirmed) return;
-
-      setBatchDeleting(true);
-      try {
-        const result = await topicApi.batchDelete([...ids]);
-        toast.success(`已删除 ${result.count} 个话题`);
-        setSelectedIds(new Set());
-        refreshList();
-      } catch (err) {
-        toast.error(err.message || '批量删除失败');
-      } finally {
-        setBatchDeleting(false);
-      }
-    },
-    [refreshList]
-  );
-
+  const handleBatchDelete = useCallback(async (ids, e) => {
+    const count = ids.size;
+    const confirmed = await confirm(e, {
+      title: pbnT("m2398", {
+        arg0: count
+      }),
+      description: pbnT("m2399"),
+      confirmText: pbnT("m246"),
+      variant: 'destructive'
+    });
+    if (!confirmed) return;
+    setBatchDeleting(true);
+    try {
+      const result = await topicApi.batchDelete([...ids]);
+      toast.success(pbnT("m2400", {
+        arg0: result.count
+      }));
+      setSelectedIds(new Set());
+      refreshList();
+    } catch (err) {
+      toast.error(err.message || pbnT("m2401"));
+    } finally {
+      setBatchDeleting(false);
+    }
+  }, [refreshList]);
   return {
     ...list,
     selectedIds,
@@ -157,6 +165,6 @@ export function useTopicManagement() {
     handleTogglePin,
     handleToggleClosed,
     handleDeleteClick,
-    handleBatchDelete,
+    handleBatchDelete
   };
 }

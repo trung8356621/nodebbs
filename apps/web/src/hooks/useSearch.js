@@ -23,7 +23,12 @@ export function useSearch() {
   const abortControllerRef = useRef(null);
 
   // 当前类型的搜索结果
-  const currentResults = cache[searchType] || { items: [], total: 0, page: 1, limit: 20 };
+  const currentResults = cache[searchType] || {
+    items: [],
+    total: 0,
+    page: 1,
+    limit: 20
+  };
 
   /**
    * 加载指定类型的数据
@@ -39,25 +44,23 @@ export function useSearch() {
     abortControllerRef.current?.abort();
     const controller = new AbortController();
     abortControllerRef.current = controller;
-
     setLoading(true);
     try {
       const data = await searchApi.search(q, type, page, 20);
       if (controller.signal.aborted) return;
-
-      setCache((prev) => ({
+      setCache(prev => ({
         ...prev,
-        [type]: data,
+        [type]: data
       }));
     } catch (error) {
       if (error.name === 'AbortError') return;
-      console.error('搜索失败:', error);
+      console.error("Search failed:", error);
     } finally {
       if (!controller.signal.aborted) {
         setLoading(false);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
   // 搜索关键词改变时：清空缓存，加载当前 Tab
@@ -69,14 +72,14 @@ export function useSearch() {
     return () => {
       abortControllerRef.current?.abort();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
   // 切换 Tab 时：按需加载（有缓存则跳过）
-  const handleTypeChange = useCallback((type) => {
+  const handleTypeChange = useCallback(type => {
     setSearchType(type);
     loadData(type);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadData]);
 
   /**
@@ -85,7 +88,6 @@ export function useSearch() {
   const loadTypePage = useCallback((type, page) => {
     loadData(type, page, true);
   }, [loadData]);
-
   return {
     /** 搜索关键词 */
     searchQuery,
@@ -98,6 +100,6 @@ export function useSearch() {
     /** 当前类型的搜索结果 */
     searchResults: currentResults,
     /** 加载特定类型的分页 */
-    loadTypePage,
+    loadTypePage
   };
 }

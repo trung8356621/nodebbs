@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useEffect, useRef, useState } from 'react';
 import { Loader2, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,8 +12,11 @@ import { uploadApi } from '@/lib/api';
 import { formatFileSize } from '@/utils/format';
 import { getAttachmentIcon } from '@/utils/attachment';
 import PolicyFields from './PolicyFields';
-
-const EMPTY_POLICY = { policy: 'none', pointsCost: 0, allowedRoleIds: [] };
+const EMPTY_POLICY = {
+  policy: 'none',
+  pointsCost: 0,
+  allowedRoleIds: []
+};
 
 // 并发上传上限，与图片上传的滑动窗口保持一致
 const MAX_CONCURRENCY = 3;
@@ -49,7 +53,12 @@ function pickErrorText(data, fallback) {
  * @param {(attachmentId:number, wasEditing:boolean)=>void} props.onSubmitted
  * @param {()=>void} props.onCancelEdit
  */
-export default function UploadTab({ editingDraft, onSubmitted, onCancelEdit }) {
+export default function UploadTab({
+  editingDraft,
+  onSubmitted,
+  onCancelEdit
+}) {
+  const pbnT = usePbnTranslations();
   const [uploadedFiles, setUploadedFiles] = useState([]); // [{ id, originalName, size, mimetype }]
   const [uploadingCount, setUploadingCount] = useState(0);
   const [title, setTitle] = useState('');
@@ -57,7 +66,6 @@ export default function UploadTab({ editingDraft, onSubmitted, onCancelEdit }) {
   const [policyValue, setPolicyValue] = useState(EMPTY_POLICY);
   const [submitting, setSubmitting] = useState(false);
   const inputRef = useRef(null);
-
   const isEditing = !!editingDraft;
   const uploading = uploadingCount > 0;
 
@@ -70,14 +78,13 @@ export default function UploadTab({ editingDraft, onSubmitted, onCancelEdit }) {
       setPolicyValue({
         policy: editingDraft.policy || 'none',
         pointsCost: editingDraft.pointsCost || 0,
-        allowedRoleIds: editingDraft.allowedRoleIds || [],
+        allowedRoleIds: editingDraft.allowedRoleIds || []
       });
       setUploadedFiles([]);
     } else {
       resetForm();
     }
   }, [editingDraft]);
-
   const resetForm = () => {
     setUploadedFiles([]);
     setTitle('');
@@ -85,8 +92,7 @@ export default function UploadTab({ editingDraft, onSubmitted, onCancelEdit }) {
     setPolicyValue(EMPTY_POLICY);
     if (inputRef.current) inputRef.current.value = '';
   };
-
-  const handleFileChange = async (e) => {
+  const handleFileChange = async e => {
     const picked = Array.from(e.target.files || []);
     if (picked.length === 0) return;
 
@@ -98,17 +104,19 @@ export default function UploadTab({ editingDraft, onSubmitted, onCancelEdit }) {
     // 算上 uploadingCount，避免上传途中再选一批把总数顶超
     const room = MAX_FILES - uploadedFiles.length - uploadingCount;
     if (room <= 0) {
-      toast.error(`单个附件最多 ${MAX_FILES} 个文件`);
+      toast.error(pbnT("m2220", {
+        arg0: MAX_FILES
+      }));
       return;
     }
     const accepted = picked.slice(0, room);
     if (accepted.length < picked.length) {
-      toast.error(
-        `单个附件最多 ${MAX_FILES} 个文件，已忽略多出的 ${picked.length - accepted.length} 个`
-      );
+      toast.error(pbnT("m2221", {
+        arg0: MAX_FILES,
+        arg1: picked.length - accepted.length
+      }));
     }
-
-    setUploadingCount((n) => n + accepted.length);
+    setUploadingCount(n => n + accepted.length);
 
     // 滑动窗口并发：完成一个补一个，避免大批量时一次性打满
     const queue = [...accepted];
@@ -117,47 +125,47 @@ export default function UploadTab({ editingDraft, onSubmitted, onCancelEdit }) {
         const file = queue.shift();
         if (!file) break;
         try {
-          const res = await uploadApi.upload(file, 'attachments');
-          setUploadedFiles((prev) => [...prev, res]);
+          const res = await uploadApi(pbnT).upload(file, 'attachments');
+          setUploadedFiles(prev => [...prev, res]);
         } catch (err) {
-          toast.error(`${file.name}：${err.message || '上传失败'}`);
+          toast.error(`${file.name}：${err.message || pbnT("m2198")}`);
         } finally {
-          setUploadingCount((n) => Math.max(0, n - 1));
+          setUploadingCount(n => Math.max(0, n - 1));
         }
       }
     };
-
-    await Promise.all(
-      Array.from({ length: Math.min(accepted.length, MAX_CONCURRENCY) }, worker)
-    );
+    await Promise.all(Array.from({
+      length: Math.min(accepted.length, MAX_CONCURRENCY)
+    }, worker));
   };
 
   // 移除必须同步删服务端：文件已落 files 表与存储，只从 state 里摘掉的话
   // 它既进不了任何附件组、又因 /uploads/attachments/ 被拦截而不可达，纯占空间
-  const removeFile = async (fileId) => {
-    setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId));
+  const removeFile = async fileId => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
     try {
-      const res = await fetch(`/api/attachments/files/${fileId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/attachments/files/${fileId}`, {
+        method: 'DELETE'
+      });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data?.error || '文件已从列表移除，但服务端删除失败');
+        toast.error(data?.error || pbnT("m2222"));
       }
     } catch {
-      toast.error('文件已从列表移除，但服务端删除失败');
+      toast.error(pbnT("m2222"));
     }
   };
-
   const validate = () => {
     if (!isEditing && uploadedFiles.length === 0) {
-      toast.error('请先选择要上传的文件');
+      toast.error(pbnT("m2223"));
       return false;
     }
     if (policyValue.policy === 'points' && !(policyValue.pointsCost > 0)) {
-      toast.error('请填写大于 0 的积分价格');
+      toast.error(pbnT("m2224"));
       return false;
     }
     if (policyValue.policy === 'role' && policyValue.allowedRoleIds.length === 0) {
-      toast.error('请至少选择一个可下载的角色');
+      toast.error(pbnT("m2225"));
       return false;
     }
     return true;
@@ -169,43 +177,44 @@ export default function UploadTab({ editingDraft, onSubmitted, onCancelEdit }) {
     description: description.trim() || null,
     policy: policyValue.policy,
     pointsCost: policyValue.policy === 'points' ? policyValue.pointsCost : 0,
-    allowedRoleIds: policyValue.policy === 'role' ? policyValue.allowedRoleIds : null,
+    allowedRoleIds: policyValue.policy === 'role' ? policyValue.allowedRoleIds : null
   });
-
   const handleSaveEdit = async () => {
     const res = await fetch(`/api/attachments/${editingDraft.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(buildBody()),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(buildBody())
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      toast.error(pickErrorText(data, '保存失败'));
+      toast.error(pickErrorText(data, pbnT("m495")));
       return;
     }
-    toast.success('草稿已更新');
+    toast.success(pbnT("m2226"));
     onSubmitted?.(editingDraft.id, true);
   };
-
   const handleCreate = async () => {
     // 一次请求把整批文件登记成一个附件组
     const res = await fetch('/api/attachments', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         ...buildBody(),
-        fileIds: uploadedFiles.map((f) => f.id),
-      }),
+        fileIds: uploadedFiles.map(f => f.id)
+      })
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      toast.error(pickErrorText(data, '创建附件失败'));
+      toast.error(pickErrorText(data, pbnT("m2227")));
       return;
     }
     onSubmitted?.(data.id, false);
     resetForm();
   };
-
   const handleSubmit = async () => {
     if (!validate()) return;
     setSubmitting(true);
@@ -216,27 +225,19 @@ export default function UploadTab({ editingDraft, onSubmitted, onCancelEdit }) {
         await handleCreate();
       }
     } catch {
-      toast.error('网络错误，请重试');
+      toast.error(pbnT("m1362"));
     } finally {
       setSubmitting(false);
     }
   };
+  return <div className="pt-4 space-y-4">
+      {!isEditing && <div className="space-y-1.5">
+          <Label className="text-sm">{pbnT("m2228")}</Label>
 
-  return (
-    <div className="pt-4 space-y-4">
-      {!isEditing && (
-        <div className="space-y-1.5">
-          <Label className="text-sm">文件</Label>
-
-          {uploadedFiles.length > 0 && (
-            <div className="space-y-1.5">
-              {uploadedFiles.map((f) => {
-                const FileIcon = getAttachmentIcon(f.mimetype, f.originalName);
-                return (
-                  <div
-                    key={f.id}
-                    className="flex items-center gap-2 border border-border rounded-lg p-2.5"
-                  >
+          {uploadedFiles.length > 0 && <div className="space-y-1.5">
+              {uploadedFiles.map(f => {
+          const FileIcon = getAttachmentIcon(f.mimetype, f.originalName);
+          return <div key={f.id} className="flex items-center gap-2 border border-border rounded-lg p-2.5">
                     <FileIcon className="h-4 w-4 text-primary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm truncate">{f.originalName}</div>
@@ -244,111 +245,53 @@ export default function UploadTab({ editingDraft, onSubmitted, onCancelEdit }) {
                         {formatFileSize(f.size)}
                       </div>
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => removeFile(f.id)}
-                    >
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeFile(f.id)}>
                       <X className="h-4 w-4" />
                     </Button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  </div>;
+        })}
+            </div>}
 
-          <Button
-            type="button"
-            variant="outline"
-            className={
-              uploadedFiles.length > 0
-                ? 'w-full border-dashed'
-                : 'w-full h-20 border-dashed'
-            }
-            onClick={() => inputRef.current?.click()}
-            disabled={uploading}
-          >
-            {uploading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" /> 上传中（剩 {uploadingCount} 个）…
-              </>
-            ) : (
-              <>
+          <Button type="button" variant="outline" className={uploadedFiles.length > 0 ? 'w-full border-dashed' : 'w-full h-20 border-dashed'} onClick={() => inputRef.current?.click()} disabled={uploading}>
+            {uploading ? <>
+                <Loader2 className="h-4 w-4 animate-spin" />{pbnT("m2229")}{uploadingCount}{pbnT("m2230")}</> : <>
                 <Upload className="h-4 w-4" />
-                {uploadedFiles.length > 0 ? '继续添加文件' : '选择文件（可多选）'}
-              </>
-            )}
+                {uploadedFiles.length > 0 ? pbnT("m2231") : pbnT("m2232")}
+              </>}
           </Button>
 
-          <input
-            ref={inputRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={handleFileChange}
-          />
-          <p className="text-xs text-muted-foreground">
-            可上传的类型与大小由管理员在「角色与权限 › 上传话题附件」中配置。
-            {uploadedFiles.length > 1 && ' 这些文件将作为一个附件插入，共用下方的下载权限。'}
+          <input ref={inputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
+          <p className="text-xs text-muted-foreground">{pbnT("m2233")}{" "}{uploadedFiles.length > 1 && pbnT("m2234")}
           </p>
-        </div>
-      )}
+        </div>}
 
-      {isEditing && (
-        <div className="border border-border rounded-lg p-3 space-y-1">
+      {isEditing && <div className="border border-border rounded-lg p-3 space-y-1">
           <div className="text-sm">
-            {editingDraft.fileCount} 个文件 · {formatFileSize(editingDraft.totalSize)}
+            {editingDraft.fileCount}{" "}{pbnT("m2235")}{formatFileSize(editingDraft.totalSize)}
           </div>
-          <div className="text-xs text-muted-foreground">
-            组内文件不可增删，需要调整请删除草稿后重建
-          </div>
-        </div>
-      )}
+          <div className="text-xs text-muted-foreground">{pbnT("m2236")}</div>
+        </div>}
 
       <div className="space-y-1.5">
-        <Label className="text-sm">附件名</Label>
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder={
-            uploadedFiles.length > 1 || editingDraft?.fileCount > 1
-              ? '留空则显示为「N 个文件」'
-              : '留空则使用原始文件名'
-          }
-          maxLength={255}
-        />
+        <Label className="text-sm">{pbnT("m2237")}</Label>
+        <Input value={title} onChange={e => setTitle(e.target.value)} placeholder={uploadedFiles.length > 1 || editingDraft?.fileCount > 1 ? pbnT("m2238") : pbnT("m2239")} maxLength={255} />
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-sm">说明（可选）</Label>
-        <Textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="补充说明，如版本号、解压密码等"
-          rows={2}
-          maxLength={2000}
-        />
+        <Label className="text-sm">{pbnT("m2240")}</Label>
+        <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder={pbnT("m2241")} rows={2} maxLength={2000} />
       </div>
 
       <PolicyFields value={policyValue} onChange={setPolicyValue} disabled={submitting} />
 
       <div className="flex justify-end gap-2 pt-2">
-        {isEditing && (
-          <Button type="button" variant="outline" onClick={onCancelEdit}>
-            取消编辑
-          </Button>
-        )}
+        {isEditing && <Button type="button" variant="outline" onClick={onCancelEdit}>{pbnT("m2242")}</Button>}
         <Button type="button" onClick={handleSubmit} disabled={submitting || uploading}>
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-          {isEditing
-            ? '保存草稿'
-            : uploadedFiles.length > 1
-              ? `插入附件（${uploadedFiles.length} 个文件）`
-              : '插入附件'}
+          {isEditing ? pbnT("m2243") : uploadedFiles.length > 1 ? pbnT("m2244", {
+          arg0: uploadedFiles.length
+        }) : pbnT("m1315")}
         </Button>
       </div>
-    </div>
-  );
+    </div>;
 }

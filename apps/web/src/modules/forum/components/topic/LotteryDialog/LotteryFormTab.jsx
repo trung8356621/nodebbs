@@ -1,5 +1,7 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,21 +10,30 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-
-const DURATION_PRESETS = [
-  { label: '1 小时', hours: 1 },
-  { label: '6 小时', hours: 6 },
-  { label: '1 天', hours: 24 },
-  { label: '3 天', hours: 24 * 3 },
-  { label: '7 天', hours: 24 * 7 },
-  { label: '30 天', hours: 24 * 30 },
-];
-
+const DURATION_PRESETS = (pbnT = pbnRuntimeT) => [{
+  label: pbnT("m850"),
+  hours: 1
+}, {
+  label: pbnT("m851"),
+  hours: 6
+}, {
+  label: pbnT("m852"),
+  hours: 24
+}, {
+  label: pbnT("m853"),
+  hours: 24 * 3
+}, {
+  label: pbnT("m854"),
+  hours: 24 * 7
+}, {
+  label: pbnT("m855"),
+  hours: 24 * 30
+}];
 function toDatetimeLocalValue(iso) {
   if (!iso) return '';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
-  const pad = (n) => String(n).padStart(2, '0');
+  const pad = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
@@ -32,7 +43,12 @@ function toDatetimeLocalValue(iso) {
  * @param {(lotteryId:number, wasEditing:boolean)=>void} props.onSubmitted
  * @param {()=>void} props.onCancelEdit
  */
-export default function LotteryFormTab({ editingDraft, onSubmitted, onCancelEdit }) {
+export default function LotteryFormTab({
+  editingDraft,
+  onSubmitted,
+  onCancelEdit
+}) {
+  const pbnT = usePbnTranslations();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [winnersCount, setWinnersCount] = useState('1');
@@ -45,9 +61,7 @@ export default function LotteryFormTab({ editingDraft, onSubmitted, onCancelEdit
   const [drawAt, setDrawAt] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [balance, setBalance] = useState(null);
-
   const isEditing = editingDraft != null;
-
   useEffect(() => {
     if (editingDraft) {
       setTitle(editingDraft.title || '');
@@ -74,307 +88,199 @@ export default function LotteryFormTab({ editingDraft, onSubmitted, onCancelEdit
       setDrawAt('');
     }
   }, [editingDraft]);
-
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/ledger/balance')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((d) => {
-        if (cancelled || !d) return;
-        setBalance(Number(d.balance) || 0);
-      })
-      .catch(() => {});
+    fetch('/api/ledger/balance').then(res => res.ok ? res.json() : null).then(d => {
+      if (cancelled || !d) return;
+      setBalance(Number(d.balance) || 0);
+    }).catch(() => {});
     return () => {
       cancelled = true;
     };
   }, []);
-
   const winners = Number.parseInt(winnersCount, 10);
   const points = Number.parseInt(pointsPerWinner, 10);
-  const totalFreeze = Number.isFinite(winners) && Number.isFinite(points)
-    ? Math.max(0, winners) * Math.max(0, points)
-    : 0;
-
+  const totalFreeze = Number.isFinite(winners) && Number.isFinite(points) ? Math.max(0, winners) * Math.max(0, points) : 0;
   const oldFrozen = editingDraft?.frozenPoints ?? 0;
   const delta = totalFreeze - oldFrozen;
   const insufficient = balance != null && delta > 0 && delta > balance;
-
-  const setPresetDrawAt = (hours) => {
+  const setPresetDrawAt = hours => {
     const target = new Date(Date.now() + hours * 60 * 60 * 1000);
     setDrawAt(toDatetimeLocalValue(target.toISOString()));
   };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     e.stopPropagation();
-
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
-      toast.error('请填写标题');
+      toast.error(pbnT("m2261"));
       return;
     }
     if (!Number.isInteger(winners) || winners < 1 || winners > 1000) {
-      toast.error('名额必须在 1-1000 之间');
+      toast.error(pbnT("m2262"));
       return;
     }
     if (!Number.isInteger(points) || points < 0) {
-      toast.error('每人积分必须是非负整数');
+      toast.error(pbnT("m2263"));
       return;
     }
     if (!drawAt) {
-      toast.error('请选择截止时间');
+      toast.error(pbnT("m2264"));
       return;
     }
     const drawDate = new Date(drawAt);
     if (Number.isNaN(drawDate.getTime()) || drawDate.getTime() <= Date.now()) {
-      toast.error('截止时间必须晚于当前时间');
+      toast.error(pbnT("m2265"));
       return;
     }
     if (insufficient) {
-      toast.error('积分余额不足');
+      toast.error(pbnT("m2266"));
       return;
     }
 
     // 逐项奖品模式：拆行 → 过滤空行 → 校验数量
     let prizeItemsPayload = null;
     if (prizeMode === 'per-winner') {
-      const items = prizeItemsText
-        .split('\n')
-        .map((s) => s.trim())
-        .filter(Boolean);
+      const items = prizeItemsText.split('\n').map(s => s.trim()).filter(Boolean);
       if (items.length !== winners) {
-        toast.error(`奖品项 ${items.length} 个，必须等于名额 ${winners} 个`);
+        toast.error(pbnT("m2267", {
+          arg0: items.length,
+          arg1: winners
+        }));
         return;
       }
-      if (items.some((s) => s.length > 500)) {
-        toast.error('单个奖品项最长 500 字');
+      if (items.some(s => s.length > 500)) {
+        toast.error(pbnT("m2268"));
         return;
       }
       prizeItemsPayload = items;
     }
-
     const body = {
       title: trimmedTitle,
       description: description.trim() || null,
       winnersCount: winners,
       pointsPerWinner: points,
-      prizeDescription: prizeMode === 'shared' ? (prizeDescription.trim() || null) : null,
+      prizeDescription: prizeMode === 'shared' ? prizeDescription.trim() || null : null,
       prizeItems: prizeItemsPayload,
       minAccountDays: Number.parseInt(minAccountDays, 10) || 0,
       requireReply,
-      drawAt: drawDate.toISOString(),
+      drawAt: drawDate.toISOString()
     };
-
     setSubmitting(true);
     try {
       const url = isEditing ? `/api/lotteries/${editingDraft.id}` : '/api/lotteries';
       const method = isEditing ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data?.error || (isEditing ? '保存失败' : '创建抽奖失败'));
+        toast.error(data?.error || (isEditing ? pbnT("m495") : pbnT("m2269")));
         return;
       }
-      if (isEditing) toast.success('草稿已保存');
+      if (isEditing) toast.success(pbnT("m2270"));
       onSubmitted?.(isEditing ? editingDraft.id : data.id, isEditing);
     } catch {
-      toast.error('网络错误，请重试');
+      toast.error(pbnT("m1362"));
     } finally {
       setSubmitting(false);
     }
   };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+  return <form onSubmit={handleSubmit} className="space-y-4 pt-4">
       {/* 余额 / 冻结提示 */}
-      <div className={`text-xs px-3 py-2 rounded-md border ${insufficient ? 'border-destructive/40 bg-destructive/5 text-destructive' : 'border-border bg-muted/40 text-muted-foreground'}`}>
-        将冻结 <span className="font-medium text-foreground">{winners || 0} × {points || 0} = {totalFreeze}</span> 积分
-        {isEditing && oldFrozen > 0 && (
-          <>（已冻结 {oldFrozen}，{delta >= 0 ? `追加 ${delta}` : `退回 ${-delta}`}）</>
-        )}
-        {balance != null && (
-          <>　当前余额：<span className="font-medium text-foreground">{balance}</span></>
-        )}
+      <div className={`text-xs px-3 py-2 rounded-md border ${insufficient ? 'border-destructive/40 bg-destructive/5 text-destructive' : 'border-border bg-muted/40 text-muted-foreground'}`}>{pbnT("m2271")}<span className="font-medium text-foreground">{winners || 0} × {points || 0} = {totalFreeze}</span>{pbnT("m2249")}{isEditing && oldFrozen > 0 && <>{pbnT("m2272")}{oldFrozen}，{delta >= 0 ? pbnT("m2273", {
+          arg0: delta
+        }) : pbnT("m2274", {
+          arg0: -delta
+        })}）</>}
+        {balance != null && <>{pbnT("m2275")}<span className="font-medium text-foreground">{balance}</span></>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="lot-title">标题</Label>
-        <Input
-          id="lot-title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="例：晒图抽 Q 群独家邀请码"
-          maxLength={200}
-        />
+        <Label htmlFor="lot-title">{pbnT("m830")}</Label>
+        <Input id="lot-title" value={title} onChange={e => setTitle(e.target.value)} placeholder={pbnT("m2276")} maxLength={200} />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="lot-desc">活动说明（可选）</Label>
-        <Textarea
-          id="lot-desc"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="补充说明、规则解释等"
-          maxLength={2000}
-          rows={3}
-        />
+        <Label htmlFor="lot-desc">{pbnT("m2277")}</Label>
+        <Textarea id="lot-desc" value={description} onChange={e => setDescription(e.target.value)} placeholder={pbnT("m2278")} maxLength={2000} rows={3} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="lot-winners">中奖名额</Label>
-          <Input
-            id="lot-winners"
-            type="number"
-            min={1}
-            max={1000}
-            value={winnersCount}
-            onChange={(e) => setWinnersCount(e.target.value)}
-          />
+          <Label htmlFor="lot-winners">{pbnT("m1386")}</Label>
+          <Input id="lot-winners" type="number" min={1} max={1000} value={winnersCount} onChange={e => setWinnersCount(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="lot-points">每人积分</Label>
-          <Input
-            id="lot-points"
-            type="number"
-            min={0}
-            value={pointsPerWinner}
-            onChange={(e) => setPointsPerWinner(e.target.value)}
-          />
+          <Label htmlFor="lot-points">{pbnT("m2279")}</Label>
+          <Input id="lot-points" type="number" min={0} value={pointsPerWinner} onChange={e => setPointsPerWinner(e.target.value)} />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>奖品（仅中奖者可见，可选）</Label>
+        <Label>{pbnT("m2280")}</Label>
         <div className="flex gap-4 text-sm">
           <label className="flex items-center gap-1.5 cursor-pointer">
-            <input
-              type="radio"
-              name="lot-prize-mode"
-              value="shared"
-              checked={prizeMode === 'shared'}
-              onChange={() => setPrizeMode('shared')}
-              className="h-4 w-4"
-            />
-            <span>共享一段描述</span>
+            <input type="radio" name="lot-prize-mode" value="shared" checked={prizeMode === 'shared'} onChange={() => setPrizeMode('shared')} className="h-4 w-4" />
+            <span>{pbnT("m2281")}</span>
           </label>
           <label className="flex items-center gap-1.5 cursor-pointer">
-            <input
-              type="radio"
-              name="lot-prize-mode"
-              value="per-winner"
-              checked={prizeMode === 'per-winner'}
-              onChange={() => setPrizeMode('per-winner')}
-              className="h-4 w-4"
-            />
-            <span>逐项分配（每人一项）</span>
+            <input type="radio" name="lot-prize-mode" value="per-winner" checked={prizeMode === 'per-winner'} onChange={() => setPrizeMode('per-winner')} className="h-4 w-4" />
+            <span>{pbnT("m2282")}</span>
           </label>
         </div>
-        {prizeMode === 'shared' ? (
-          <Textarea
-            id="lot-prize"
-            value={prizeDescription}
-            onChange={(e) => setPrizeDescription(e.target.value)}
-            placeholder="例：QQ 群号 1234567、兑换码 ABCD-EFGH"
-            maxLength={1000}
-            rows={2}
-          />
-        ) : (
-          <PrizeItemsInput
-            value={prizeItemsText}
-            onChange={setPrizeItemsText}
-            winnersCount={winners}
-          />
-        )}
+        {prizeMode === 'shared' ? <Textarea id="lot-prize" value={prizeDescription} onChange={e => setPrizeDescription(e.target.value)} placeholder={pbnT("m2283")} maxLength={1000} rows={2} /> : <PrizeItemsInput value={prizeItemsText} onChange={setPrizeItemsText} winnersCount={winners} />}
       </div>
 
       <div className="space-y-2">
-        <Label>截止时间</Label>
+        <Label>{pbnT("m2284")}</Label>
         <div className="flex flex-wrap gap-1">
-          {DURATION_PRESETS.map((p) => (
-            <Button
-              key={p.label}
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setPresetDrawAt(p.hours)}
-            >
+          {DURATION_PRESETS(pbnT).map(p => <Button key={p.label} type="button" size="sm" variant="outline" onClick={() => setPresetDrawAt(p.hours)}>
               {p.label}
-            </Button>
-          ))}
+            </Button>)}
         </div>
-        <Input
-          type="datetime-local"
-          value={drawAt}
-          onChange={(e) => setDrawAt(e.target.value)}
-        />
+        <Input type="datetime-local" value={drawAt} onChange={e => setDrawAt(e.target.value)} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="lot-account-days">账号天数门槛</Label>
-          <Input
-            id="lot-account-days"
-            type="number"
-            min={0}
-            value={minAccountDays}
-            onChange={(e) => setMinAccountDays(e.target.value)}
-            placeholder="0 = 不限"
-          />
+          <Label htmlFor="lot-account-days">{pbnT("m2285")}</Label>
+          <Input id="lot-account-days" type="number" min={0} value={minAccountDays} onChange={e => setMinAccountDays(e.target.value)} placeholder={pbnT("m2286")} />
         </div>
         <div className="flex items-end">
           <label className="flex items-center gap-2 cursor-pointer h-9">
-            <Checkbox
-              id="lot-require-reply"
-              checked={requireReply}
-              onCheckedChange={(v) => setRequireReply(v === true)}
-            />
-            <span className="text-sm">需先回复话题</span>
+            <Checkbox id="lot-require-reply" checked={requireReply} onCheckedChange={v => setRequireReply(v === true)} />
+            <span className="text-sm">{pbnT("m2287")}</span>
           </label>
         </div>
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
-        {isEditing && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancelEdit}
-            disabled={submitting}
-          >
-            取消编辑
-          </Button>
-        )}
+        {isEditing && <Button type="button" variant="outline" onClick={onCancelEdit} disabled={submitting}>{pbnT("m2242")}</Button>}
         <Button type="submit" disabled={submitting || insufficient}>
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-          {isEditing ? '保存修改' : '创建抽奖'}
+          {isEditing ? pbnT("m114") : pbnT("m2288")}
         </Button>
       </div>
-    </form>
-  );
+    </form>;
 }
-
-function PrizeItemsInput({ value, onChange, winnersCount }) {
-  const items = value.split('\n').map((s) => s.trim()).filter(Boolean);
+function PrizeItemsInput({
+  value,
+  onChange,
+  winnersCount
+}) {
+  const pbnT = usePbnTranslations();
+  const items = value.split('\n').map(s => s.trim()).filter(Boolean);
   const count = items.length;
   const target = Number.isFinite(winnersCount) && winnersCount > 0 ? winnersCount : 0;
   const matched = count === target;
-  return (
-    <div className="space-y-1">
-      <Textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={'每行一项，例如：\nQQ 群邀请码：ABC123\n兑换码：XYZ789'}
-        rows={5}
-      />
-      <div className={`text-xs ${matched ? 'text-muted-foreground' : 'text-destructive'}`}>
-        已填 {count} 项 / 名额 {target} 项
-        {!matched && count > 0 && '（必须相等）'}
+  return <div className="space-y-1">
+      <Textarea value={value} onChange={e => onChange(e.target.value)} placeholder={pbnT("m2289")} rows={5} />
+      <div className={`text-xs ${matched ? 'text-muted-foreground' : 'text-destructive'}`}>{pbnT("m2290")}{" "}{count}{" "}{pbnT("m2291")}{" "}{target}{" "}{pbnT("m1276")}{" "}{!matched && count > 0 && pbnT("m2292")}
       </div>
-    </div>
-  );
+    </div>;
 }

@@ -1,3 +1,4 @@
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
 import { fetchData, rethrowIfRateLimit } from '@/lib/server/api';
 import { DEFAULT_CURRENCY_CODE } from './constants';
 
@@ -12,27 +13,27 @@ import { DEFAULT_CURRENCY_CODE } from './constants';
  * 获取活跃货币列表 (Server Side)
  * @returns {Promise<Array>}
  */
-export async function getActiveCurrencies() {
-    return fetchData('/ledger/active-currencies', {
-        fallback: [],
-        select: (data) => (Array.isArray(data) ? data : []),
-    });
+export async function getActiveCurrencies(pbnT = pbnRuntimeT) {
+  return fetchData('/ledger/active-currencies', {
+    fallback: [],
+    select: data => Array.isArray(data) ? data : []
+  }, pbnT);
 }
 
 /**
  * 获取默认货币名称 (Server Side)
  * @returns {Promise<string>} 货币名称，如果获取失败则返回货币代码
  */
-export async function getDefaultCurrencyName() {
-    try {
-        const currencies = await getActiveCurrencies();
-        const defaultCurrency = currencies.find(c => c.code === DEFAULT_CURRENCY_CODE);
-        return defaultCurrency?.name || DEFAULT_CURRENCY_CODE;
-    } catch (error) {
-        rethrowIfRateLimit(error);
-        console.error('[Server] Failed to get default currency name', error);
-        return DEFAULT_CURRENCY_CODE;
-    }
+export async function getDefaultCurrencyName(pbnT = pbnRuntimeT) {
+  try {
+    const currencies = await getActiveCurrencies(pbnT);
+    const defaultCurrency = currencies.find(c => c.code === DEFAULT_CURRENCY_CODE);
+    return defaultCurrency?.name || DEFAULT_CURRENCY_CODE;
+  } catch (error) {
+    rethrowIfRateLimit(error);
+    console.error('[Server] Failed to get default currency name', error);
+    return DEFAULT_CURRENCY_CODE;
+  }
 }
 
 /**
@@ -41,13 +42,13 @@ export async function getDefaultCurrencyName() {
  * @param {string} currencyCode - 货币代码 (默认 'credits')
  * @returns {Promise<boolean>}
  */
-export async function isCurrencyActive(currencyCode = DEFAULT_CURRENCY_CODE) {
-    try {
-        const activeCurrencies = await getActiveCurrencies();
-        return activeCurrencies.some(c => c.code === currencyCode);
-    } catch (error) {
-        rethrowIfRateLimit(error);
-        console.error(`[Server] Failed to check status for currency ${currencyCode}`, error);
-        return false;
-    }
+export async function isCurrencyActive(currencyCode = DEFAULT_CURRENCY_CODE, pbnT = pbnRuntimeT) {
+  try {
+    const activeCurrencies = await getActiveCurrencies(pbnT);
+    return activeCurrencies.some(c => c.code === currencyCode);
+  } catch (error) {
+    rethrowIfRateLimit(error);
+    console.error(`[Server] Failed to check status for currency ${currencyCode}`, error);
+    return false;
+  }
 }

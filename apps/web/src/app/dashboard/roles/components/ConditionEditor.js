@@ -1,27 +1,14 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerClose,
-  DrawerTrigger,
-} from '@/components/ui/drawer';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose, DrawerTrigger } from '@/components/ui/drawer';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Settings2, Trash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import MultiSelect from '@/components/common/MultiSelect';
@@ -31,27 +18,30 @@ import MultiSelect from '@/components/common/MultiSelect';
  * defaultValue 由后端按权限给出（见 SYSTEM_PERMISSIONS 的 conditions），
  * 与上传路由、RBAC 引擎的兜底逻辑同源，不是这里另算的。
  */
-function formatDefaultHint({ key, defaultValue }) {
+function formatDefaultHint({
+  key,
+  defaultValue
+}, pbnT = pbnRuntimeT) {
   if (defaultValue === undefined || defaultValue === null) return null;
-
   if (Array.isArray(defaultValue)) {
     if (defaultValue.length === 0) return null;
     // 扩展名可能几十个，全列会把说明文字撑爆，超出部分只报总数
     const MAX_SHOWN = 8;
     const shown = defaultValue.slice(0, MAX_SHOWN).map(v => String(v).toUpperCase()).join('、');
-    return defaultValue.length > MAX_SHOWN
-      ? `留空则按系统默认：${shown} … 共 ${defaultValue.length} 种`
-      : `留空则按系统默认：${shown}`;
+    return defaultValue.length > MAX_SHOWN ? pbnT("m470", {
+      arg0: shown,
+      arg1: defaultValue.length
+    }) : pbnT("m471", {
+      arg0: shown
+    });
   }
-
   if (typeof defaultValue === 'number') {
     // maxFileSize 单位是 KB，超过 1MB 时换算展示（与 ImageUpload 的口径一致）
-    const text = key === 'maxFileSize'
-      ? (defaultValue >= 1024 ? `${(defaultValue / 1024).toFixed(0)}MB` : `${defaultValue}KB`)
-      : String(defaultValue);
-    return `留空则按系统默认：${text}`;
+    const text = key === 'maxFileSize' ? defaultValue >= 1024 ? `${(defaultValue / 1024).toFixed(0)}MB` : `${defaultValue}KB` : String(defaultValue);
+    return pbnT("m471", {
+      arg0: text
+    });
   }
-
   return null;
 }
 
@@ -59,45 +49,39 @@ function formatDefaultHint({ key, defaultValue }) {
  * 条件字段容器组件
  * 统一处理标题、描述、清除按钮等公共功能
  */
-function ConditionField({ label, description, hasValue, onClear, children, defaultHint, inline = false }) {
-  return (
-    <div className="py-3 border-b last:border-b-0">
-      {inline ? (
-        // 行内布局（用于 switch）
-        <div className="flex items-center justify-between gap-2">
+function ConditionField({
+  label,
+  description,
+  hasValue,
+  onClear,
+  children,
+  defaultHint,
+  inline = false
+}) {
+  return <div className="py-3 border-b last:border-b-0">
+      {inline ?
+    // 行内布局（用于 switch）
+    <div className="flex items-center justify-between gap-2">
           <div className="space-y-0.5">
             <Label className="text-sm font-medium">{label}</Label>
             {description && <p className="text-xs text-muted-foreground">{description}</p>}
           </div>
           {children}
-        </div>
-      ) : (
-        // 堆叠布局（默认）
-        <div className="space-y-2">
+        </div> :
+    // 堆叠布局（默认）
+    <div className="space-y-2">
           <div className="min-h-6 flex items-center justify-between">
             <Label className="text-sm font-medium">{label}</Label>
-            {hasValue && onClear && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="w-6 h-6 text-muted-foreground hover:text-destructive"
-                onClick={onClear}
-              >
+            {hasValue && onClear && <Button type="button" variant="ghost" size="sm" className="w-6 h-6 text-muted-foreground hover:text-destructive" onClick={onClear}>
                 <Trash className="h-3 w-3" />
-              </Button>
-            )}
+              </Button>}
           </div>
           {children}
           {description && <p className="text-xs text-muted-foreground">{description}</p>}
           {/* 已配置时不再提示——此时兜底值不生效，说了反而误导 */}
-          {!hasValue && defaultHint && (
-            <p className="text-xs text-muted-foreground/80">{defaultHint}</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
+          {!hasValue && defaultHint && <p className="text-xs text-muted-foreground/80">{defaultHint}</p>}
+        </div>}
+    </div>;
 }
 
 /**
@@ -111,8 +95,9 @@ export function ConditionEditor({
   disabled,
   hasConfig,
   conditionTypes = [],
-  dynamicDataSources = {},
+  dynamicDataSources = {}
 }) {
+  const pbnT = usePbnTranslations();
   const [open, setOpen] = useState(false);
   const [localConditions, setLocalConditions] = useState(conditions || {});
 
@@ -120,7 +105,6 @@ export function ConditionEditor({
   useEffect(() => {
     setLocalConditions(conditions || {});
   }, [conditions]);
-
   const handleSave = () => {
     // 清理空值
     const cleaned = Object.entries(localConditions).reduce((acc, [key, value]) => {
@@ -142,239 +126,169 @@ export function ConditionEditor({
       }
       return acc;
     }, {});
-
     onChange(Object.keys(cleaned).length > 0 ? cleaned : null);
     setOpen(false);
   };
-
   const updateCondition = (key, value) => {
-    setLocalConditions(prev => ({ ...prev, [key]: value }));
+    setLocalConditions(prev => ({
+      ...prev,
+      [key]: value
+    }));
   };
-
-  const clearCondition = (key) => {
+  const clearCondition = key => {
     setLocalConditions(prev => {
-      const next = { ...prev };
+      const next = {
+        ...prev
+      };
       delete next[key];
       return next;
     });
   };
 
   // 渲染条件输入控件
-  const renderConditionInput = (conditionType) => {
-    const { key, label, component, description, options, dataSource, placeholder, min, schema, creatable } = conditionType;
+  const renderConditionInput = conditionType => {
+    const {
+      key,
+      label,
+      component,
+      description,
+      options,
+      dataSource,
+      placeholder,
+      min,
+      schema,
+      creatable
+    } = conditionType;
     const value = localConditions[key];
 
     // 布尔开关
     if (component === 'switch') {
-      return (
-        <ConditionField key={key} label={label} description={description} inline>
-          <Switch
-            checked={value === true}
-            onCheckedChange={(checked) => updateCondition(key, checked || undefined)}
-          />
-        </ConditionField>
-      );
+      return <ConditionField key={key} label={label} description={description} inline>
+          <Switch checked={value === true} onCheckedChange={checked => updateCondition(key, checked || undefined)} />
+        </ConditionField>;
     }
 
     // 数字输入
     if (component === 'number') {
-      return (
-        <ConditionField
-          key={key}
-          label={label}
-          description={description}
-          hasValue={value !== undefined && value !== ''}
-          onClear={() => clearCondition(key)}
-          defaultHint={formatDefaultHint(conditionType)}
-        >
-          <Input
-            type="number"
-            min={min ?? 0}
-            placeholder={placeholder || '不限制'}
-            value={value ?? ''}
-            onChange={(e) => updateCondition(key, e.target.value ? parseInt(e.target.value) : undefined)}
-          />
-        </ConditionField>
-      );
+      return <ConditionField key={key} label={label} description={description} hasValue={value !== undefined && value !== ''} onClear={() => clearCondition(key)} defaultHint={formatDefaultHint(conditionType, pbnT)}>
+          <Input type="number" min={min ?? 0} placeholder={placeholder || pbnT("m472")} value={value ?? ''} onChange={e => updateCondition(key, e.target.value ? parseInt(e.target.value) : undefined)} />
+        </ConditionField>;
     }
 
     // 多选下拉框
     if (component === 'multiSelect') {
-      const selectOptions = dataSource && dynamicDataSources[dataSource]
-        ? dynamicDataSources[dataSource]
-        : options || [];
+      const selectOptions = dataSource && dynamicDataSources[dataSource] ? dynamicDataSources[dataSource] : options || [];
 
       // creatable：允许输入预设之外的值（如附件扩展名无法穷举）。
       // 统一小写并去掉前导点，避免出现 ".ZIP" / "zip" 这类等价却不相等的条目
-      const handleCreate = creatable
-        ? (raw) => {
-            const normalized = String(raw).trim().toLowerCase().replace(/^\.+/, '');
-            if (!normalized) return;
-            const current = Array.isArray(value) ? value : [];
-            if (current.includes(normalized)) return;
-            updateCondition(key, [...current, normalized]);
-          }
-        : undefined;
-
-      return (
-        <ConditionField
-          key={key}
-          label={label}
-          description={description}
-          hasValue={Array.isArray(value) && value.length > 0}
-          onClear={() => clearCondition(key)}
-          defaultHint={formatDefaultHint(conditionType)}
-        >
-          <MultiSelect
-            value={value || []}
-            onChange={(val) => updateCondition(key, val.length > 0 ? val : undefined)}
-            options={selectOptions}
-            placeholder="选择..."
-            searchPlaceholder={creatable ? '搜索或输入新增...' : '搜索...'}
-            onCreate={handleCreate}
-          />
-        </ConditionField>
-      );
+      const handleCreate = creatable ? raw => {
+        const normalized = String(raw).trim().toLowerCase().replace(/^\.+/, '');
+        if (!normalized) return;
+        const current = Array.isArray(value) ? value : [];
+        if (current.includes(normalized)) return;
+        updateCondition(key, [...current, normalized]);
+      } : undefined;
+      return <ConditionField key={key} label={label} description={description} hasValue={Array.isArray(value) && value.length > 0} onClear={() => clearCondition(key)} defaultHint={formatDefaultHint(conditionType, pbnT)}>
+          <MultiSelect value={value || []} onChange={val => updateCondition(key, val.length > 0 ? val : undefined)} options={selectOptions} placeholder={pbnT("m473")} searchPlaceholder={creatable ? pbnT("m474") : pbnT("m475")} onCreate={handleCreate} />
+        </ConditionField>;
     }
 
     // 频率限制
     if (component === 'rateLimit') {
-      const rateLimit = value || { count: '', period: 'hour' };
-      const periodOptions = schema?.period?.options || [
-        { value: 'minute', label: '每分钟' },
-        { value: 'hour', label: '每小时' },
-        { value: 'day', label: '每天' },
-      ];
-
-      return (
-        <ConditionField
-          key={key}
-          label={label}
-          description={description}
-          hasValue={rateLimit.count !== '' && rateLimit.count !== undefined}
-          onClear={() => clearCondition(key)}
-        >
+      const rateLimit = value || {
+        count: '',
+        period: 'hour'
+      };
+      const periodOptions = schema?.period?.options || [{
+        value: 'minute',
+        label: pbnT("m476")
+      }, {
+        value: 'hour',
+        label: pbnT("m477")
+      }, {
+        value: 'day',
+        label: pbnT("m478")
+      }];
+      return <ConditionField key={key} label={label} description={description} hasValue={rateLimit.count !== '' && rateLimit.count !== undefined} onClear={() => clearCondition(key)}>
           <div className="flex gap-2">
-            <Input
-              type="number"
-              min="1"
-              placeholder="次数"
-              value={rateLimit.count ?? ''}
-              onChange={(e) => updateCondition(key, {
-                ...rateLimit,
-                count: e.target.value ? parseInt(e.target.value) : ''
-              })}
-              className="w-24"
-            />
-            <Select
-              value={rateLimit.period || 'hour'}
-              onValueChange={(val) => updateCondition(key, { ...rateLimit, period: val })}
-            >
+            <Input type="number" min="1" placeholder={pbnT("m479")} value={rateLimit.count ?? ''} onChange={e => updateCondition(key, {
+            ...rateLimit,
+            count: e.target.value ? parseInt(e.target.value) : ''
+          })} className="w-24" />
+            <Select value={rateLimit.period || 'hour'} onValueChange={val => updateCondition(key, {
+            ...rateLimit,
+            period: val
+          })}>
               <SelectTrigger className="flex-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {periodOptions.map(p => (
-                  <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                ))}
+                {periodOptions.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-        </ConditionField>
-      );
+        </ConditionField>;
     }
 
     // 时间范围
     if (component === 'timeRange') {
-      const timeRange = value || { start: '', end: '' };
-
-      return (
-        <ConditionField
-          key={key}
-          label={label}
-          description={description}
-          hasValue={!!(timeRange.start || timeRange.end)}
-          onClear={() => clearCondition(key)}
-        >
+      const timeRange = value || {
+        start: '',
+        end: ''
+      };
+      return <ConditionField key={key} label={label} description={description} hasValue={!!(timeRange.start || timeRange.end)} onClear={() => clearCondition(key)}>
           <div className="flex gap-2 items-center">
-            <Input
-              type="time"
-              value={timeRange.start || ''}
-              onChange={(e) => updateCondition(key, { ...timeRange, start: e.target.value })}
-            />
-            <span className="text-muted-foreground text-sm">至</span>
-            <Input
-              type="time"
-              value={timeRange.end || ''}
-              onChange={(e) => updateCondition(key, { ...timeRange, end: e.target.value })}
-            />
+            <Input type="time" value={timeRange.start || ''} onChange={e => updateCondition(key, {
+            ...timeRange,
+            start: e.target.value
+          })} />
+            <span className="text-muted-foreground text-sm">{pbnT("m480")}</span>
+            <Input type="time" value={timeRange.end || ''} onChange={e => updateCondition(key, {
+            ...timeRange,
+            end: e.target.value
+          })} />
           </div>
-        </ConditionField>
-      );
+        </ConditionField>;
     }
 
     // 文本列表（逗号分隔）
     if (component === 'textList') {
-      return (
-        <ConditionField
-          key={key}
-          label={label}
-          description={description}
-          hasValue={Array.isArray(value) && value.length > 0}
-          onClear={() => clearCondition(key)}
-        >
-          <Input
-            placeholder={placeholder || '多个值用逗号分隔'}
-            defaultValue={value?.join(', ') || ''}
-            onBlur={(e) => {
-              const val = e.target.value;
-              if (!val) {
-                clearCondition(key);
-              } else {
-                const items = val.split(',').map(s => s.trim()).filter(Boolean);
-                updateCondition(key, items.length > 0 ? items : undefined);
-              }
-            }}
-          />
-        </ConditionField>
-      );
+      return <ConditionField key={key} label={label} description={description} hasValue={Array.isArray(value) && value.length > 0} onClear={() => clearCondition(key)}>
+          <Input placeholder={placeholder || pbnT("m481")} defaultValue={value?.join(', ') || ''} onBlur={e => {
+          const val = e.target.value;
+          if (!val) {
+            clearCondition(key);
+          } else {
+            const items = val.split(',').map(s => s.trim()).filter(Boolean);
+            updateCondition(key, items.length > 0 ? items : undefined);
+          }
+        }} />
+        </ConditionField>;
     }
-
     return null;
   };
-
-  return (
-    <Drawer direction="right" open={open} onOpenChange={setOpen}>
+  return <Drawer direction="right" open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className={cn('w-7 h-7', hasConfig ? 'text-primary' : 'text-muted-foreground/30')}
-          disabled={disabled}
-        >
+        <Button type="button" variant="outline" size="sm" className={cn('w-7 h-7', hasConfig ? 'text-primary' : 'text-muted-foreground/30')} disabled={disabled}>
           <Settings2 className="h-3.5 w-3.5" />
         </Button>
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full max-w-md">
           <DrawerHeader>
-            <DrawerTitle>条件配置</DrawerTitle>
-            <DrawerDescription>
-              为 &quot;{permission.name}&quot; 设置生效条件
-            </DrawerDescription>
+            <DrawerTitle>{pbnT("m482")}</DrawerTitle>
+            <DrawerDescription>{pbnT("m483")}{permission.name}{pbnT("m484")}</DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-4 overflow-y-auto max-h-[calc(100vh-200px)]">
             {conditionTypes.map(renderConditionInput)}
           </div>
           <DrawerFooter>
-            <Button onClick={handleSave}>确定</Button>
+            <Button onClick={handleSave}>{pbnT("m485")}</Button>
             <DrawerClose asChild>
-              <Button variant="outline">取消</Button>
+              <Button variant="outline">{pbnT("m486")}</Button>
             </DrawerClose>
           </DrawerFooter>
         </div>
       </DrawerContent>
-    </Drawer>
-  );
+    </Drawer>;
 }

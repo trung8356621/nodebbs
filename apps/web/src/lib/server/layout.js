@@ -1,22 +1,18 @@
+import { getPbnTranslations } from "@/i18n/server";
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
 import { request, getCurrentUser } from './api';
 import { cache } from 'react';
-import {
-  THEMES,
-  FONT_SIZES,
-  DEFAULT_THEME,
-  DEFAULT_FONT_SIZE,
-  STORAGE_KEYS,
-} from '@/config/theme.config';
+import { THEMES, FONT_SIZES, DEFAULT_THEME, DEFAULT_FONT_SIZE, STORAGE_KEYS } from '@/config/theme.config';
 
 // ============ 常量 ============
 const DEFAULT_SITE_NAME = 'NodeBBS';
-const DEFAULT_SITE_DESCRIPTION = '一个基于 Node.js 和 React 的现代化论坛系统';
+const DEFAULT_SITE_DESCRIPTION = (pbnT = pbnRuntimeT) => pbnT("m2200");
 const DEFAULT_SITE_LOGO = '/logo.svg';
 const DEFAULT_FAVICON = '/favicon.ico';
 const DEFAULT_APPLE_TOUCH_ICON = '/apple-touch-icon.png';
-
 export const getApiInfo = cache(async () => {
-  return await request('/');
+  const pbnT = await getPbnTranslations();
+  return await request('/', undefined, pbnT);
 });
 
 // ============ 主函数 ============
@@ -25,10 +21,10 @@ export const getApiInfo = cache(async () => {
  * 获取 RootLayout 所需的数据
  * 包括：系统设置、API 信息、当前用户
  */
-export async function getLayoutData() {
+export async function getLayoutData(pbnT = pbnRuntimeT) {
   // 外壳数据：每个请求独立兜底——任一端点失败（含 429）都不影响其它，
   // 且不会让限速接管整页外壳。根布局必须无条件渲染，故此处吞掉一切错误。
-  const swallow = (label) => (error) => {
+  const swallow = label => error => {
     // 限速(429)是预期情形，已由页面错误边界向用户呈现 RateLimitView，
     // 外壳无需重复报错刷屏；其余真实错误（5xx/网络等）照常记录。
     if (error?.status !== 429) {
@@ -36,36 +32,33 @@ export async function getLayoutData() {
     }
     return null;
   };
-
-  const [settings, apiInfo, currenciesData] = await Promise.all([
-    request('/settings').catch(swallow('/settings')),
-    getApiInfo().catch(swallow('/')),
-    request('/ledger/active-currencies').catch(swallow('/ledger/active-currencies')),
-  ]);
-
+  const [settings, apiInfo, currenciesData] = await Promise.all([request('/settings', undefined, pbnT).catch(swallow('/settings')), getApiInfo().catch(swallow('/')), request('/ledger/active-currencies', undefined, pbnT).catch(swallow('/ledger/active-currencies'))]);
   const activeCurrencies = Array.isArray(currenciesData) ? currenciesData : [];
 
   // 获取当前用户 (SSR)
-  const user = await getCurrentUser();
-
-  return { settings, apiInfo, user, activeCurrencies };
+  const user = await getCurrentUser(pbnT);
+  return {
+    settings,
+    apiInfo,
+    user,
+    activeCurrencies
+  };
 }
 
 /**
  * 生成 RootLayout 的 Metadata
  * 包含完整的 SEO 优化：Open Graph、Twitter Cards 等
  */
-export async function getLayoutMetadata() {
+export async function getLayoutMetadata(pbnT = pbnRuntimeT) {
   let siteName = DEFAULT_SITE_NAME;
-  let siteDescription = DEFAULT_SITE_DESCRIPTION;
+  let siteDescription = DEFAULT_SITE_DESCRIPTION(pbnT);
   let siteLogo = DEFAULT_SITE_LOGO;
   let favicon = DEFAULT_FAVICON;
   let appleTouchIcon = DEFAULT_APPLE_TOUCH_ICON;
   let siteKeywords = '';
   let siteUrl = '';
-
   try {
-    const settings = await request('/settings');
+    const settings = await request('/settings', undefined, pbnT);
     if (settings?.site_name?.value) {
       siteName = settings.site_name.value;
     }
@@ -92,58 +85,61 @@ export async function getLayoutMetadata() {
   }
 
   // 生成社交分享图片的绝对 URL
-  const ogImageUrl =
-    siteUrl && !siteLogo.startsWith('http') ? `${siteUrl}${siteLogo}` : siteLogo;
+  const ogImageUrl = siteUrl && !siteLogo.startsWith('http') ? `${siteUrl}${siteLogo}` : siteLogo;
 
   // 基础 metadata
   const metadata = {
     title: {
       template: `%s | ${siteName}`,
-      default: siteName,
+      default: siteName
     },
     description: siteDescription,
     applicationName: siteName,
     appleWebApp: {
-      title: siteName,
+      title: siteName
     },
     icons: {
       icon: favicon,
-      apple: appleTouchIcon,
+      apple: appleTouchIcon
     },
     openGraph: {
       title: {
         template: `%s | ${siteName}`,
-        default: siteName,
+        default: siteName
       },
       description: siteDescription,
       siteName,
-      type: 'website',
+      type: 'website'
     },
     twitter: {
       card: 'summary',
       title: {
         template: `%s | ${siteName}`,
-        default: siteName,
+        default: siteName
       },
-      description: siteDescription,
-    },
+      description: siteDescription
+    }
   };
 
   // 有 keywords 时才添加
   if (siteKeywords) {
-    metadata.keywords = siteKeywords.split(',').map((k) => k.trim());
+    metadata.keywords = siteKeywords.split(',').map(k => k.trim());
   }
 
   // 有 siteUrl 时才添加 URL 相关配置
   if (siteUrl) {
     metadata.metadataBase = new URL(siteUrl);
-    metadata.alternates = { canonical: '/' };
+    metadata.alternates = {
+      canonical: '/'
+    };
     metadata.openGraph.url = siteUrl;
-    metadata.openGraph.images = [{ url: ogImageUrl, alt: siteName }];
+    metadata.openGraph.images = [{
+      url: ogImageUrl,
+      alt: siteName
+    }];
     metadata.twitter.card = 'summary_large_image';
     metadata.twitter.images = [ogImageUrl];
   }
-
   return metadata;
 }
 
@@ -152,13 +148,12 @@ export async function getLayoutMetadata() {
 /**
  * 获取站点基本信息（用于子页面 metadata）
  */
-export async function getSiteInfo() {
+export async function getSiteInfo(pbnT = pbnRuntimeT) {
   let siteName = DEFAULT_SITE_NAME;
   let siteUrl = '';
   let siteLogo = DEFAULT_SITE_LOGO;
-
   try {
-    const settings = await request('/settings');
+    const settings = await request('/settings', undefined, pbnT);
     if (settings?.site_name?.value) {
       siteName = settings.site_name.value;
     }
@@ -171,18 +166,20 @@ export async function getSiteInfo() {
   } catch (error) {
     console.error('Error fetching site info:', error);
   }
-
-  return { siteName, siteUrl, siteLogo };
+  return {
+    siteName,
+    siteUrl,
+    siteLogo
+  };
 }
 
 /**
  * 生成主题初始化脚本
  * 用于在页面加载时立即恢复主题配置，避免闪烁
  */
-export function generateThemeScript() {
-  const themeClasses = THEMES.filter((t) => t.class).map((t) => t.class);
-  const fontSizeClasses = FONT_SIZES.map((f) => f.class);
-
+export function generateThemeScript(pbnT = pbnRuntimeT) {
+  const themeClasses = THEMES(pbnT).filter(t => t.class).map(t => t.class);
+  const fontSizeClasses = FONT_SIZES(pbnT).map(f => f.class);
   return `
     (function() {
       try {

@@ -1,3 +1,6 @@
+'use client';
+
+import { usePbnTranslations } from '@/i18n/useTranslations';
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -7,6 +10,29 @@ function Input({
   type,
   ...props
 }) {
+  const t = usePbnTranslations();
+  const clearLocalizedValidity = (event) => {
+    const input = event.currentTarget;
+    if (input.dataset.pbnValidity) {
+      input.setCustomValidity('');
+      delete input.dataset.pbnValidity;
+    }
+    props.onInput?.(event);
+  };
+  const localizeValidity = (event) => {
+    if (props.onInvalid) { props.onInvalid(event); return; }
+    const input = event.currentTarget;
+    if (input.dataset.pbnValidity) input.setCustomValidity('');
+    const { validity } = input;
+    if (validity.valid || validity.customError) return;
+    const key = validity.valueMissing ? 'vRequired'
+      : validity.typeMismatch ? 'vType'
+      : validity.tooShort ? 'vShort'
+      : validity.tooLong ? 'vLong'
+      : validity.rangeUnderflow || validity.rangeOverflow ? 'vRange' : 'vFormat';
+    input.setCustomValidity(t(key));
+    input.dataset.pbnValidity = '1';
+  };
   return (
     <input
       type={type}
@@ -17,7 +43,9 @@ function Input({
         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
         className
       )}
-      {...props} />
+      {...props}
+      onInput={clearLocalizedValidity}
+      onInvalid={localizeValidity} />
   );
 }
 

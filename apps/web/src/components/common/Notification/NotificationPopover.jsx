@@ -1,14 +1,11 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import usePageVisibility from '@/hooks/usePageVisibility';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Check, Trash2 } from 'lucide-react';
 import { getNotificationIcon, getNotificationMessage } from './helpers';
@@ -17,8 +14,8 @@ import Link from '@/components/common/Link';
 import { Loading } from '@/components/common/Loading';
 import UserAvatar from '@/components/user/UserAvatar';
 import Time from '@/components/common/Time';
-
 export default function NotificationPopover() {
+  const pbnT = usePbnTranslations();
   const router = useRouter();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -48,16 +45,13 @@ export default function NotificationPopover() {
   // 只有页面可见时才定时轮询未读数量
   useEffect(() => {
     if (!isVisible) return;
-
     const remaining = POLL_INTERVAL - (Date.now() - lastFetchTimeRef.current);
     if (remaining <= 0) {
       fetchUnreadCount();
     }
-
     const id = setInterval(fetchUnreadCount, POLL_INTERVAL);
     return () => clearInterval(id);
   }, [isVisible, fetchUnreadCount]);
-
   const fetchNotifications = async () => {
     setIsLoading(true);
     try {
@@ -69,43 +63,43 @@ export default function NotificationPopover() {
       setIsLoading(false);
     }
   };
-
-  const handleMarkAsRead = async (id) => {
+  const handleMarkAsRead = async id => {
     try {
       await notificationApi.markAsRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      setNotifications(prev => prev.map(n => n.id === id ? {
+        ...n,
+        isRead: true
+      } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
   };
-
   const handleMarkAllAsRead = async () => {
     try {
       await notificationApi.markAllAsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setNotifications(prev => prev.map(n => ({
+        ...n,
+        isRead: true
+      })));
       setUnreadCount(0);
     } catch (error) {
       console.error('Error marking all as read:', error);
     }
   };
-
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     try {
       await notificationApi.delete(id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      const notification = notifications.find((n) => n.id === id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      const notification = notifications.find(n => n.id === id);
       if (notification && !notification.isRead) {
-        setUnreadCount((prev) => Math.max(0, prev - 1));
+        setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (error) {
       console.error('Error deleting notification:', error);
     }
   };
-
-  const handleNotificationClick = async (notification) => {
+  const handleNotificationClick = async notification => {
     // 如果未读，标记为已读
     if (!notification.isRead) {
       await handleMarkAsRead(notification.id);
@@ -113,164 +107,118 @@ export default function NotificationPopover() {
     // 关闭弹窗
     setIsOpen(false);
   };
-
-
-
-  return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+  return <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant='ghost' size='icon' className='relative'>
           <Bell className='h-4 w-4' />
-          {unreadCount > 0 && (
-            <Badge
-              variant='destructive'
-              className='absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs'
-            >
+          {unreadCount > 0 && <Badge variant='destructive' className='absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs'>
               {unreadCount > 99 ? '99+' : unreadCount}
-            </Badge>
-          )}
+            </Badge>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-96 p-0' align='end'>
         {/* 标题栏 */}
         <div className='flex items-center justify-between px-4 py-3 border-b border-border'>
-          <h3 className='font-semibold text-base'>通知</h3>
+          <h3 className='font-semibold text-base'>{pbnT("m1457")}</h3>
           <div className='flex items-center gap-2'>
-            {unreadCount > 0 && (
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={handleMarkAllAsRead}
-                className='text-xs h-7 px-2'
-              >
-                <Check className='h-3 w-3 mr-1' />
-                全部已读
-              </Button>
-            )}
+            {unreadCount > 0 && <Button variant='ghost' size='sm' onClick={handleMarkAllAsRead} className='text-xs h-7 px-2'>
+                <Check className='h-3 w-3 mr-1' />{pbnT("m990")}</Button>}
             {/* <Link href='/profile/notifications'  onClick={() => setIsOpen(false)}>
               <Button variant='ghost' size='icon' className='h-7 w-7'>
                 <Settings className='h-3.5 w-3.5' />
               </Button>
-            </Link> */}
+             </Link> */}
           </div>
         </div>
 
         {/* 通知列表 */}
         <div className='max-h-100 overflow-y-auto'>
-          {isLoading ? (
-            <Loading className='py-8' />
-          ) : notifications.length > 0 ? (
-            <div className='divide-y divide-border'>
-              {notifications.map((notification) => {
-                // 生成跳转链接
-                let linkUrl = null;
-                if (notification.type === 'message' && notification.triggeredByUserId) {
-                  // 消息类型：跳转到与发送者的消息对话
-                  linkUrl = `/profile/messages/${notification.triggeredByUserId}`;
-                } else if (notification.type === 'gift_received') {
-                  // 礼物类型：跳转到我的物品页面
-                  linkUrl = '/profile/items';
-                } else if (notification.type === 'report_resolved' || notification.type === 'report_dismissed') {
-                  // 举报处理结果：跳转到被举报的内容
-                  try {
-                    const meta = typeof notification.metadata === 'string'
-                      ? JSON.parse(notification.metadata)
-                      : notification.metadata;
-                    if (meta) {
-                      if (meta.reportType === 'topic' && meta.targetId) {
-                        linkUrl = `/topic/${meta.targetId}`;
-                      } else if (meta.reportType === 'post' && meta.topicId && meta.targetId) {
-                        linkUrl = `/topic/${meta.topicId}#post-${meta.targetId}`;
-                      } else if (meta.reportType === 'user' && meta.targetUsername) {
-                        linkUrl = `/users/${meta.targetUsername}`;
-                      }
-                    }
-                  } catch (e) {
-                    console.error('Error parsing report metadata', e);
-                  }
-                } else if (notification.type === 'moderation_approved' || notification.type === 'moderation_rejected') {
-                  // 审核结果：跳转到内容位置（metadata.link）。
-                  // 驳回时仅 entity（话题/回复）内容仍在且作者可访问，故带 link；field 驳回无 link。
-                  try {
-                    const meta = typeof notification.metadata === 'string'
-                      ? JSON.parse(notification.metadata)
-                      : notification.metadata;
-                    if (meta?.link) linkUrl = meta.link;
-                  } catch (e) {
-                    console.error('Error parsing moderation metadata', e);
-                  }
-                } else if (notification.topicId) {
-                  // 其他类型：跳转到对应的话题/帖子
-                  linkUrl = `/topic/${notification.topicId}${
-                    notification.postId ? `#post-${notification.postId}` : ''
-                  }`;
-                } else if (notification.type === 'badge_earned') {
-                  // 勋章类型：跳转到我的勋章页面，并带上参数以触发弹窗
-                  let badgeId, badgeName, iconUrl;
-                  try {
-                    const meta = typeof notification.metadata === 'string' 
-                      ? JSON.parse(notification.metadata) 
-                      : notification.metadata;
-                    if (meta) {
-                      badgeId = meta.badgeId;
-                      badgeName = meta.badgeName;
-                      iconUrl = meta.iconUrl;
-                    }
-                  } catch (e) {
-                    console.error('Error parsing badge metadata', e);
-                  }
-                  
-                  if (badgeId && !notification.isRead) {
-                    const params = new URLSearchParams();
-                    params.set('unlockBadgeId', badgeId);
-                    if (badgeName) params.set('unlockBadgeName', badgeName);
-                    if (iconUrl) params.set('unlockBadgeIcon', iconUrl);
-                    linkUrl = `/profile/badges?${params.toString()}`;
-                  } else {
-                    linkUrl = '/profile/badges';
+          {isLoading ? <Loading className='py-8' /> : notifications.length > 0 ? <div className='divide-y divide-border'>
+              {notifications.map(notification => {
+            // 生成跳转链接
+            let linkUrl = null;
+            if (notification.type === 'message' && notification.triggeredByUserId) {
+              // 消息类型：跳转到与发送者的消息对话
+              linkUrl = `/profile/messages/${notification.triggeredByUserId}`;
+            } else if (notification.type === 'gift_received') {
+              // 礼物类型：跳转到我的物品页面
+              linkUrl = '/profile/items';
+            } else if (notification.type === 'report_resolved' || notification.type === 'report_dismissed') {
+              // 举报处理结果：跳转到被举报的内容
+              try {
+                const meta = typeof notification.metadata === 'string' ? JSON.parse(notification.metadata) : notification.metadata;
+                if (meta) {
+                  if (meta.reportType === 'topic' && meta.targetId) {
+                    linkUrl = `/topic/${meta.targetId}`;
+                  } else if (meta.reportType === 'post' && meta.topicId && meta.targetId) {
+                    linkUrl = `/topic/${meta.topicId}#post-${meta.targetId}`;
+                  } else if (meta.reportType === 'user' && meta.targetUsername) {
+                    linkUrl = `/users/${meta.targetUsername}`;
                   }
                 }
-
-                return (
-                  <div
-                    key={notification.id}
-                    className={`px-4 py-3 hover:bg-accent transition-colors ${
-                      !notification.isRead ? 'bg-accent/50' : ''
-                    } ${linkUrl ? 'cursor-pointer' : ''}`}
-                    onClick={async () => {
-                      if (!linkUrl) return;
-                      // 客户端路由，不卸载文档；markAsRead 的 fetch 不会被中止
-                      handleNotificationClick(notification);
-                      router.push(linkUrl);
-                    }}
-                  >
+              } catch (e) {
+                console.error('Error parsing report metadata', e);
+              }
+            } else if (notification.type === 'moderation_approved' || notification.type === 'moderation_rejected') {
+              // 审核结果：跳转到内容位置（metadata.link）。
+              // 驳回时仅 entity（话题/回复）内容仍在且作者可访问，故带 link；field 驳回无 link。
+              try {
+                const meta = typeof notification.metadata === 'string' ? JSON.parse(notification.metadata) : notification.metadata;
+                if (meta?.link) linkUrl = meta.link;
+              } catch (e) {
+                console.error('Error parsing moderation metadata', e);
+              }
+            } else if (notification.topicId) {
+              // 其他类型：跳转到对应的话题/帖子
+              linkUrl = `/topic/${notification.topicId}${notification.postId ? `#post-${notification.postId}` : ''}`;
+            } else if (notification.type === 'badge_earned') {
+              // 勋章类型：跳转到我的勋章页面，并带上参数以触发弹窗
+              let badgeId, badgeName, iconUrl;
+              try {
+                const meta = typeof notification.metadata === 'string' ? JSON.parse(notification.metadata) : notification.metadata;
+                if (meta) {
+                  badgeId = meta.badgeId;
+                  badgeName = meta.badgeName;
+                  iconUrl = meta.iconUrl;
+                }
+              } catch (e) {
+                console.error('Error parsing badge metadata', e);
+              }
+              if (badgeId && !notification.isRead) {
+                const params = new URLSearchParams();
+                params.set('unlockBadgeId', badgeId);
+                if (badgeName) params.set('unlockBadgeName', badgeName);
+                if (iconUrl) params.set('unlockBadgeIcon', iconUrl);
+                linkUrl = `/profile/badges?${params.toString()}`;
+              } else {
+                linkUrl = '/profile/badges';
+              }
+            }
+            return <div key={notification.id} className={`px-4 py-3 hover:bg-accent transition-colors ${!notification.isRead ? 'bg-accent/50' : ''} ${linkUrl ? 'cursor-pointer' : ''}`} onClick={async () => {
+              if (!linkUrl) return;
+              // 客户端路由，不卸载文档；markAsRead 的 fetch 不会被中止
+              handleNotificationClick(notification);
+              router.push(linkUrl);
+            }}>
                     <div className='flex items-start gap-3'>
                       {/* 未读指示器 */}
                       <div className='shrink-0 pt-1.5'>
-                        {!notification.isRead && (
-                          <div className='w-2 h-2 bg-green-500 rounded-full ring-2 ring-green-500/20' />
-                        )}
+                        {!notification.isRead && <div className='w-2 h-2 bg-green-500 rounded-full ring-2 ring-green-500/20' />}
                       </div>
 
                       {/* 用户头像 */}
-                      <UserAvatar
-                        url={notification.triggeredByAvatar}
-                        name={notification.triggeredByName || notification.triggeredByUsername}
-                        size='sm'
-                      />
+                      <UserAvatar url={notification.triggeredByAvatar} name={notification.triggeredByName || notification.triggeredByUsername} size='sm' />
 
                       {/* 内容 */}
                       <div className='flex-1 min-w-0'>
                         {/* 用户名和消息 */}
                         <div className='flex items-start gap-1.5 mb-1 flex-wrap'>
                           {getNotificationIcon(notification.type)}
-                          {notification.triggeredByUsername && (
-                            <span className='text-sm font-medium text-foreground'>
+                          {notification.triggeredByUsername && <span className='text-sm font-medium text-foreground'>
                               {notification.triggeredByName || notification.triggeredByUsername}
-                            </span>
-                          )}
+                            </span>}
                           <span className='text-sm text-muted-foreground'>
-                            {getNotificationMessage(notification)}
+                            {getNotificationMessage(notification, pbnT)}
                           </span>
                         </div>
 
@@ -279,68 +227,40 @@ export default function NotificationPopover() {
                           <span className='text-xs text-muted-foreground'>
                             <Time date={notification.createdAt} fromNow />
                           </span>
-                          {!notification.isRead && (
-                            <Badge
-                              variant='secondary'
-                              className='h-4 px-1.5 text-xs font-bold text-green-600'
-                            >
-                              新
-                            </Badge>
-                          )}
+                          {!notification.isRead && <Badge variant='secondary' className='h-4 px-1.5 text-xs font-bold text-green-600'>{pbnT("m1458")}</Badge>}
                         </div>
                       </div>
 
                       {/* 操作按钮 */}
                       <div className='flex items-center gap-1 shrink-0'>
-                        {!notification.isRead && (
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            className='h-6 w-6'
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMarkAsRead(notification.id);
-                            }}
-                            title='标记为已读'
-                          >
+                        {!notification.isRead && <Button variant='ghost' size='icon' className='h-6 w-6' onClick={e => {
+                    e.stopPropagation();
+                    handleMarkAsRead(notification.id);
+                  }} title={pbnT("m1459")}>
                             <Check className='h-3 w-3' />
-                          </Button>
-                        )}
-                        <Button
-                          variant='ghost'
-                          size='icon'
-                          className='h-6 w-6 hover:text-destructive'
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(notification.id);
-                          }}
-                          title='删除'
-                        >
+                          </Button>}
+                        <Button variant='ghost' size='icon' className='h-6 w-6 hover:text-destructive' onClick={e => {
+                    e.stopPropagation();
+                    handleDelete(notification.id);
+                  }} title={pbnT("m110")}>
                           <Trash2 className='h-3 w-3' />
                         </Button>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className='flex flex-col items-center justify-center py-12'>
+                  </div>;
+          })}
+            </div> : <div className='flex flex-col items-center justify-center py-12'>
               <Bell className='h-12 w-12 text-muted-foreground opacity-50 mb-3' />
-              <p className='text-sm text-muted-foreground'>暂无通知</p>
-            </div>
-          )}
+              <p className='text-sm text-muted-foreground'>{pbnT("m1000")}</p>
+            </div>}
         </div>
 
         {/* 底部操作 */}
         <div className='border-t border-border px-4 py-2'>
           <Link href='/profile/notifications' onClick={() => setIsOpen(false)}>
-            <Button variant='ghost' className='w-full text-sm hover:bg-accent'>
-              查看全部通知
-            </Button>
+            <Button variant='ghost' className='w-full text-sm hover:bg-accent'>{pbnT("m1460")}</Button>
           </Link>
         </div>
       </PopoverContent>
-    </Popover>
-  );
+    </Popover>;
 }

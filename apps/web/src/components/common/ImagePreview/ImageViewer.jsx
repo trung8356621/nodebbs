@@ -372,7 +372,7 @@ function ImageViewer({ src, alt, onClose, overlayBaseOpacity = 0.5, onOverlayOpa
       {!isLoaded && (
         <Loading size="lg" className="absolute text-white/70" />
       )}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* Image rendered by the media component. */}
       <img
         ref={imgRef}
         src={src}

@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { FormDialog } from '@/components/common/FormDialog';
@@ -9,9 +10,19 @@ import { Mail, Loader2 } from 'lucide-react';
 import { conversationApi, blockedUsersApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-
-export default function SendMessageButton({ recipientId, recipientName, recipientMessagePermission = 'everyone', variant = 'outline', className = 'w-full' }) {
-  const { isAuthenticated, user, openLoginDialog } = useAuth();
+export default function SendMessageButton({
+  recipientId,
+  recipientName,
+  recipientMessagePermission = 'everyone',
+  variant = 'outline',
+  className = 'w-full'
+}) {
+  const pbnT = usePbnTranslations();
+  const {
+    isAuthenticated,
+    user,
+    openLoginDialog
+  } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState('');
   const [sending, setSending] = useState(false);
@@ -26,13 +37,12 @@ export default function SendMessageButton({ recipientId, recipientName, recipien
       setCheckingBlock(false);
     }
   }, [isAuthenticated, user, recipientId]);
-
   const checkBlockStatus = async () => {
     try {
       const result = await blockedUsersApi.check(recipientId);
       setIsBlocked(result.isBlocked || false);
     } catch (err) {
-      console.error('检查拉黑状态失败:', err);
+      console.error("Could not check block status:", err);
     } finally {
       setCheckingBlock(false);
     }
@@ -57,76 +67,46 @@ export default function SendMessageButton({ recipientId, recipientName, recipien
   if (!checkingBlock && isBlocked) {
     return null;
   }
-
   const handleSend = async () => {
     if (!content.trim()) {
-      toast.error('请输入消息内容');
+      toast.error(pbnT("m1533"));
       return;
     }
-
     setSending(true);
-
     try {
       await conversationApi.send(recipientId, {
         content: content.trim()
       });
-
-      toast.success('消息发送成功');
+      toast.success(pbnT("m1534"));
       setIsOpen(false);
       setContent('');
     } catch (err) {
-      console.error('发送消息失败:', err);
-      toast.error(err.message || '发送失败');
+      console.error("Could not send message:", err);
+      toast.error(err.message || pbnT("m974"));
     } finally {
       setSending(false);
     }
   };
-
-  const handleOpenChange = (open) => {
+  const handleOpenChange = open => {
     if (!isAuthenticated && open) {
       openLoginDialog();
       return;
     }
     setIsOpen(open);
   };
+  return <>
+      <Button className={className} variant={variant} onClick={() => handleOpenChange(true)}>
+        <Mail className='h-4 w-4' />{pbnT("m1535")}</Button>
 
-  return (
-    <>
-      <Button
-        className={className}
-        variant={variant}
-        onClick={() => handleOpenChange(true)}
-      >
-        <Mail className='h-4 w-4' />
-        发送消息
-      </Button>
-
-      <FormDialog
-        open={isOpen}
-        onOpenChange={handleOpenChange}
-        title="发送站内信"
-        description={`发送私信给 ${recipientName}`}
-        submitText="发送"
-        onSubmit={handleSend}
-        loading={sending}
-        disabled={sending || !content.trim()}
-        maxWidth="sm:max-w-125"
-      >
+      <FormDialog open={isOpen} onOpenChange={handleOpenChange} title={pbnT("m1536")} description={pbnT("m1537", {
+      arg0: recipientName
+    })} submitText={pbnT("m1538")} onSubmit={handleSend} loading={sending} disabled={sending || !content.trim()} maxWidth="sm:max-w-125">
           <div className='space-y-4 py-4'>
             <div className='space-y-2'>
-              <Label htmlFor='content'>内容 *</Label>
-              <Textarea
-                id='content'
-                placeholder='请输入消息内容'
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                disabled={sending}
-                className='resize-none min-h-24'
-                autoFocus
-              />
+              <Label htmlFor='content'>{pbnT("m1539")}</Label>
+              <Textarea id='content' placeholder={pbnT("m1533")} value={content} onChange={e => setContent(e.target.value)} disabled={sending} className='resize-none min-h-24' autoFocus />
             </div>
           </div>
       </FormDialog>
-    </>
-  );
+    </>;
 }

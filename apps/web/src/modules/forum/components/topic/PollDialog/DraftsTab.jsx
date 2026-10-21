@@ -1,30 +1,27 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
 import { useEffect, useState } from 'react';
 import { BarChart3, Pencil, Trash2, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-
 const LIMIT = 20;
-
-function formatTimeAgo(iso) {
+function formatTimeAgo(iso, pbnT = pbnRuntimeT) {
   if (!iso) return '';
   const diff = Date.now() - new Date(iso).getTime();
   const day = 24 * 60 * 60 * 1000;
-  if (diff < day) return '今天';
-  if (diff < 7 * day) return `${Math.floor(diff / day)} 天前`;
-  if (diff < 30 * day) return `${Math.floor(diff / (7 * day))} 周前`;
-  return `${Math.floor(diff / (30 * day))} 月前`;
+  if (diff < day) return pbnT("m2250");
+  if (diff < 7 * day) return pbnT("m2251", {
+    arg0: Math.floor(diff / day)
+  });
+  if (diff < 30 * day) return pbnT("m2252", {
+    arg0: Math.floor(diff / (7 * day))
+  });
+  return pbnT("m2253", {
+    arg0: Math.floor(diff / (30 * day))
+  });
 }
 
 /**
@@ -33,7 +30,12 @@ function formatTimeAgo(iso) {
  * @param {(pollId:number)=>void} props.onInsert
  * @param {(draft:object)=>void} props.onEdit
  */
-export default function DraftsTab({ refreshKey, onInsert, onEdit }) {
+export default function DraftsTab({
+  refreshKey,
+  onInsert,
+  onEdit
+}) {
+  const pbnT = usePbnTranslations();
   const [drafts, setDrafts] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -41,96 +43,82 @@ export default function DraftsTab({ refreshKey, onInsert, onEdit }) {
   const [error, setError] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [busyEdit, setBusyEdit] = useState(null);
-
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetch(`/api/polls/drafts?page=${page}&limit=${LIMIT}`)
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body?.error || '加载草稿失败');
-        }
-        return res.json();
-      })
-      .then((d) => {
-        if (cancelled) return;
-        setDrafts(d.drafts ?? []);
-        setTotal(d.total ?? 0);
-      })
-      .catch((err) => !cancelled && setError(err.message))
-      .finally(() => !cancelled && setLoading(false));
+    fetch(`/api/polls/drafts?page=${page}&limit=${LIMIT}`).then(async res => {
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || pbnT("m2203"));
+      }
+      return res.json();
+    }).then(d => {
+      if (cancelled) return;
+      setDrafts(d.drafts ?? []);
+      setTotal(d.total ?? 0);
+    }).catch(err => !cancelled && setError(err.message)).finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     };
   }, [page, refreshKey]);
-
-  const handleEditClick = async (draft) => {
+  const handleEditClick = async draft => {
     setBusyEdit(draft.id);
     try {
       const res = await fetch(`/api/polls/${draft.id}`);
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data?.error || '加载草稿失败');
+        toast.error(data?.error || pbnT("m2203"));
         return;
       }
       onEdit?.({
         id: data.id,
         question: data.question,
-        options: data.options.map((o) => o.text),
+        options: data.options.map(o => o.text),
         selectionType: data.selectionType,
         maxChoices: data.maxChoices,
         isAnonymous: data.isAnonymous,
-        closedAt: data.closedAt,
+        closedAt: data.closedAt
       });
     } catch {
-      toast.error('网络错误，请重试');
+      toast.error(pbnT("m1362"));
     } finally {
       setBusyEdit(null);
     }
   };
-
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     try {
-      const res = await fetch(`/api/polls/${deleteTarget.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/polls/${deleteTarget.id}`, {
+        method: 'DELETE'
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data?.error || '删除失败');
+        toast.error(data?.error || pbnT("m249"));
         return;
       }
-      toast.success('草稿已删除');
+      toast.success(pbnT("m2204"));
       setDeleteTarget(null);
       // 触发自身刷新：通过 setPage(1) 或刷新机制
       // 简单做法：重新发请求 — 但本组件依赖 refreshKey；这里直接更新本地列表更省事
-      setDrafts((prev) => prev.filter((d) => d.id !== deleteTarget.id));
-      setTotal((t) => Math.max(0, t - 1));
+      setDrafts(prev => prev.filter(d => d.id !== deleteTarget.id));
+      setTotal(t => Math.max(0, t - 1));
     } catch {
-      toast.error('网络错误，请重试');
+      toast.error(pbnT("m1362"));
     }
   };
-
   if (loading && drafts.length === 0) {
-    return <div className="py-8 text-sm text-muted-foreground text-center">加载中…</div>;
+    return <div className="py-8 text-sm text-muted-foreground text-center">{pbnT("m1406")}</div>;
   }
   if (error) {
     return <div className="py-8 text-sm text-destructive text-center">{error}</div>;
   }
   if (drafts.length === 0) {
-    return (
-      <div className="py-8 text-sm text-muted-foreground text-center">
-        还没有草稿。去『新建』Tab 创建第一个吧。
-      </div>
-    );
+    return <div className="py-8 text-sm text-muted-foreground text-center">{pbnT("m2299")}</div>;
   }
-
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
-
-  return (
-    <div className="pt-4 space-y-2">
-      {drafts.map((d) => (
-        <div key={d.id} className="border border-border rounded-lg p-3 space-y-2">
+  return <div className="pt-4 space-y-2">
+      {drafts.map(d => <div key={d.id} className="border border-border rounded-lg p-3 space-y-2">
           <div className="flex items-start gap-2">
             <BarChart3 className="h-4 w-4 mt-0.5 text-primary shrink-0" />
             <div className="flex-1 min-w-0">
@@ -138,69 +126,47 @@ export default function DraftsTab({ refreshKey, onInsert, onEdit }) {
                 {d.question.length > 60 ? d.question.slice(0, 60) + '…' : d.question}
               </div>
               <div className="text-xs text-muted-foreground mt-0.5">
-                {d.selectionType === 'single' ? '单选' : '多选'}
+                {d.selectionType === 'single' ? pbnT("m2294") : pbnT("m2295")}
                 {' · '}
-                {d.isAnonymous ? '匿名' : '实名'}
+                {d.isAnonymous ? pbnT("m1415") : pbnT("m2296")}
                 {' · '}
-                {d.optionsCount} 选项
-                {' · '}
-                {formatTimeAgo(d.createdAt)}
+                {d.optionsCount}{" "}{pbnT("m2297")}{" "}{' · '}
+                {formatTimeAgo(d.createdAt, pbnT)}
               </div>
             </div>
           </div>
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="outline" onClick={() => onInsert?.(d.id)}>
-              <ArrowRight className="h-3 w-3" /> 插入
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleEditClick(d)}
-              disabled={busyEdit === d.id}
-            >
-              {busyEdit === d.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Pencil className="h-3 w-3" />}
-              编辑
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-destructive hover:text-destructive"
-              onClick={() => setDeleteTarget({ id: d.id, question: d.question })}
-            >
-              <Trash2 className="h-3 w-3" /> 删除
-            </Button>
+              <ArrowRight className="h-3 w-3" />{pbnT("m1346")}</Button>
+            <Button size="sm" variant="outline" onClick={() => handleEditClick(d)} disabled={busyEdit === d.id}>
+              {busyEdit === d.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Pencil className="h-3 w-3" />}{pbnT("m235")}</Button>
+            <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteTarget({
+          id: d.id,
+          question: d.question
+        })}>
+              <Trash2 className="h-3 w-3" />{pbnT("m110")}</Button>
           </div>
-        </div>
-      ))}
+        </div>)}
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
-          <span>共 {total} 条 · 第 {page} / {totalPages} 页</span>
+      {totalPages > 1 && <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
+          <span>{pbnT("m75")}{" "}{total}{" "}{pbnT("m2207")}{" "}{page} / {totalPages}{" "}{pbnT("m142")}</span>
           <div className="flex gap-1">
-            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-              上一页
-            </Button>
-            <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-              下一页
-            </Button>
+            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>{pbnT("m140")}</Button>
+            <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>{pbnT("m143")}</Button>
           </div>
-        </div>
-      )}
+        </div>}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除草稿</AlertDialogTitle>
-            <AlertDialogDescription>
-              确定删除草稿"{deleteTarget?.question?.slice(0, 40)}…"？此操作不可恢复。
-            </AlertDialogDescription>
+            <AlertDialogTitle>{pbnT("m2208")}</AlertDialogTitle>
+            <AlertDialogDescription>{pbnT("m2300")}{deleteTarget?.question?.slice(0, 40)}{pbnT("m2301")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>删除</AlertDialogAction>
+            <AlertDialogCancel>{pbnT("m486")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>{pbnT("m110")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>;
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import Link from '@/components/common/Link';
 import { Badge } from '@/components/ui/badge';
 import { Lock } from 'lucide-react';
@@ -13,51 +14,31 @@ import { useTopicContext } from '@/modules/forum/contexts/TopicContext';
  * @param {Object} props
  * @param {string} [props.className] - 容器自定义样式
  */
-export default function TopicMetaLine({ className }) {
-  const { topic } = useTopicContext();
-
-  return (
-    <div className={className || 'flex items-center gap-2 text-sm text-muted-foreground/70 flex-wrap'}>
-      <Link
-        href={`/users/${topic.username}`}
-        className='hover:text-foreground transition-colors'
-      >
+export default function TopicMetaLine({
+  className
+}) {
+  const pbnT = usePbnTranslations();
+  const {
+    topic
+  } = useTopicContext();
+  return <div className={className || 'flex items-center gap-2 text-sm text-muted-foreground/70 flex-wrap'}>
+      <Link href={`/users/${topic.username}`} className='hover:text-foreground transition-colors'>
         {topic.userName || topic.username}
       </Link>
-      <span className='opacity-70'>
-        发布于 <Time date={topic.createdAt} fromNow />
+      <span className='opacity-70'>{pbnT("m373")}<Time date={topic.createdAt} fromNow />
       </span>
-      {topic.viewCount > 0 && (
-        <>
+      {topic.viewCount > 0 && <>
           <span className='opacity-50'>•</span>
-          <span className='opacity-70'>{topic.viewCount} 次浏览</span>
-        </>
-      )}
-      {topic.isClosed && (
-        <Lock className='inline-block h-4 w-4 text-muted-foreground -mt-0.5 mr-1' />
-      )}
-      {topic.approvalStatus === 'pending' && (
-        <>
+          <span className='opacity-70'>{topic.viewCount}{" "}{pbnT("m2340")}</span>
+        </>}
+      {topic.isClosed && <Lock className='inline-block h-4 w-4 text-muted-foreground -mt-0.5 mr-1' />}
+      {topic.approvalStatus === 'pending' && <>
           <span className='opacity-50'>•</span>
-          <Badge
-            variant='outline'
-            className='text-chart-5 border-chart-5 text-xs'
-          >
-            待审核
-          </Badge>
-        </>
-      )}
-      {topic.approvalStatus === 'rejected' && (
-        <>
+          <Badge variant='outline' className='text-chart-5 border-chart-5 text-xs'>{pbnT("m379")}</Badge>
+        </>}
+      {topic.approvalStatus === 'rejected' && <>
           <span className='opacity-50'>•</span>
-          <Badge
-            variant='outline'
-            className='text-destructive border-destructive text-xs'
-          >
-            已拒绝
-          </Badge>
-        </>
-      )}
-    </div>
-  );
+          <Badge variant='outline' className='text-destructive border-destructive text-xs'>{pbnT("m434")}</Badge>
+        </>}
+    </div>;
 }

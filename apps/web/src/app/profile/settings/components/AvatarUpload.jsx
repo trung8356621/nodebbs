@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useRef, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Upload } from 'lucide-react';
@@ -15,14 +16,15 @@ import { uploadApi } from '@/lib/api';
  * @param {string} props.accept - 允许的文件类型
  * @param {number} props.maxSize - 最大文件大小 (字节)
  */
-export function AvatarUpload({ 
-  onUpload, 
+export function AvatarUpload({
+  onUpload,
   uploading: externalUploading,
   // 默认使用全局配置 (5MB)
   maxSize = MAX_UPLOAD_SIZE_DEFAULT_KB * 1024,
   // 默认构建 accept 字符串
   accept
 }) {
+  const pbnT = usePbnTranslations();
   const fileInputRef = useRef(null);
   const [internalUploading, setInternalUploading] = useState(false);
 
@@ -33,90 +35,59 @@ export function AvatarUpload({
     // 从扩展名映射到 MIME 类型
     const mimes = new Set();
     DEFAULT_IMAGE_EXTENSIONS.forEach(ext => {
-       const mapped = EXT_MIME_MAP[ext];
-       if (mapped) mapped.forEach(m => mimes.add(m));
+      const mapped = EXT_MIME_MAP[ext];
+      if (mapped) mapped.forEach(m => mimes.add(m));
     });
     return Array.from(mimes).join(',');
   }, [accept]);
-
   const uploading = externalUploading !== undefined ? externalUploading : internalUploading;
 
   // 生成友好的扩展名提示文本
   const acceptExtensionsText = useMemo(() => {
-     // 如果外部传入了 custom accept string (e.g. "image/*")，则难以反推扩展名，这里简化处理
-     // 只列常见位图格式：svg/ico 虽在白名单内，但作为头像提示给用户没有意义
-     const commonExts = DEFAULT_IMAGE_EXTENSIONS.filter(ext =>
-       ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)
-     );
-     return commonExts.map(e => e.toUpperCase()).join('、');
+    // 如果外部传入了 custom accept string (e.g. "image/*")，则难以反推扩展名，这里简化处理
+    // 只列常见位图格式：svg/ico 虽在白名单内，但作为头像提示给用户没有意义
+    const commonExts = DEFAULT_IMAGE_EXTENSIONS.filter(ext => ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext));
+    return commonExts.map(e => e.toUpperCase()).join('、');
   }, []);
-
   const handleClick = () => {
     fileInputRef.current?.click();
   };
-
-  const handleFileChange = async (e) => {
+  const handleFileChange = async e => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     // 清空 input，允许重复选择同一文件
     e.target.value = '';
-
     if (!file.type.startsWith('image/')) {
-      toast.error('请选择图片文件');
+      toast.error(pbnT("m1014"));
       return;
     }
-
     if (file.size > maxSize) {
       const sizeMB = maxSize / (1024 * 1024);
-      toast.error(`图片大小不能超过 ${sizeMB}MB`);
+      toast.error(pbnT("m1015", {
+        arg0: sizeMB
+      }));
       return;
     }
-
     setInternalUploading(true);
-
     try {
-      const result = await uploadApi.upload(file, 'avatars');
+      const result = await uploadApi(pbnT).upload(file, 'avatars');
       onUpload(result.url); // 注意: 通用上传接口返回 { url: ... }
     } catch (err) {
-      console.error('上传头像失败:', err);
-      toast.error(err.message || '上传头像失败');
+      console.error("Could not upload avatar:", err);
+      toast.error(err.message || pbnT("m1017"));
     } finally {
       setInternalUploading(false);
     }
   };
-
-  return (
-    <>
-      <input
-        ref={fileInputRef}
-        type='file'
-        accept={computedAccept}
-        onChange={handleFileChange}
-        className='hidden'
-      />
-      <Button
-        type='button'
-        variant='outline'
-        size='sm'
-        onClick={handleClick}
-        disabled={uploading}
-      >
-        {uploading ? (
-          <>
-            <Loader2 className='h-4 w-4 animate-spin' />
-            上传中...
-          </>
-        ) : (
-          <>
-            <Upload className='h-4 w-4' />
-            上传新头像
-          </>
-        )}
+  return <>
+      <input ref={fileInputRef} type='file' accept={computedAccept} onChange={handleFileChange} className='hidden' />
+      <Button type='button' variant='outline' size='sm' onClick={handleClick} disabled={uploading}>
+        {uploading ? <>
+            <Loader2 className='h-4 w-4 animate-spin' />{pbnT("m1018")}</> : <>
+            <Upload className='h-4 w-4' />{pbnT("m1019")}</>}
       </Button>
-      <p className='text-xs text-muted-foreground mt-2'>
-        推荐尺寸：200x200px，支持 {acceptExtensionsText} 格式，最大 {maxSize / (1024 * 1024)}MB
+      <p className='text-xs text-muted-foreground mt-2'>{pbnT("m1020")}{" "}{acceptExtensionsText}{" "}{pbnT("m1021")}{" "}{maxSize / (1024 * 1024)}MB
       </p>
-    </>
-  );
+    </>;
 }

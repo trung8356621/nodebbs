@@ -1,3 +1,4 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Package } from 'lucide-react';
@@ -16,50 +17,38 @@ import { getItemTypeLabel } from '@/extensions/shop/utils/itemTypes';
  * @param {boolean} props.loading - 加载状态
  * @param {string} props.itemType - 当前物品类型筛选
  */
-export function ItemInventoryGrid({ items, onEquip, onUnequip, onUse, actioningItemId, loading, itemType }) {
+export function ItemInventoryGrid({
+  items,
+  onEquip,
+  onUnequip,
+  onUse,
+  actioningItemId,
+  loading,
+  itemType
+}) {
+  const pbnT = usePbnTranslations();
   if (loading) {
-    return (
-      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:grid-cols-5">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="aspect-[3/4] rounded-2xl bg-muted/20 animate-pulse border border-border/50" />
-        ))}
-      </div>
-    );
+    return <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:grid-cols-5">
+        {Array.from({
+        length: 8
+      }).map((_, i) => <div key={i} className="aspect-[3/4] rounded-2xl bg-muted/20 animate-pulse border border-border/50" />)}
+      </div>;
   }
-
   if (items.length === 0) {
-    return (
-      <Card className="shadow-none">
+    return <Card className="shadow-none">
         <CardContent className="text-center py-12">
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-          <h3 className="text-lg font-medium text-card-foreground mb-2">
-            暂无道具
-          </h3>
+          <h3 className="text-lg font-medium text-card-foreground mb-2">{pbnT("m1993")}</h3>
           <p className="text-muted-foreground mb-4">
-            {itemType === 'all'
-              ? '你还没有购买任何道具'
-              : `你还没有购买${getItemTypeLabel(itemType)}`}
+            {itemType === 'all' ? pbnT("m1994") : pbnT("m1995", {
+            arg0: getItemTypeLabel(itemType, pbnT)
+          })}
           </p>
-          <Button onClick={() => (window.location.href = '/profile/shop')}>
-            前往商城
-          </Button>
+          <Button onClick={() => window.location.href = '/profile/shop'}>{pbnT("m1996")}</Button>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-      {items.map((item) => (
-        <ItemInventoryCard
-          key={item.id}
-          item={item}
-          onEquip={onEquip}
-          onUnequip={onUnequip}
-          onUse={onUse}
-          actioning={actioningItemId === item.id}
-        />
-      ))}
-    </div>
-  );
+  return <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      {items.map(item => <ItemInventoryCard key={item.id} item={item} onEquip={onEquip} onUnequip={onUnequip} onUse={onUse} actioning={actioningItemId === item.id} />)}
+    </div>;
 }

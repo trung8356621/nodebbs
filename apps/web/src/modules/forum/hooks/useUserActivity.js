@@ -16,7 +16,7 @@ export function useUserActivity({
   topicsTotal = 0,
   postsTotal = 0,
   currentPage = 1,
-  limit = 20,
+  limit = 20
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -45,7 +45,9 @@ export function useUserActivity({
     } else {
       params.delete('page');
     }
-    router.push(`?${params.toString()}`, { scroll: false });
+    router.push(`?${params.toString()}`, {
+      scroll: false
+    });
   }, [router, searchParams]);
 
   /**
@@ -57,12 +59,12 @@ export function useUserActivity({
       const data = await topicApi.getList({
         userId,
         page,
-        limit,
+        limit
       });
       setTopics(data.items || []);
       setTopicsPageTotal(data.total || 0);
     } catch (error) {
-      console.error('获取话题失败:', error);
+      console.error("Could not load topic:", error);
     } finally {
       setIsLoadingTopics(false);
     }
@@ -78,7 +80,7 @@ export function useUserActivity({
       setPosts(data.items || []);
       setPostsPageTotal(data.total || 0);
     } catch (error) {
-      console.error('获取回复失败:', error);
+      console.error("Could not load replies:", error);
     } finally {
       setIsLoadingPosts(false);
     }
@@ -87,7 +89,7 @@ export function useUserActivity({
   /**
    * 处理 Tab 切换
    */
-  const handleTabChange = useCallback((value) => {
+  const handleTabChange = useCallback(value => {
     setActiveTab(value);
     updateURL(value, 1);
 
@@ -102,7 +104,7 @@ export function useUserActivity({
   /**
    * 处理话题分页
    */
-  const handleTopicsPageChange = useCallback((page) => {
+  const handleTopicsPageChange = useCallback(page => {
     updateURL('topics', page);
     fetchTopics(page);
   }, [updateURL, fetchTopics]);
@@ -110,11 +112,10 @@ export function useUserActivity({
   /**
    * 处理回复分页
    */
-  const handlePostsPageChange = useCallback((page) => {
+  const handlePostsPageChange = useCallback(page => {
     updateURL('posts', page);
     fetchPosts(page);
   }, [updateURL, fetchPosts]);
-
   return {
     // ===== 状态 =====
     /** 当前激活的 Tab（'topics' | 'posts'） */
@@ -141,6 +142,6 @@ export function useUserActivity({
     /** 话题分页切换回调 */
     handleTopicsPageChange,
     /** 回复分页切换回调 */
-    handlePostsPageChange,
+    handlePostsPageChange
   };
 }

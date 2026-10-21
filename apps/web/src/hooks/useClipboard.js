@@ -1,12 +1,13 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-
-export function useClipboard({ timeout = 2000 } = {}) {
+export function useClipboard({
+  timeout = 2000
+} = {}) {
+  const pbnT = usePbnTranslations();
   const [copied, setCopied] = useState(false);
-
-  const copy = useCallback(async (text) => {
+  const copy = useCallback(async text => {
     if (!text) return false;
-
     try {
       if (navigator?.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
@@ -25,12 +26,11 @@ export function useClipboard({ timeout = 2000 } = {}) {
           if (!successful) throw new Error('Copy command failed');
         } catch (err) {
           console.error('Fallback copy failed', err);
-          throw new Error('复制失败');
+          throw new Error(pbnT("m2191"));
         } finally {
           document.body.removeChild(textArea);
         }
       }
-      
       setCopied(true);
       setTimeout(() => setCopied(false), timeout);
       return true;
@@ -40,6 +40,8 @@ export function useClipboard({ timeout = 2000 } = {}) {
       return false;
     }
   }, [timeout]);
-
-  return { copy, copied };
+  return {
+    copy,
+    copied
+  };
 }

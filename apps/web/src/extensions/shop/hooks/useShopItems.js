@@ -1,3 +1,4 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect, useCallback } from 'react';
 import { shopApi } from '@/lib/api';
 import { toast } from 'sonner';
@@ -8,43 +9,47 @@ import { toast } from 'sonner';
  * @returns {Object} { items, total, loading, error, refetch }
  */
 export function useShopItems(options = {}) {
-  const { type, page = 1, limit = 20, isAdmin = false } = options;
-  
+  const pbnT = usePbnTranslations();
+  const {
+    type,
+    page = 1,
+    limit = 20,
+    isAdmin = false
+  } = options;
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const fetchItems = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = { page, limit };
+      const params = {
+        page,
+        limit
+      };
       if (type && type !== 'all') params.type = type;
-
       const api = isAdmin ? shopApi.admin : shopApi;
       const data = await api.getItems(params);
       setItems(data.items || []);
       setTotal(data.total || 0);
     } catch (err) {
-      console.error('获取商品列表失败:', err);
+      console.error("Could not load shop items:", err);
       setError(err);
-      toast.error('获取商品列表失败');
+      toast.error(pbnT("m2033"));
     } finally {
       setLoading(false);
     }
   }, [type, page, limit, isAdmin]);
-
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
-
   return {
     items,
     total,
     loading,
     error,
     refetch: fetchItems,
-    setItems, // Expose for optimistic updates
+    setItems // Expose for optimistic updates
   };
 }

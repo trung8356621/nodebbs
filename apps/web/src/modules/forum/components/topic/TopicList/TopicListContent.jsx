@@ -1,75 +1,46 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import Link from '@/components/common/Link';
 import { Fragment } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  MessageSquare,
-  Eye,
-  Pin,
-  Lock,
-  BookOpen,
-  Plus,
-} from 'lucide-react';
+import { MessageSquare, Eye, Pin, Lock, BookOpen, Plus } from 'lucide-react';
 import UserAvatar from '@/components/user/UserAvatar';
 import { Pager } from '@/components/common/Pagination';
 import Time from '@/components/common/Time';
 
 // 空状态组件
 export function EmptyState() {
-  return (
-    <div className='text-center py-16 sm:py-20 content-card'>
+  const pbnT = usePbnTranslations();
+  return <div className='text-center py-16 sm:py-20 content-card'>
       <div className='w-16 h-16 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center'>
         <BookOpen className='h-8 w-8 text-muted-foreground/50' />
       </div>
-      <div className='text-lg font-semibold mb-2 text-foreground'>暂无话题</div>
-      <p className='text-sm text-muted-foreground mb-6 max-w-md mx-auto px-4'>
-        还没有人发布话题，成为第一个吧！
-      </p>
+      <div className='text-lg font-semibold mb-2 text-foreground'>{pbnT("m837")}</div>
+      <p className='text-sm text-muted-foreground mb-6 max-w-md mx-auto px-4'>{pbnT("m2359")}</p>
       <Link href='/create'>
         <Button size='default'>
-          <Plus className='h-4 w-4' />
-          发布第一个话题
-        </Button>
+          <Plus className='h-4 w-4' />{pbnT("m2360")}</Button>
       </Link>
-    </div>
-  );
+    </div>;
 }
 
 // 单个话题项组件
-export function TopicItem({ topic }) {
-  const categoryName =
-    topic.categoryName || topic.category?.name || '未知分类';
-
+export function TopicItem({
+  topic
+}) {
+  const pbnT = usePbnTranslations();
+  const categoryName = topic.categoryName || topic.category?.name || pbnT("m77");
   const isPinned = topic.isPinned;
   const replyCount = Math.max((topic.postCount || 1) - 1, 0);
   const viewCount = topic.viewCount || 0;
-
-  return (
-    <div
-      className={`p-3 sm:p-5 group relative transition-colors ${
-        isPinned
-          ? 'bg-primary/5 dark:bg-primary/10'
-          : 'hover:bg-accent/50'
-      }`}
-      style={{ contain: 'layout style' }}
-    >
+  return <div className={`p-3 sm:p-5 group relative transition-colors ${isPinned ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-accent/50'}`} style={{
+    contain: 'layout style'
+  }}>
       <div className='flex items-start gap-3 sm:gap-4 w-full'>
         {/* 左侧：作者头像 */}
         <div className='shrink-0 mt-0.5'>
           <Link href={`/users/${topic.username}`} className='relative z-10'>
-            <UserAvatar
-              url={topic.userAvatar}
-              name={topic.userName || topic.username}
-              size='md'
-              className={
-                !topic.userAvatarFrame?.itemMetadata
-                  ? isPinned
-                    ? 'ring-2 ring-primary/20'
-                    : 'ring-2 ring-transparent group-hover:ring-primary/20 transition-shadow'
-                  : ''
-              }
-              frameMetadata={topic.userAvatarFrame?.itemMetadata}
-            />
+            <UserAvatar url={topic.userAvatar} name={topic.userName || topic.username} size='md' className={!topic.userAvatarFrame?.itemMetadata ? isPinned ? 'ring-2 ring-primary/20' : 'ring-2 ring-transparent group-hover:ring-primary/20 transition-shadow' : ''} frameMetadata={topic.userAvatarFrame?.itemMetadata} />
           </Link>
         </div>
 
@@ -77,61 +48,28 @@ export function TopicItem({ topic }) {
         <div className='flex-1 min-w-0'>
           {/* 标题行 */}
           <div className='mb-1.5 leading-snug relative'>
-            {isPinned && (
-              <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary align-middle mr-1.5'>
-                <Pin className='w-3 h-3' />
-                置顶
-              </span>
-            )}
-            {topic.isClosed && (
-              <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground align-middle mr-1.5'>
-                <Lock className='w-3 h-3' />
-                已关闭
-              </span>
-            )}
-            <Link
-              href={`/topic/${topic.id}`}
-              className={`text-base sm:text-lg font-medium align-middle break-all before:absolute before:inset-0 before:z-0 text-foreground group-hover:text-primary ${
-                isPinned ? '' : 'visited:text-muted-foreground'
-              }`}
-            >
+            {isPinned && <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary align-middle mr-1.5'>
+                <Pin className='w-3 h-3' />{pbnT("m1175")}</span>}
+            {topic.isClosed && <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground align-middle mr-1.5'>
+                <Lock className='w-3 h-3' />{pbnT("m831")}</span>}
+            <Link href={`/topic/${topic.id}`} className={`text-base sm:text-lg font-medium align-middle break-all before:absolute before:inset-0 before:z-0 text-foreground group-hover:text-primary ${isPinned ? '' : 'visited:text-muted-foreground'}`}>
               {topic.title}
             </Link>
-            {topic.approvalStatus === 'pending' && (
-              <Badge
-                variant='outline'
-                className='text-chart-5 border-chart-5 text-xs h-5 inline-flex align-middle ml-2'
-              >
-                待审核
-              </Badge>
-            )}
-            {topic.approvalStatus === 'rejected' && (
-              <Badge
-                variant='outline'
-                className='text-destructive border-destructive text-xs h-5 inline-flex align-middle ml-2'
-              >
-                已拒绝
-              </Badge>
-            )}
+            {topic.approvalStatus === 'pending' && <Badge variant='outline' className='text-chart-5 border-chart-5 text-xs h-5 inline-flex align-middle ml-2'>{pbnT("m379")}</Badge>}
+            {topic.approvalStatus === 'rejected' && <Badge variant='outline' className='text-destructive border-destructive text-xs h-5 inline-flex align-middle ml-2'>{pbnT("m434")}</Badge>}
           </div>
 
           {/* 元信息行 */}
           <div className='flex items-center gap-x-2 gap-y-1 text-sm text-muted-foreground flex-wrap'>
             {/* 作者名 */}
-            <Link
-              href={`/users/${topic.username}`}
-              className='font-medium text-foreground/70 hover:text-primary relative z-10'
-            >
+            <Link href={`/users/${topic.username}`} className='font-medium text-foreground/70 hover:text-primary relative z-10'>
               {topic.userName || topic.username}
             </Link>
 
             {/* 分类 */}
             <div className='hidden sm:flex items-center'>
               <span className='text-muted-foreground/40 mr-2'>·</span>
-              <Badge
-                variant='secondary'
-                className='text-xs font-normal px-2 py-0.5 h-auto bg-muted/50 hover:bg-muted transition-colors relative z-10'
-              >
+              <Badge variant='secondary' className='text-xs font-normal px-2 py-0.5 h-auto bg-muted/50 hover:bg-muted transition-colors relative z-10'>
                 {categoryName}
               </Badge>
             </div>
@@ -144,27 +82,17 @@ export function TopicItem({ topic }) {
             </span>
 
             {/* 标签 */}
-            {topic.tags?.length > 0 && (
-              <>
+            {topic.tags?.length > 0 && <>
                 <span className='text-muted-foreground/40'>·</span>
                 <div className='flex items-center gap-1.5 flex-wrap'>
-                  {topic.tags.slice(0, 3).map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant='outline'
-                      className='text-xs h-5 px-2 text-muted-foreground/70 border-muted-foreground/20 hover:border-muted-foreground/40 transition-colors relative z-10'
-                    >
+                  {topic.tags.slice(0, 3).map(tag => <Badge key={tag} variant='outline' className='text-xs h-5 px-2 text-muted-foreground/70 border-muted-foreground/20 hover:border-muted-foreground/40 transition-colors relative z-10'>
                       {tag}
-                    </Badge>
-                  ))}
-                  {topic.tags.length > 3 && (
-                    <span className='text-xs text-muted-foreground/60'>
+                    </Badge>)}
+                  {topic.tags.length > 3 && <span className='text-xs text-muted-foreground/60'>
                       +{topic.tags.length - 3}
-                    </span>
-                  )}
+                    </span>}
                 </div>
-              </>
-            )}
+              </>}
 
             {/* 移动端统计信息 */}
             <div className='flex sm:hidden items-center gap-3 text-xs text-muted-foreground/60 ml-auto shrink-0'>
@@ -193,15 +121,11 @@ export function TopicItem({ topic }) {
             </div>
           </div>
 
-          {topic.lastPostAt && (
-            <div className='text-xs text-muted-foreground/50 whitespace-nowrap'>
-              最后回复 <Time date={topic.lastPostAt} fromNow />
-            </div>
-          )}
+          {topic.lastPostAt && <div className='text-xs text-muted-foreground/50 whitespace-nowrap'>{pbnT("m2361")}<Time date={topic.lastPostAt} fromNow />
+            </div>}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
 
 // 主 UI 组件
@@ -214,35 +138,23 @@ export function TopicListContent({
   showPagination,
   onPageChange,
   itemInserts,
-  renderItem,
+  renderItem
 }) {
   // 空状态
   if (topics.length === 0) {
     return <EmptyState />;
   }
-
-  return (
-    <>
+  return <>
       <div className='content-card overflow-hidden w-full'>
         <div className='divide-y divide-border/60'>
-          {topics.map((topic, index) => (
-            <Fragment key={topic.id}>
+          {topics.map((topic, index) => <Fragment key={topic.id}>
               {renderItem ? renderItem(topic, index) : <TopicItem topic={topic} />}
               {itemInserts?.[index]}
-            </Fragment>
-          ))}
+            </Fragment>)}
         </div>
       </div>
 
       {/* 分页 */}
-      {showPagination && totalPages > 1 && (
-        <Pager
-          total={totalTopics}
-          page={currentPage}
-          pageSize={limit}
-          onPageChange={onPageChange}
-        />
-      )}
-    </>
-  );
+      {showPagination && totalPages > 1 && <Pager total={totalTopics} page={currentPage} pageSize={limit} onPageChange={onPageChange} />}
+    </>;
 }

@@ -1,3 +1,4 @@
+import { getPbnTranslations } from "@/i18n/server";
 import NavSidebar from '../components/NavSidebar';
 import { getCategoriesData } from '@/modules/forum/server';
 
@@ -6,11 +7,14 @@ import { getCategoriesData } from '@/modules/forum/server';
  * 所有页面共享的框架：左侧导航 + 内容容器
  * 右侧栏由各 View 通过 SidebarLayout 自行决定
  */
-export default async function PageLayout({ children }) {
-  const categories = await getCategoriesData({ isFeatured: true });
-
-  return (
-    <>
+export default async function PageLayout({
+  children
+}) {
+  const pbnT = await getPbnTranslations();
+  const categories = await getCategoriesData({
+    isFeatured: true
+  }, pbnT);
+  return <>
       {/* 三栏框架：左侧导航（桌面内联 / 移动端抽屉），右侧栏由各 View 自行决定 */}
       <div className='container mx-auto px-4 sm:px-6 lg:px-8 flex gap-6 items-start pt-6 pb-12'>
         <NavSidebar categories={categories} />
@@ -19,6 +23,5 @@ export default async function PageLayout({ children }) {
           {children}
         </div>
       </div>
-    </>
-  );
+    </>;
 }

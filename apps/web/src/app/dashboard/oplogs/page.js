@@ -1,18 +1,17 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
+import { getPbnTranslations } from "@/i18n/server";
 import { PageHeader } from '@/components/common/PageHeader';
 import { OperationLogs } from './components/OperationLogs';
-
-export const metadata = {
-  title: '操作日志',
-};
-
+export async function generateMetadata() {
+  const pbnT = await getPbnTranslations();
+  return {
+    title: pbnT("m387")
+  };
+}
 export default function OperationLogsPage() {
-  return (
-    <div className='space-y-6'>
-      <PageHeader
-        title='操作日志'
-        description='查看系统内所有操作记录，包括内容审核、用户管理、资料变更等'
-      />
+  const pbnT = usePbnTranslations();
+  return <div className='space-y-6'>
+      <PageHeader title={pbnT("m387")} description={pbnT("m388")} />
       <OperationLogs />
-    </div>
-  );
+    </div>;
 }

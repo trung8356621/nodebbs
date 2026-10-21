@@ -1,13 +1,8 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useMemo } from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loading } from './Loading';
 
 /**
@@ -23,32 +18,23 @@ import { Loading } from './Loading';
  * @param {Function} props.renderSelected - 自定义选中值渲染 (selectedOption) => ReactNode
  * @param {string} props.className - 自定义样式类
  */
-export default function TreeSelect({
-  items = [],
-  value,
-  onChange,
-  placeholder = '请选择',
-  disabled = false,
-  loading = false,
-  renderOption,
-  renderSelected,
-  className = '',
-}) {
-  if (loading) {
-    return (
-      <div
-        className={`flex h-9 w-full items-center justify-center rounded-md border border-input bg-background px-3 py-2 ${className}`}
-      >
-        <Loading text='加载中...' size='sm' variant='inline' />
-      </div>
-    );
-  }
+export default function TreeSelect(pbnArgument0) {
+  const pbnT = usePbnTranslations();
+  const {
+    items = [],
+    value,
+    onChange,
+    placeholder = pbnT("m1097"),
+    disabled = false,
+    loading = false,
+    renderOption,
+    renderSelected,
+    className = ''
+  } = pbnArgument0;
   // 将嵌套结构展平为一维数组 (带层级信息)，用于 SelectItem 渲染
   const flattenedOptions = useMemo(() => {
     if (!items || items.length === 0) return [];
-    
     const result = [];
-    
     const traverse = (nodes, level = 0) => {
       nodes.forEach(node => {
         // 创建扁平化节点，保留原始数据
@@ -57,14 +43,13 @@ export default function TreeSelect({
           level,
           raw: node
         });
-        
+
         // 递归处理子节点
         if (node.children && node.children.length > 0) {
           traverse(node.children, level + 1);
         }
       });
     };
-    
     traverse(items, 0);
     return result;
   }, [items]);
@@ -83,23 +68,19 @@ export default function TreeSelect({
     }
     return null;
   };
-
   const selectedOption = useMemo(() => {
     if (!value) return null;
     return findOption(items, value);
   }, [value, items]);
-
-  return (
-    <Select
-      value={value ? String(value) : 'none'}
-      onValueChange={(val) => onChange(val === 'none' ? null : val)}
-      disabled={disabled}
-    >
+  if (loading) {
+    return <div className={`flex h-9 w-full items-center justify-center rounded-md border border-input bg-background px-3 py-2 ${className}`}>
+        <Loading text={pbnT("m71")} size='sm' variant='inline' />
+      </div>;
+  }
+  return <Select value={value ? String(value) : 'none'} onValueChange={val => onChange(val === 'none' ? null : val)} disabled={disabled}>
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder}>
-          {selectedOption 
-            ? (renderSelected ? renderSelected(selectedOption) : selectedOption.label)
-            : placeholder}
+          {selectedOption ? renderSelected ? renderSelected(selectedOption) : selectedOption.label : placeholder}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
@@ -108,33 +89,20 @@ export default function TreeSelect({
           <span className="text-muted-foreground">{placeholder}</span>
         </SelectItem>
 
-        {flattenedOptions.length === 0 ? (
-          <div className="py-2 text-center text-sm text-muted-foreground">
-            暂无数据
-          </div>
-        ) : (
-          flattenedOptions.map((option) => (
-            <SelectItem
-              key={option.value}
-              value={String(option.value)}
-              className="cursor-pointer"
-            >
+        {flattenedOptions.length === 0 ? <div className="py-2 text-center text-sm text-muted-foreground">{pbnT("m1272")}</div> : flattenedOptions.map(option => <SelectItem key={option.value} value={String(option.value)} className="cursor-pointer">
               <div className="flex items-center gap-2">
                 {/* 缩进渲染 */}
-                {option.level > 0 && (
-                  <>
-                    <span style={{ width: `${(option.level - 1) * 16}px` }} />
+                {option.level > 0 && <>
+                    <span style={{
+              width: `${(option.level - 1) * 16}px`
+            }} />
                     <span className="text-muted-foreground text-xs">└─</span>
-                  </>
-                )}
+                  </>}
                 
                 {/* 选项内容渲染 */}
                 {renderOption ? renderOption(option) : <span>{option.label}</span>}
               </div>
-            </SelectItem>
-          ))
-        )}
+            </SelectItem>)}
       </SelectContent>
-    </Select>
-  );
+    </Select>;
 }

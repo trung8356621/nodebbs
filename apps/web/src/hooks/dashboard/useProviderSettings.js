@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 
@@ -13,20 +14,20 @@ import { toast } from 'sonner';
  * @param {boolean} [options.exclusiveEnable=false] - 启用时是否互斥（禁用其他）
  * @param {string} [options.errorMessage='获取配置失败'] - 获取失败提示
  */
-export function useProviderSettings({
-  fetchFn,
-  idField = 'provider',
-  exclusiveEnable = false,
-  errorMessage = '获取配置失败',
-}) {
+export function useProviderSettings(pbnArgument0) {
+  const pbnT = usePbnTranslations();
+  const {
+    fetchFn,
+    idField = 'provider',
+    exclusiveEnable = false,
+    errorMessage = pbnT("m488")
+  } = pbnArgument0;
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingProvider, setEditingProvider] = useState(null);
   const [testingProvider, setTestingProvider] = useState(null);
-
   const fetchFnRef = useRef(fetchFn);
   fetchFnRef.current = fetchFn;
-
   const fetchProviders = useCallback(async () => {
     try {
       setLoading(true);
@@ -39,28 +40,26 @@ export function useProviderSettings({
       setLoading(false);
     }
   }, [errorMessage]);
-
   useEffect(() => {
     fetchProviders();
   }, [fetchProviders]);
-
-  const updateProvider = useCallback(
-    (id, updates) => {
-      setProviders((prev) =>
-        prev.map((p) => {
-          if (exclusiveEnable && updates.isEnabled && p[idField] !== id) {
-            return { ...p, isEnabled: false };
-          }
-          if (p[idField] === id) {
-            return { ...p, ...updates };
-          }
-          return p;
-        })
-      );
-    },
-    [idField, exclusiveEnable]
-  );
-
+  const updateProvider = useCallback((id, updates) => {
+    setProviders(prev => prev.map(p => {
+      if (exclusiveEnable && updates.isEnabled && p[idField] !== id) {
+        return {
+          ...p,
+          isEnabled: false
+        };
+      }
+      if (p[idField] === id) {
+        return {
+          ...p,
+          ...updates
+        };
+      }
+      return p;
+    }));
+  }, [idField, exclusiveEnable]);
   return {
     providers,
     setProviders,
@@ -70,6 +69,6 @@ export function useProviderSettings({
     testingProvider,
     setTestingProvider,
     updateProvider,
-    fetchProviders,
+    fetchProviders
   };
 }

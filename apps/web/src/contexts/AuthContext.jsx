@@ -1,33 +1,34 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { authApi } from '@/lib/api';
 import LoginDialog from '@/components/auth/LoginDialog';
 import { useSettings } from '@/contexts/SettingsContext';
-
 const AuthContext = createContext(null);
 
 // 增强用户对象，添加权限辅助属性
 // /auth/me 接口已包含 RBAC 数据 (userRoles, permissions, displayRole)
 function enhanceUser(user) {
   if (!user) return null;
-
   const enhanced = {
     ...user,
     // 基于 RBAC 的 isAdmin 属性（不依赖旧 role 字段）
-    isAdmin: user.userRoles?.some(r => r.slug === 'admin') ?? false,
+    isAdmin: user.userRoles?.some(r => r.slug === 'admin') ?? false
   };
-
   return enhanced;
 }
-
-export function AuthProvider({ children, initialUser }) {
+export function AuthProvider({
+  children,
+  initialUser
+}) {
+  const pbnT = usePbnTranslations();
   // 如果 initialUser 被传递（无论是 null 还是对象），说明服务端已经检查过了
   // 我们直接使用该状态，且不需要 loading
   const isHydrated = initialUser !== undefined;
-  
-  const { refreshSettings } = useSettings();
-  
+  const {
+    refreshSettings
+  } = useSettings();
   const [user, setUser] = useState(enhanceUser(initialUser) || null);
   const [loading, setLoading] = useState(!isHydrated);
   const [error, setError] = useState(null);
@@ -41,15 +42,14 @@ export function AuthProvider({ children, initialUser }) {
     if (!isHydrated) {
       checkAuth();
     }
-    
+
     // 监听未授权事件
     const handleUnauthorized = () => {
       setUser(null);
-      setError('登录已过期，请重新登录');
+      setError(pbnT("m1569"));
       // 自动打开登录对话框
       setLoginDialogOpen(true);
     };
-
     window.addEventListener('unauthorized', handleUnauthorized);
     return () => window.removeEventListener('unauthorized', handleUnauthorized);
   }, []);
@@ -82,15 +82,21 @@ export function AuthProvider({ children, initialUser }) {
       refreshSettings();
       // 登录成功后关闭对话框
       setLoginDialogOpen(false);
-      return { success: true, user: response.user };
+      return {
+        success: true,
+        user: response.user
+      };
     } catch (err) {
-      setError(err.message || '登录失败');
-      return { success: false, error: err.message };
+      setError(err.message || pbnT("m33"));
+      return {
+        success: false,
+        error: err.message
+      };
     }
   }, [refreshSettings]);
 
   // 注册
-  const register = useCallback(async (data) => {
+  const register = useCallback(async data => {
     try {
       setError(null);
       const response = await authApi.register(data);
@@ -101,10 +107,16 @@ export function AuthProvider({ children, initialUser }) {
       refreshSettings();
       // 注册成功后关闭对话框
       setLoginDialogOpen(false);
-      return { success: true, user: response.user };
+      return {
+        success: true,
+        user: response.user
+      };
     } catch (err) {
-      setError(err.message || '注册失败');
-      return { success: false, error: err.message };
+      setError(err.message || pbnT("m1570"));
+      return {
+        success: false,
+        error: err.message
+      };
     }
   }, [refreshSettings]);
 
@@ -117,8 +129,11 @@ export function AuthProvider({ children, initialUser }) {
   }, [refreshSettings]);
 
   // 更新用户信息
-  const updateUser = useCallback((userData) => {
-    setUser((prev) => enhanceUser({ ...prev, ...userData }));
+  const updateUser = useCallback(userData => {
+    setUser(prev => enhanceUser({
+      ...prev,
+      ...userData
+    }));
   }, []);
 
   // 刷新用户信息
@@ -135,7 +150,7 @@ export function AuthProvider({ children, initialUser }) {
   }, []);
 
   // 设置认证数据（用于扫码登录等外部认证成功后）
-  const setAuthData = useCallback((userData) => {
+  const setAuthData = useCallback(userData => {
     // 设置用户数据
     setUser(enhanceUser(userData));
     // 刷新设置
@@ -158,18 +173,20 @@ export function AuthProvider({ children, initialUser }) {
         success: true,
         user: response.user,
         isNewUser: response.isNewUser,
-        needSetPassword: response.needSetPassword,
+        needSetPassword: response.needSetPassword
       };
     } catch (err) {
-      setError(err.message || '登录失败');
-      return { success: false, error: err.message };
+      setError(err.message || pbnT("m33"));
+      return {
+        success: false,
+        error: err.message
+      };
     }
   }, [refreshSettings]);
 
   // 登录对话框控制
   const openLoginDialog = useCallback(() => setLoginDialogOpen(true), []);
   const closeLoginDialog = useCallback(() => setLoginDialogOpen(false), []);
-
   const value = useMemo(() => ({
     // 认证相关
     user,
@@ -186,15 +203,12 @@ export function AuthProvider({ children, initialUser }) {
     setAuthData,
     // 登录对话框相关
     openLoginDialog,
-    closeLoginDialog,
+    closeLoginDialog
   }), [user, loading, error, login, loginByPhone, register, logout, updateUser, checkAuth, refreshUser, setAuthData, openLoginDialog, closeLoginDialog]);
-
-  return (
-    <AuthContext.Provider value={value}>
+  return <AuthContext.Provider value={value}>
       {children}
       <LoginDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
-    </AuthContext.Provider>
-  );
+    </AuthContext.Provider>;
 }
 
 // Hook 来使用认证上下文
@@ -205,4 +219,3 @@ export function useAuth() {
   }
   return context;
 }
-

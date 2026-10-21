@@ -1,15 +1,17 @@
+import { getPbnTranslations } from "@/i18n/server";
 import { getTagsData } from '@/modules/forum/server';
 import { TagsView } from '@/modules/forum/ui';
-
-export const metadata = {
-  title: '标签广场',
-  description: '浏览社区中的所有话题标签',
-};
-
+export async function generateMetadata() {
+  const pbnT = await getPbnTranslations();
+  return {
+    title: pbnT("m80"),
+    description: pbnT("m81")
+  };
+}
 export default async function TagsPage() {
-  const tags = await getTagsData({ limit: 500 });
-
-  return (
-    <TagsView tags={tags} />
-  );
+  const pbnT = await getPbnTranslations();
+  const tags = await getTagsData({
+    limit: 500
+  }, pbnT);
+  return <TagsView tags={tags} />;
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect, useMemo } from 'react';
 import TreeSelect from '@/components/common/TreeSelect';
 import { categoryApi } from '@/lib/api';
@@ -17,30 +18,30 @@ import { toast } from 'sonner';
  * @param {boolean} props.featuredFirst - 精选分类优先排列（与导航侧栏一致）
  * @param {string} props.className - 自定义样式类
  */
-export default function CategorySelector({
-  value,
-  onChange,
-  placeholder = '选择分类',
-  disabled = false,
-  excludeId = null,
-  onlyTopLevel = false,
-  featuredFirst = false,
-  className = '',
-}) {
+export default function CategorySelector(pbnArgument0) {
+  const pbnT = usePbnTranslations();
+  const {
+    value,
+    onChange,
+    placeholder = pbnT("m1685"),
+    disabled = false,
+    excludeId = null,
+    onlyTopLevel = false,
+    featuredFirst = false,
+    className = ''
+  } = pbnArgument0;
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetchCategories();
   }, []);
-
   const fetchCategories = async () => {
     try {
       const data = await categoryApi.getAll();
       setCategories(data || []);
     } catch (err) {
-      console.error('获取分类列表失败:', err);
-      toast.error('获取分类列表失败');
+      console.error("Could not load category list:", err);
+      toast.error(pbnT("m2246"));
       setCategories([]);
     } finally {
       setLoading(false);
@@ -50,7 +51,7 @@ export default function CategorySelector({
   // 将扁平 API 数据转换为 TreeSelect 需要的嵌套结构
   const treeData = useMemo(() => {
     if (!categories || categories.length === 0) return [];
-    
+
     // 1. 构建 ID -> Node 映射 和 ParentID -> Children 映射
     const categoryMap = new Map();
     const childrenMap = new Map();
@@ -64,9 +65,7 @@ export default function CategorySelector({
         children: [],
         ...cat // 保留颜色图标等原始数据
       };
-      
       categoryMap.set(cat.id, node);
-      
       const pId = cat.parentId || null;
       if (!childrenMap.has(pId)) {
         childrenMap.set(pId, []);
@@ -75,7 +74,7 @@ export default function CategorySelector({
     });
 
     // 2. 递归构建树
-    const buildTree = (parentId) => {
+    const buildTree = parentId => {
       const childIds = childrenMap.get(parentId);
       if (!childIds) return [];
 
@@ -93,68 +92,41 @@ export default function CategorySelector({
         }
         return (a.name || '').localeCompare(b.name || '');
       });
+      return sortedIds.map(id => {
+        const node = categoryMap.get(id);
 
-      return sortedIds
-        .map(id => {
-           const node = categoryMap.get(id);
-           
-           // 处理排除逻辑 (如果是被排除的节点，返回 null，最后 filter 掉)
-           if (excludeId && (node.value === excludeId || Number(node.value) === Number(excludeId))) {
-             return null;
-           }
+        // 处理排除逻辑 (如果是被排除的节点，返回 null，最后 filter 掉)
+        if (excludeId && (node.value === excludeId || Number(node.value) === Number(excludeId))) {
+          return null;
+        }
+        const children = buildTree(id);
 
-           const children = buildTree(id);
-           
-           // 处理 onlyTopLevel 逻辑 (如果有子节点但 onlyTopLevel=true，则清空子节点)
-           if (onlyTopLevel) {
-             node.children = [];
-           } else {
-             node.children = children;
-           }
-           
-           return node;
-        })
-        .filter(Boolean); // 过滤掉 null
+        // 处理 onlyTopLevel 逻辑 (如果有子节点但 onlyTopLevel=true，则清空子节点)
+        if (onlyTopLevel) {
+          node.children = [];
+        } else {
+          node.children = children;
+        }
+        return node;
+      }).filter(Boolean); // 过滤掉 null
     };
 
     // 从根节点开始构建
     return buildTree(null);
-
   }, [categories, excludeId, onlyTopLevel, featuredFirst]);
-
-  return (
-    <TreeSelect
-      items={treeData}
-      loading={loading}
-      value={value ? Number(value) : null}
-      onChange={onChange}
-      placeholder={placeholder}
-      disabled={disabled}
-      className={className}
-      // 自定义选项渲染
-      renderOption={(option) => (
-        <>
-          {option.color && (
-            <div
-              className="h-3 w-3 rounded-sm shrink-0"
-              style={{ backgroundColor: option.color }}
-            />
-          )}
+  return <TreeSelect items={treeData} loading={loading} value={value ? Number(value) : null} onChange={onChange} placeholder={placeholder} disabled={disabled} className={className}
+  // 自定义选项渲染
+  renderOption={option => <>
+          {option.color && <div className="h-3 w-3 rounded-sm shrink-0" style={{
+      backgroundColor: option.color
+    }} />}
           <span>{option.label}</span>
-        </>
-      )}
-      // 自定义选中值渲染
-      renderSelected={(option) => (
-         <div className="flex items-center gap-2">
-           {option.color && (
-             <div
-               className="h-3 w-3 rounded-sm shrink-0"
-               style={{ backgroundColor: option.color }}
-             />
-           )}
+        </>}
+  // 自定义选中值渲染
+  renderSelected={option => <div className="flex items-center gap-2">
+           {option.color && <div className="h-3 w-3 rounded-sm shrink-0" style={{
+      backgroundColor: option.color
+    }} />}
            <span className="truncate">{option.label}</span>
-         </div>
-      )}
-    />
-  );
+         </div>} />;
 }

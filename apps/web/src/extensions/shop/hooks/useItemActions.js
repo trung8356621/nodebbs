@@ -1,3 +1,4 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useCallback } from 'react';
 import { shopApi } from '@/lib/api';
 import { toast } from 'sonner';
@@ -7,31 +8,30 @@ import { toast } from 'sonner';
  * @returns {Object} { equip, unequip, useItem, actioning, actioningItemId }
  */
 export function useItemActions() {
+  const pbnT = usePbnTranslations();
   const [actioningItemId, setActioningItemId] = useState(null);
-
   const equip = useCallback(async (userItemId, onSuccess) => {
     setActioningItemId(userItemId);
     try {
       const response = await shopApi.equipItem(userItemId);
-      toast.success('装备成功');
+      toast.success(pbnT("m2023"));
       if (onSuccess) await onSuccess(response);
     } catch (err) {
-      console.error('装备失败:', err);
-      toast.error(err.message || '装备失败');
+      console.error("Could not equip:", err);
+      toast.error(err.message || pbnT("m2025"));
     } finally {
       setActioningItemId(null);
     }
   }, []);
-
   const unequip = useCallback(async (userItemId, onSuccess) => {
     setActioningItemId(userItemId);
     try {
       const response = await shopApi.unequipItem(userItemId);
-      toast.success('卸下成功');
+      toast.success(pbnT("m2026"));
       if (onSuccess) await onSuccess(response);
     } catch (err) {
-      console.error('卸下失败:', err);
-      toast.error(err.message || '卸下失败');
+      console.error("Could not unequip:", err);
+      toast.error(err.message || pbnT("m2028"));
     } finally {
       setActioningItemId(null);
     }
@@ -42,22 +42,20 @@ export function useItemActions() {
     setActioningItemId(userItemId);
     try {
       const response = await shopApi.useItem(userItemId, data);
-      toast.success('使用成功');
+      toast.success(pbnT("m2029"));
       if (onSuccess) await onSuccess(response);
     } catch (err) {
-      console.error('使用失败:', err);
-      toast.error(err.message || '使用失败');
+      console.error("Could not use item:", err);
+      toast.error(err.message || pbnT("m2031"));
     } finally {
       setActioningItemId(null);
     }
   }, []);
-
   return {
     equip,
     unequip,
     useItem,
     actioning: actioningItemId !== null,
-    actioningItemId,
+    actioningItemId
   };
 }
-

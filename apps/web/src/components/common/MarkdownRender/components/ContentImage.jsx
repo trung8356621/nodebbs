@@ -83,7 +83,7 @@ export function ContentImage({ src, alt, ...props }) {
         maxWidth: `min(100%, ${MIN_ZOOM_SIZE}px)`,
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* Image rendered by the media component. */}
       <img
         ref={imgRef}
         src={displayUrl}

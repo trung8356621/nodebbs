@@ -1,18 +1,14 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { createContext, useContext, useEffect, useState } from 'react';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
-import {
-  THEMES,
-  FONT_SIZES,
-  DEFAULT_THEME,
-  DEFAULT_FONT_SIZE,
-  STORAGE_KEYS,
-} from '@/config/theme.config';
-
+import { THEMES, FONT_SIZES, DEFAULT_THEME, DEFAULT_FONT_SIZE, STORAGE_KEYS } from '@/config/theme.config';
 const ThemeContext = createContext(null);
-
-export function ThemeProvider({ children }) {
+export function ThemeProvider({
+  children
+}) {
+  const pbnT = usePbnTranslations();
   const [themeStyle, setThemeStyle] = useState(DEFAULT_THEME);
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
   const [mounted, setMounted] = useState(false);
@@ -29,13 +25,12 @@ export function ThemeProvider({ children }) {
   // 应用主题风格和字号到 HTML 元素
   useEffect(() => {
     if (!mounted) return;
-
     const root = document.documentElement;
-    const themeConfig = THEMES.find((t) => t.value === themeStyle);
-    const fontConfig = FONT_SIZES.find((f) => f.value === fontSize);
+    const themeConfig = THEMES(pbnT).find(t => t.value === themeStyle);
+    const fontConfig = FONT_SIZES(pbnT).find(f => f.value === fontSize);
 
     // 移除所有主题类
-    THEMES.forEach((t) => {
+    THEMES(pbnT).forEach(t => {
       if (t.class) root.classList.remove(t.class);
     });
 
@@ -45,7 +40,7 @@ export function ThemeProvider({ children }) {
     }
 
     // 移除所有字号类
-    FONT_SIZES.forEach((f) => {
+    FONT_SIZES(pbnT).forEach(f => {
       if (f.class) root.classList.remove(f.class);
     });
 
@@ -58,29 +53,19 @@ export function ThemeProvider({ children }) {
     localStorage.setItem(STORAGE_KEYS.THEME_STYLE, themeStyle);
     localStorage.setItem(STORAGE_KEYS.FONT_SIZE, fontSize);
   }, [themeStyle, fontSize, mounted]);
-
   const value = {
     themeStyle,
     setThemeStyle,
-    themes: THEMES,
+    themes: THEMES(pbnT),
     fontSize,
     setFontSize,
-    fontSizes: FONT_SIZES,
-    mounted,
+    fontSizes: FONT_SIZES(pbnT),
+    mounted
   };
-
-  return (
-    <NextThemesProvider
-      attribute='class'
-      defaultTheme='system'
-      enableSystem
-      disableTransitionOnChange
-    >
+  return <NextThemesProvider attribute='class' defaultTheme='system' enableSystem disableTransitionOnChange>
       <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-    </NextThemesProvider>
-  );
+    </NextThemesProvider>;
 }
-
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {

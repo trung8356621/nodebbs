@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,8 +13,9 @@ import { FormDialog } from '@/components/common/FormDialog';
 export function UsernameChangeDialog({
   open,
   onOpenChange,
-  usernameChange,
+  usernameChange
 }) {
+  const pbnT = usePbnTranslations();
   const {
     user,
     settings,
@@ -21,74 +23,42 @@ export function UsernameChangeDialog({
     setFormData,
     handleSubmit,
     loading,
-    usernameInfo,
+    usernameInfo
   } = usernameChange;
-
   const isInitialSetup = user?.needsUsernameSetup;
-
-  return (
-    <FormDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title={isInitialSetup ? '设置用户名' : '修改用户名'}
-      description={
-        isInitialSetup ? (
-          <span>为你的账号设置一个专属用户名</span>
-        ) : (
-          <span>
-            {usernameInfo?.cooldownDays > 0 &&
-              `修改后需等待 ${usernameInfo.cooldownDays} 天才能再次修改`}
-            {usernameInfo?.remainingChanges >= 0 &&
-              ` · 剩余修改次数：${usernameInfo.remainingChanges}次`}
-          </span>
-        )
-      }
-      submitText={loading ? (isInitialSetup ? '设置中...' : '修改中...') : (isInitialSetup ? '确认设置' : '确认修改')}
-      onSubmit={handleSubmit}
-      loading={loading}
-      onCancel={() => {
-          onOpenChange(false);
-          setFormData({ newUsername: '', password: '' });
-      }}
-      maxWidth="sm:max-w-125"
-    >
+  return <FormDialog open={open} onOpenChange={onOpenChange} title={isInitialSetup ? pbnT("m1114") : pbnT("m1162")} description={isInitialSetup ? <span>{pbnT("m1163")}</span> : <span>
+            {usernameInfo?.cooldownDays > 0 && pbnT("m1164", {
+      arg0: usernameInfo.cooldownDays
+    })}
+            {usernameInfo?.remainingChanges >= 0 && pbnT("m1165", {
+      arg0: usernameInfo.remainingChanges
+    })}
+          </span>} submitText={loading ? isInitialSetup ? pbnT("m1155") : pbnT("m1156") : isInitialSetup ? pbnT("m1166") : pbnT("m869")} onSubmit={handleSubmit} loading={loading} onCancel={() => {
+    onOpenChange(false);
+    setFormData({
+      newUsername: '',
+      password: ''
+    });
+  }} maxWidth="sm:max-w-125">
         <div className='space-y-4 py-4'>
           <div>
-            <Label className='text-sm font-medium text-card-foreground block mb-2'>
-              当前用户名
-            </Label>
+            <Label className='text-sm font-medium text-card-foreground block mb-2'>{pbnT("m1167")}</Label>
             <Input value={user?.username} disabled className='bg-muted' />
           </div>
           <div>
-            <Label className='text-sm font-medium text-card-foreground block mb-2'>
-              新用户名 *
-            </Label>
-            <Input
-              value={formData.newUsername}
-              onChange={(e) =>
-                setFormData({ ...formData, newUsername: e.target.value })
-              }
-              placeholder='输入新用户名'
-              disabled={loading}
-            />
+            <Label className='text-sm font-medium text-card-foreground block mb-2'>{pbnT("m1168")}</Label>
+            <Input value={formData.newUsername} onChange={e => setFormData({
+          ...formData,
+          newUsername: e.target.value
+        })} placeholder={pbnT("m1169")} disabled={loading} />
           </div>
-          {!isInitialSetup && settings.username_change_requires_password?.value && (
-            <div>
-              <Label className='text-sm font-medium text-card-foreground block mb-2'>
-                当前密码 *
-              </Label>
-              <Input
-                type='password'
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                placeholder='输入当前密码'
-                disabled={loading}
-              />
-            </div>
-          )}
+          {!isInitialSetup && settings.username_change_requires_password?.value && <div>
+              <Label className='text-sm font-medium text-card-foreground block mb-2'>{pbnT("m1037")}</Label>
+              <Input type='password' value={formData.password} onChange={e => setFormData({
+          ...formData,
+          password: e.target.value
+        })} placeholder={pbnT("m1170")} disabled={loading} />
+            </div>}
         </div>
-    </FormDialog>
-  );
+    </FormDialog>;
 }

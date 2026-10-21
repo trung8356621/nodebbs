@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { adsApi } from '@/lib/api';
-
 const AdsContext = createContext(null);
 
 /**
@@ -11,7 +10,10 @@ const AdsContext = createContext(null);
  * @param {string[]} [props.preloadSlots] - 预加载的广告位代码列表
  * @param {React.ReactNode} props.children
  */
-export function AdsProvider({ preloadSlots = [], children }) {
+export function AdsProvider({
+  preloadSlots = [],
+  children
+}) {
   // 存储各广告位的数据 { [slotCode]: { slot, ads, loading, error } }
   const [slotsData, setSlotsData] = useState({});
   // 已记录展示的广告 ID
@@ -34,28 +36,31 @@ export function AdsProvider({ preloadSlots = [], children }) {
     if (queueItems.length === 0) return;
 
     // 提取唯一的 slotCodes
-    const uniqueSlotCodes = [...new Set(queueItems.map((item) => item.code))];
+    const uniqueSlotCodes = [...new Set(queueItems.map(item => item.code))];
 
     // 1. 批量设置加载状态 (触发一次重渲染)
-    setSlotsData((prev) => {
-      const next = { ...prev };
-      uniqueSlotCodes.forEach((code) => {
+    setSlotsData(prev => {
+      const next = {
+        ...prev
+      };
+      uniqueSlotCodes.forEach(code => {
         next[code] = {
           ...(next[code] || {}),
           loading: true,
-          error: null,
+          error: null
         };
       });
       return next;
     });
-
     try {
       // 2. 发起批量 API 请求
       const results = await adsApi.getAdsBySlots(uniqueSlotCodes);
 
       // 3. 批量更新成功状态 (触发一次重渲染)
-      setSlotsData((prev) => {
-        const next = { ...prev };
+      setSlotsData(prev => {
+        const next = {
+          ...prev
+        };
 
         // 更新返回的数据
         Object.entries(results).forEach(([code, data]) => {
@@ -64,48 +69,57 @@ export function AdsProvider({ preloadSlots = [], children }) {
             slot: data.slot,
             ads: data.ads || [],
             loading: false,
-            error: null,
+            error: null
           };
         });
 
         // 处理未返回数据的 slot (防御性处理)
-        uniqueSlotCodes.forEach((code) => {
+        uniqueSlotCodes.forEach(code => {
           if (!results[code]) {
             next[code] = {
               ...(next[code] || {}),
               slot: null,
               ads: [],
               loading: false,
-              error: null,
+              error: null
             };
           }
         });
-
         return next;
       });
 
       // 4. Resolve 所有相关的 Promise
-      queueItems.forEach(({ code, resolve }) => {
-        resolve(results[code] || { slot: null, ads: [] });
+      queueItems.forEach(({
+        code,
+        resolve
+      }) => {
+        resolve(results[code] || {
+          slot: null,
+          ads: []
+        });
       });
     } catch (error) {
-      console.error('批量获取广告失败:', error);
+      console.error("Could not load ads in bulk:", error);
 
       // 批量更新错误状态
-      setSlotsData((prev) => {
-        const next = { ...prev };
-        uniqueSlotCodes.forEach((code) => {
+      setSlotsData(prev => {
+        const next = {
+          ...prev
+        };
+        uniqueSlotCodes.forEach(code => {
           next[code] = {
             ...(next[code] || {}),
             loading: false,
-            error,
+            error
           };
         });
         return next;
       });
 
       // Reject 所有相关的 Promise
-      queueItems.forEach(({ reject }) => {
+      queueItems.forEach(({
+        reject
+      }) => {
         reject(error);
       });
     }
@@ -114,7 +128,7 @@ export function AdsProvider({ preloadSlots = [], children }) {
   /**
    * 获取指定广告位的广告数据 (加入批量队列)
    */
-  const fetchSlotAds = useCallback((slotCode) => {
+  const fetchSlotAds = useCallback(slotCode => {
     return new Promise((resolve, reject) => {
       if (!slotCode) {
         resolve(null);
@@ -125,13 +139,16 @@ export function AdsProvider({ preloadSlots = [], children }) {
       requestedSlots.current.add(slotCode);
 
       // 加入队列
-      batchQueue.current.push({ code: slotCode, resolve, reject });
+      batchQueue.current.push({
+        code: slotCode,
+        resolve,
+        reject
+      });
 
       // 重置定时器 (防抖 50ms)
       if (batchTimeout.current) {
         clearTimeout(batchTimeout.current);
       }
-
       batchTimeout.current = setTimeout(() => {
         processBatch();
       }, 50);
@@ -141,7 +158,7 @@ export function AdsProvider({ preloadSlots = [], children }) {
   /**
    * 记录广告点击
    */
-  const recordClick = useCallback((adId) => {
+  const recordClick = useCallback(adId => {
     if (adId) {
       adsApi.recordClick(adId).catch(() => {});
     }
@@ -150,7 +167,7 @@ export function AdsProvider({ preloadSlots = [], children }) {
   /**
    * 记录广告展示 (提供给组件调用)
    */
-  const recordImpression = useCallback((adId) => {
+  const recordImpression = useCallback(adId => {
     if (adId) {
       adsApi.recordImpression(adId).catch(() => {});
     }
@@ -159,7 +176,7 @@ export function AdsProvider({ preloadSlots = [], children }) {
   /**
    * 刷新指定广告位
    */
-  const refreshSlot = useCallback((slotCode) => {
+  const refreshSlot = useCallback(slotCode => {
     // 强制刷新：先移除已请求标记
     if (requestedSlots.current.has(slotCode)) {
       requestedSlots.current.delete(slotCode);
@@ -178,22 +195,21 @@ export function AdsProvider({ preloadSlots = [], children }) {
   // 预加载指定的广告位（仅在 mount 时执行一次）
   useEffect(() => {
     if (preloadSlots.length > 0) {
-      preloadSlots.forEach((slotCode) => {
+      preloadSlots.forEach(slotCode => {
         if (!requestedSlots.current.has(slotCode)) {
           fetchSlotAds(slotCode);
         }
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);  // 仅在 mount 时执行
+  }, []); // 仅在 mount 时执行
 
   /**
    * 检查广告位是否已请求
    */
-  const isSlotRequested = useCallback((slotCode) => {
+  const isSlotRequested = useCallback(slotCode => {
     return requestedSlots.current.has(slotCode);
   }, []);
-
   const value = {
     slotsData,
     fetchSlotAds,
@@ -201,9 +217,8 @@ export function AdsProvider({ preloadSlots = [], children }) {
     recordImpression,
     refreshSlot,
     refreshAll,
-    isSlotRequested,
+    isSlotRequested
   };
-
   return <AdsContext.Provider value={value}>{children}</AdsContext.Provider>;
 }
 
@@ -224,13 +239,19 @@ export function useAdsContext() {
  * @returns {{ slot: Object|null, ads: Array, loading: boolean, error: Error|null, refresh: Function, recordClick: Function }}
  */
 export function useAds(slotCode) {
-  const { slotsData, fetchSlotAds, recordClick, recordImpression, refreshSlot, isSlotRequested } = useAdsContext();
-
+  const {
+    slotsData,
+    fetchSlotAds,
+    recordClick,
+    recordImpression,
+    refreshSlot,
+    isSlotRequested
+  } = useAdsContext();
   const slotData = slotsData[slotCode] || {
     slot: null,
     ads: [],
     loading: false,
-    error: null,
+    error: null
   };
 
   // 如果该广告位还没有数据，自动获取
@@ -239,15 +260,13 @@ export function useAds(slotCode) {
       fetchSlotAds(slotCode);
     }
   }, [slotCode, fetchSlotAds, isSlotRequested]);
-
   const refresh = useCallback(() => {
     return refreshSlot(slotCode);
   }, [refreshSlot, slotCode]);
-
   return {
     ...slotData,
     refresh,
     recordClick,
-    recordImpression,
+    recordImpression
   };
 }

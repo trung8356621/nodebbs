@@ -1,3 +1,4 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { TopicList } from '@/modules/forum/components/topic/TopicList';
 import { TopicSortTabs } from '@/modules/forum/components/topic/TopicSortTabs';
 import { Tag } from 'lucide-react';
@@ -8,10 +9,16 @@ import TopicFeed from '../components/TopicFeed';
 /**
  * 标签详情页
  */
-export default function TagView({ tag, sort, data, page, totalPages, limit }) {
-
-  return (
-    <SidebarLayout>
+export default function TagView({
+  tag,
+  sort,
+  data,
+  page,
+  totalPages,
+  limit
+}) {
+  const pbnT = usePbnTranslations();
+  return <SidebarLayout>
       <div>
         {/* 标签信息头部 */}
         <div className='bg-card border border-border rounded-lg p-5 mb-4'>
@@ -23,12 +30,9 @@ export default function TagView({ tag, sort, data, page, totalPages, limit }) {
               <h1 className='text-2xl font-bold flex items-center gap-3'>
                 {tag.name}
                 <Badge variant='secondary' className='text-sm font-normal'>
-                  {data.total} 个话题
-                </Badge>
+                  {data.total}{" "}{pbnT("m2468")}</Badge>
               </h1>
-              {tag.description && (
-                <p className='mt-2 text-muted-foreground'>{tag.description}</p>
-              )}
+              {tag.description && <p className='mt-2 text-muted-foreground'>{tag.description}</p>}
             </div>
           </div>
         </div>
@@ -37,17 +41,7 @@ export default function TagView({ tag, sort, data, page, totalPages, limit }) {
           <TopicSortTabs defaultValue={sort} className='w-auto' />
         </div>
 
-        <TopicList
-          initialData={data.items}
-          total={data.total}
-          currentPage={page}
-          totalPages={totalPages}
-          limit={limit}
-          showPagination={true}
-          useUrlPagination={true}
-          component={TopicFeed}
-        />
+        <TopicList initialData={data.items} total={data.total} currentPage={page} totalPages={totalPages} limit={limit} showPagination={true} useUrlPagination={true} component={TopicFeed} />
       </div>
-    </SidebarLayout>
-  );
+    </SidebarLayout>;
 }

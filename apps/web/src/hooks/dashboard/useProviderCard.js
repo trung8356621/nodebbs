@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
@@ -31,80 +32,72 @@ export function useProviderCard({
   setEditingProvider,
   testApiFn,
   testingProvider,
-  setTestingProvider,
+  setTestingProvider
 }) {
+  const pbnT = usePbnTranslations();
   const providerId = provider[idField];
   const isEditing = editingProvider === providerId;
   const isTesting = testingProvider === providerId;
-
   const [formData, setFormData] = useState(() => getInitialFormData(provider));
   const [saving, setSaving] = useState(false);
-
   const handleEditClick = useCallback(() => {
     setEditingProvider(providerId);
     setFormData(getInitialFormData(provider));
   }, [providerId, provider, setEditingProvider, getInitialFormData]);
-
   const handleCancelClick = useCallback(() => {
     setEditingProvider(null);
   }, [setEditingProvider]);
-
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
       const payload = buildSavePayload(formData, provider);
       await updateApiFn(providerId, payload);
-      toast.success(`${provider.displayName} 配置已保存`);
+      toast.success(pbnT("m2083", {
+        arg0: provider.displayName
+      }));
       setEditingProvider(null);
       onUpdate(providerId, payload);
     } catch (error) {
       console.error(`Failed to update provider ${providerId}:`, error);
-      toast.error('保存配置失败');
+      toast.error(pbnT("m590"));
     } finally {
       setSaving(false);
     }
   }, [formData, provider, providerId, buildSavePayload, updateApiFn, setEditingProvider, onUpdate]);
-
-  const handleToggleEnabled = useCallback(
-    async (checked) => {
-      try {
-        const payload = { isEnabled: checked };
-        await updateApiFn(providerId, payload);
-        toast.success(
-          checked
-            ? `${provider.displayName} 已启用`
-            : `${provider.displayName} 已停用`
-        );
-        onUpdate(providerId, payload);
-      } catch (error) {
-        console.error(`Failed to toggle provider ${providerId}:`, error);
-        toast.error('操作失败');
+  const handleToggleEnabled = useCallback(async checked => {
+    try {
+      const payload = {
+        isEnabled: checked
+      };
+      await updateApiFn(providerId, payload);
+      toast.success(checked ? pbnT("m2084", {
+        arg0: provider.displayName
+      }) : pbnT("m2085", {
+        arg0: provider.displayName
+      }));
+      onUpdate(providerId, payload);
+    } catch (error) {
+      console.error(`Failed to toggle provider ${providerId}:`, error);
+      toast.error(pbnT("m568"));
+    }
+  }, [providerId, provider.displayName, updateApiFn, onUpdate]);
+  const handleTest = useCallback(async (...args) => {
+    if (!testApiFn || !setTestingProvider) return;
+    try {
+      setTestingProvider(providerId);
+      const result = await testApiFn(providerId, ...args);
+      if (result.success) {
+        toast.success(result.message || pbnT("m2086"));
+      } else {
+        toast.error(result.message || pbnT("m2087"));
       }
-    },
-    [providerId, provider.displayName, updateApiFn, onUpdate]
-  );
-
-  const handleTest = useCallback(
-    async (...args) => {
-      if (!testApiFn || !setTestingProvider) return;
-      try {
-        setTestingProvider(providerId);
-        const result = await testApiFn(providerId, ...args);
-        if (result.success) {
-          toast.success(result.message || '测试通过');
-        } else {
-          toast.error(result.message || '测试失败');
-        }
-      } catch (error) {
-        console.error(`Failed to test provider ${providerId}:`, error);
-        toast.error('测试失败');
-      } finally {
-        setTestingProvider(null);
-      }
-    },
-    [providerId, testApiFn, setTestingProvider]
-  );
-
+    } catch (error) {
+      console.error(`Failed to test provider ${providerId}:`, error);
+      toast.error(pbnT("m2087"));
+    } finally {
+      setTestingProvider(null);
+    }
+  }, [providerId, testApiFn, setTestingProvider]);
   return {
     formData,
     setFormData,
@@ -115,6 +108,6 @@ export function useProviderCard({
     handleCancelClick,
     handleSave,
     handleToggleEnabled,
-    handleTest,
+    handleTest
   };
 }

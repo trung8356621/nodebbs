@@ -1,177 +1,134 @@
-# NodeBBS
+# PBN — Forum Network
 
-一个基于 Turborepo 单体仓库架构构建的现代化、高性能论坛平台。
+Multi-forum platform based on NodeBBS, built with Next.js, Fastify and PostgreSQL.
 
-简体中文 | [English](./README.en.md)
+PBN currently runs as a single forum installation. The network capabilities below are a roadmap, not implemented tenant isolation.
 
-## 🏗️ 系统架构
+## Upstream and license
 
-| 服务 | 技术 | 端口 | 说明 |
-|------|------|------|------|
-| **web** | Next.js 16 | 3100 | 前端应用 |
-| **api** | Fastify | 7100 | 后端 API 服务 |
-| **postgres** | PostgreSQL 16 | 5432 | 主数据库 |
-| **redis** | Redis 7 | 6379 | 缓存服务 |
+This project is based on [NodeBBS](https://github.com/aiprojecthub/nodebbs), by wengqianshan / qianshan w. Bootstrap upstream commit: `9dbac4be53cdc9ea58bb84854ffadb661e945c87` (NodeBBS 2.4.0). Git history and upstream attribution are retained. PBN-specific work does not imply authorship of the upstream source.
 
+The source is distributed under the MIT License. The original **Copyright (c) 2025 qianshan w** notice and complete terms remain in [LICENSE](LICENSE). Preserve these notices when redistributing substantial portions. The upstream English documentation remains in [README.en.md](README.en.md); its deployment instructions may differ from this project's native development workflow.
 
+## Technology stack and architecture
 
-## 🚀 快速开始
+- Web: Next.js 16 App Router, React 19, Tailwind CSS 4, Radix UI and next-intl.
+- API: Fastify 5, JWT/OAuth, PostgreSQL, Drizzle ORM and Redis.
+- Tooling: Node.js 22+, pnpm 10.33.0, Turborepo, ESLint and Playwright.
+- Local environment verified with Node.js 24.18.0, PostgreSQL Laragon 17.2 and native Redis 5.0.14.1. Upstream recommends PostgreSQL 16 and Redis 7; broader compatibility with the existing Redis version remains to be tested.
 
-### 前置要求
-
-- **Docker**: Docker Engine 20.10+
-- **Docker Compose**: 2.0+
-- **Node.js**: 22+
-
-
-### 部署
-
-NodeBBS 提供**交互式 CLI 部署工具**，支持源码部署和镜像部署两种方式，任选其一即可。
-
-#### 方式一：源码部署（直接使用最新源码）
-
-```bash
-git clone https://github.com/aiprojecthub/nodebbs.git
-cd nodebbs
-npx nodebbs
+```text
+apps/web/       Next.js pages, shared components, forum UI and extension UI
+apps/api/       Fastify plugins, core routes, business modules and extensions
+  src/db/       Drizzle schema composition
+  src/modules/  Forum routes, services and schema
+  src/i18n/     Response message catalogs (no database content translation)
+  drizzle/      Upstream SQL migration history
+scripts/        Development helpers and verification tools
+docs/audit/     Bootstrap and implementation audit reports
 ```
 
-#### 方式二：镜像部署（快速启动）
+Core services and the forum module are composed statically. Ledger, rewards, shop, badges, emoji and advertisement extensions already exist upstream. One database connection pool currently serves one installation. There is no hostname-based tenant isolation or cross-forum Topic Registry yet.
 
-```bash
-mkdir nodebbs && cd nodebbs
-npx nodebbs
+## Local development — Windows + Laragon
+
+**Docker is not used for development.** Original Docker assets are retained for upstream compatibility. Do not start, prune or remove containers or volumes as part of this workflow.
+
+1. Open the existing Laragon installation and start PostgreSQL. Do not install another PostgreSQL instance or reset another project's data directory.
+2. In `D:\workspace-2026\pbn`, run `pnpm install --frozen-lockfile`.
+3. Copy `apps/api/.env.example` to `apps/api/.env` and `apps/web/.env.example` to `apps/web/.env` if local files do not already exist. Configure your own local database access and generate a random JWT secret. Never overwrite an existing local configuration blindly.
+4. Create **only** the `pbn_dev` database if it does not exist, using Laragon's PostgreSQL tools and your local database role. Confirm `SELECT current_database()` returns `pbn_dev` before schema or seed operations.
+5. Start a dedicated native Redis process using `powershell -File scripts/start-pbn-redis.ps1`. The helper defaults to the Redis executable already installed in Laragon; supply `-RedisExe` if its path differs. An occupied port is rejected for manual ownership verification.
+
+| Service | Local address | Scope |
+| --- | --- | --- |
+| PostgreSQL Laragon | `127.0.0.1:5432` | Database `pbn_dev`; confirm the actual Laragon port |
+| Redis PBN | `127.0.0.1:16379`, DB 0 | Dedicated process; persistent files in ignored `.local/redis/` |
+| Fastify | `127.0.0.1:7100` | Native Node.js development server |
+| Next.js | `127.0.0.1:3100` | Native Node.js development server |
+
+Check port ownership before starting services. Never stop all Node, Redis or PostgreSQL processes to resolve a conflict.
+
+### Environment variables
+
+| Application | Variable | Purpose |
+| --- | --- | --- |
+| API | `DATABASE_URL` | Your local PostgreSQL connection to `pbn_dev`; keep access details only in `.env` |
+| API | `REDIS_URL` | Dedicated Redis endpoint, port 16379, DB 0 |
+| API | `JWT_SECRET` | A locally generated random secret |
+| API | `NODE_ENV`, `HOST`, `PORT` | Development, loopback address, port 7100 |
+| API | `CORS_ORIGIN` | Explicit local Web origins |
+| Web | `SERVER_API_URL` | `http://127.0.0.1:7100` |
+| Web | `PORT` | 3100; pass the same port when invoking Next.js |
+| Web/API | `FORUM_DEFAULT_LOCALE` | Default locale for this installation: `vi-VN` or `en-US` |
+| Web | `NEXT_PUBLIC_FORUM_DEFAULT_LOCALE` | Matching fallback for standalone browser utilities; build-time configuration |
+
+No credentials are required in this README. `.env`, runtime logs, local accounts, uploads, backups and smoke artifacts are ignored. `.env.example` templates remain tracked.
+
+### Database initialization and migration limitation
+
+The upstream migration journal **fails on a fresh database**, because its first registered data migration reads the missing legacy table `user_credits`. Phase 1 used the README-supported schema-push workflow on the newly created `pbn_dev` database:
+
+```powershell
+pnpm --dir apps/api exec dotenvx run -- pnpm db:push
+pnpm --dir apps/api seed
 ```
 
-### ℹ️ 说明
+Schema, search extension/index initialization and seeds succeeded. This does **not** repair the migration history: zero historical migrations were recorded as applied. Do not run `db:migrate` against this bootstrapped database until a reviewed baseline/upgrade procedure is ready. Never run reset/clean commands against existing data. No schema migration is required for i18n.
 
-* `nodebbs cli` 是一个 **交互式部署工具**，会引导你完成全部初始化配置
-* 使用前请确保已安装 CLI 工具：
+### Start Web and API
 
-```bash
-npm install -g nodebbs
-# 或直接使用
-npx nodebbs
+Run each command in a separate terminal, after PostgreSQL and Redis are ready:
+
+```powershell
+Set-Location D:\workspace-2026\pbn
+pnpm --dir apps/api dev
 ```
 
-* CLI 详细说明与参数文档：
-  👉 [https://www.npmjs.com/nodebbs](https://www.npmjs.com/nodebbs)
-
-## ✨ 功能预览
-
-### 前台界面
-
-<table>
-  <tr>
-    <td width="50%">
-      <img src="./docs/screens/1.png" alt="论坛首页" />
-      <p align="center"><b>论坛首页</b> - 话题列表、分类导航</p>
-    </td>
-    <td width="50%">
-      <img src="./docs/screens/2.png" alt="话题详情" />
-      <p align="center"><b>话题详情</b> - Markdown 支持、评论互动</p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <img src="./docs/screens/3.png" alt="个人设置" />
-      <p align="center"><b>个人设置</b> - 资料编辑、头像上传</p>
-    </td>
-    <td width="50%">
-      <img src="./docs/screens/4.png" alt="管理后台" />
-      <p align="center"><b>管理后台</b> - 数据统计、内容管理</p>
-    </td>
-  </tr>
-</table>
-
-### 管理后台
-
-<table>
-  <tr>
-    <td width="50%">
-      <img src="./docs/screens/5.png" alt="注册设置" />
-      <p align="center"><b>注册设置</b> - 注册模式配置</p>
-    </td>
-    <td width="50%">
-      <img src="./docs/screens/6.png" alt="OAuth登录" />
-      <p align="center"><b>OAuth 登录</b> - 第三方登录集成</p>
-    </td>
-  </tr>
-</table>
-
-## 📋 技术栈
-
-### 后端 (API)
-- **框架**: [Fastify](https://fastify.dev/) - 高性能 Node.js Web 框架
-- **数据库**: PostgreSQL 16 + [Drizzle ORM](https://orm.drizzle.team/)
-- **身份验证**: JWT + OAuth2
-- **缓存**: Redis 7
-- **邮件服务**: Nodemailer
-- **API 文档**: Swagger/OpenAPI
-- **进程管理**: PM2
-
-### 前端 (Web)
-- **框架**: [Next.js 16](https://nextjs.org/) (支持 Turbopack)
-- **UI 库**: React 19
-- **样式**: Tailwind CSS 4
-- **组件库**: Radix UI
-- **表单处理**: React Hook Form
-- **Markdown**: React Markdown (支持 GitHub 风格)
-- **主题**: next-themes (支持深色/浅色模式)
-
-### 开发与部署
-- **单体仓库**: Turborepo
-- **包管理器**: pnpm 10+
-- **环境变量**: dotenvx
-- **容器化**: Docker + Docker Compose
-- **反向代理**: Nginx (生产环境)
-
-## 🛠️ 开发环境设置（不使用 Docker）
-
-### 前置要求
-- Node.js >= 22
-- pnpm >= 10.0.0
-- PostgreSQL
-- Redis
-
-### 步骤
-
-```bash
-# 1. 安装依赖
-pnpm install
-
-# 2. 配置环境变量
-cd apps/api && cp .env.example .env
-cd ../web && cp .env.example .env
-
-# 3. 设置数据库
-cd ../api
-pnpm db:push
-pnpm seed
-
-# 4. 启动开发服务器
-cd ../..
-pnpm dev
-
-# API: 7100 端口 | Web: 3100 端口
+```powershell
+Set-Location D:\workspace-2026\pbn
+pnpm --dir apps/web exec next dev --turbopack -p 3100 --hostname 127.0.0.1
 ```
 
-## 🤝 贡献
+`pnpm dev` runs both applications through Turbo. The upstream Web script may listen beyond loopback; the explicit command above limits access to this machine. Use Ctrl+C to stop each foreground process. After restarting Windows, reopen Laragon, start PostgreSQL, start the dedicated Redis helper and run these two commands again. Re-running schema setup and seeds is unnecessary.
 
-欢迎贡献！请遵循以下步骤：
+- Frontend: [http://127.0.0.1:3100](http://127.0.0.1:3100)
+- API health: [http://127.0.0.1:7100/api](http://127.0.0.1:7100/api)
+- API documentation: [http://127.0.0.1:7100/docs](http://127.0.0.1:7100/docs)
 
-1. Fork 本仓库
-2. 创建你的特性分支 (`git checkout -b feature/amazing-feature`)
-3. 提交你的更改 (`git commit -m 'Add amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 打开一个 Pull Request
+## Internationalization — Vietnamese and English
 
-## 📄 许可证
+The interface supports **vi-VN** and **en-US** using next-intl. Vietnamese is the development default. The header language selector writes the `pbn-locale` cookie for one year and reloads the current URL. The cookie is host-scoped, allowing independent future forum installations to choose their own defaults. This is configuration preparation, not multi-tenant implementation.
 
-MIT
+There are no locale URL prefixes, routing rewrites or language-specific sitemap/canonical variants. The existing route paths are retained. Server Components resolve the locale per request; Client Components share the same provider. Dictionaries under `apps/web/src/i18n/messages/` are organized into auth, forum, common, admin, profile, wallet, shop, ads, badges and rewards namespaces, with matching keys and English fallback.
 
-## 🐛 支持
+Utilities accept a translator for server rendering rather than changing global locale state. Backend response catalogs localize application-owned message/error envelopes and known generated notifications using the cookie or explicit supported `Accept-Language`. Status codes, field names, technical identifiers, database values and user content remain unchanged. Existing category names, products, badges, roles, currency names and administrator-authored content retain their stored language; they are data rather than automatic translation targets.
 
-如有问题：
-- 在 GitHub 上提交 issue
+When adding interface text, add the same key and interpolation parameters to both catalogs and update the namespace map. Keep original-language text only in the source-message catalog for migration/reference, not in UI components. `pnpm i18n:check` checks parity, interpolation, ICU formatting, key references, backend catalog coverage and hard-coded Chinese interface strings. Developer logs in UI modules use English; comments are not treated as interface text.
 
+## Verification commands
+
+```powershell
+pnpm lint
+pnpm i18n:check
+pnpm build
+pnpm exec playwright install chromium
+pnpm smoke:i18n
+```
+
+Browser smoke requires running local services and local smoke account access, as described by the script. Artifacts are saved under ignored `.local/`. Production build output is verification only; no production deployment is performed. The audit report distinguishes executed browser/API checks from integrations that were not tested.
+
+## Current status and roadmap
+
+Core forum flows run locally: registration/sign-in, categories/topics, topic creation, replies, admin statistics and manual pin/unpin. Native services, Web SSR and API proxy were verified. Phase 1.5 adds bilingual interface text, response messages, repository hygiene and project documentation; review is pending. Wallet concurrency/idempotency, paid pin expiry, outbound link policy and tenant isolation are not implemented by this phase.
+
+| Phase | Status |
+| --- | --- |
+| Phase 1: Bootstrap NodeBBS | Completed |
+| Phase 1.5: i18n / Git / README | In progress — implemented, awaiting review |
+| Phase 2: Multi-forum architecture | Planned |
+| Phase 3: Wallet / Paid Pin / Link Policy | Planned |
+| Phase 4: Banner Management | Planned |
+| SEO-OPS integration | Deferred |
+
+These roadmap entries do not authorize automatic implementation. See [Phase 1 setup](docs/audit/PHASE1-SETUP.md), [feature matrix](docs/audit/PHASE1-FEATURE-MATRIX.md), [architecture audit](docs/audit/PHASE1-ARCHITECTURE.md), [blockers](docs/audit/PHASE1-BLOCKERS.md) and the [Phase 1.5 report](docs/audit/PHASE1.5-I18N-GIT-README.md) for evidence and limitations.

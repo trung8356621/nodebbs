@@ -1,7 +1,6 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect } from 'react';
-import {
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { DialogFooter } from '@/components/ui/dialog';
 import { FormDialog } from '@/components/common/FormDialog';
 import { SearchSelect } from '@/components/common/SearchSelect';
 import { Button } from '@/components/ui/button';
@@ -27,12 +26,20 @@ import { searchApi } from '@/lib/api';
  * @param {Function} props.onCancel - 取消回调
  * @param {boolean} props.purchasing - 购买进行中
  */
-export function PurchaseDialog({ open, item, accounts = [], onConfirm, onCancel, purchasing, initialMode = 'buy' }) {
+export function PurchaseDialog({
+  open,
+  item,
+  accounts = [],
+  onConfirm,
+  onCancel,
+  purchasing,
+  initialMode = 'buy'
+}) {
+  const pbnT = usePbnTranslations();
   const [mode, setMode] = useState('buy');
   const [receiver, setReceiver] = useState(null);
   const [message, setMessage] = useState('');
   const [quantity, setQuantity] = useState(1);
-
   useEffect(() => {
     if (open) {
       setMode(initialMode);
@@ -43,58 +50,41 @@ export function PurchaseDialog({ open, item, accounts = [], onConfirm, onCancel,
   }, [open, initialMode]);
 
   // 搜索用户（响应结构：{ items, total, page, limit }）
-  const searchUsers = async (query) => {
+  const searchUsers = async query => {
     const res = await searchApi.search(query, 'users', 1, 5);
     return res?.items || [];
   };
-
-  const transformUser = (user) => ({
+  const transformUser = user => ({
     id: user.id,
     label: user.name || user.username,
     description: user.username,
-    avatar: user.avatar,
+    avatar: user.avatar
   });
-
-  const renderUserItem = (user, transformed, onSelect, isHighlighted) => (
-    <div
-      key={transformed.id}
-      className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${isHighlighted ? 'bg-accent' : 'hover:bg-muted'}`}
-      onClick={onSelect}
-    >
+  const renderUserItem = (user, transformed, onSelect, isHighlighted) => <div key={transformed.id} className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${isHighlighted ? 'bg-accent' : 'hover:bg-muted'}`} onClick={onSelect}>
       <UserAvatar url={transformed.avatar} name={transformed.label} size="sm" />
       <div>
         <div className="text-sm font-medium">{transformed.label}</div>
-        {
-          transformed.description && <div className="text-xs text-muted-foreground">{transformed.description}</div>
-        }
+        {transformed.description && <div className="text-xs text-muted-foreground">{transformed.description}</div>}
       </div>
-    </div>
-  );
-
-  const renderSelectedUser = (user, transformed, onClear) => (
-    <div className="flex items-center justify-between p-3 border rounded-lg bg-card">
+    </div>;
+  const renderSelectedUser = (user, transformed, onClear) => <div className="flex items-center justify-between p-3 border rounded-lg bg-card">
       <div className="flex items-center gap-3">
         <UserAvatar url={transformed.avatar} name={transformed.label} size="sm" />
         <div>
           <div className="font-medium text-sm">{transformed.label}</div>
-          {
-            transformed.description && <div className="text-xs text-muted-foreground">{transformed.description}</div>
-          }
+          {transformed.description && <div className="text-xs text-muted-foreground">{transformed.description}</div>}
         </div>
       </div>
       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClear}>
         <X className="h-4 w-4" />
       </Button>
-    </div>
-  );
-
+    </div>;
   if (!item) return null;
-
   const account = accounts.find(a => a.currency.code === item.currencyCode);
   const balance = account ? Number(account.balance) : 0;
   const consumeType = item.consumeType || 'non_consumable';
   const isQuantifiable = consumeType !== 'non_consumable';
-  const effectiveQty = isQuantifiable ? (parseInt(quantity) || 1) : 1;
+  const effectiveQty = isQuantifiable ? parseInt(quantity) || 1 : 1;
   const totalPrice = item.price * effectiveQty;
   const canAfford = balance >= totalPrice;
 
@@ -103,7 +93,6 @@ export function PurchaseDialog({ open, item, accounts = [], onConfirm, onCancel,
   const isAlreadyOwned = !isQuantifiable && item.owned === true;
   const isMaxOwned = isQuantifiable && item.maxOwn !== null && ownedCount >= item.maxOwn;
   const canBuySelf = !isAlreadyOwned && !isMaxOwned;
-
   const getMaxQuantity = () => {
     let max = 99;
     if (item.stock !== null) max = Math.min(max, item.stock);
@@ -114,173 +103,109 @@ export function PurchaseDialog({ open, item, accounts = [], onConfirm, onCancel,
     if (item.price > 0) max = Math.min(max, Math.floor(balance / item.price));
     return Math.max(0, max);
   };
-
   const maxQty = getMaxQuantity();
-
   const handleConfirm = () => {
     if (mode === 'gift') {
       if (!receiver) return;
-      onConfirm({ isGift: true, receiverId: receiver.id, message, quantity: effectiveQty });
+      onConfirm({
+        isGift: true,
+        receiverId: receiver.id,
+        message,
+        quantity: effectiveQty
+      });
     } else {
-      onConfirm({ quantity: effectiveQty });
+      onConfirm({
+        quantity: effectiveQty
+      });
     }
   };
-
-  const isDisabled = purchasing || !canAfford || (isQuantifiable && maxQty <= 0) || (mode === 'gift' && !receiver);
-
-  return (
-    <FormDialog
-      open={open}
-      onOpenChange={onCancel}
-      maxWidth="sm:max-w-110"
-      title={mode === 'gift' ? '赠送商品' : '购买商品'}
-      description={item.name}
-      footer={
-        <DialogFooter className="shrink-0 p-6 pt-4">
-          <Button variant="outline" onClick={onCancel} disabled={purchasing}>
-            取消
-          </Button>
+  const isDisabled = purchasing || !canAfford || isQuantifiable && maxQty <= 0 || mode === 'gift' && !receiver;
+  return <FormDialog open={open} onOpenChange={onCancel} maxWidth="sm:max-w-110" title={mode === 'gift' ? pbnT("m1906") : pbnT("m1903")} description={item.name} footer={<DialogFooter className="shrink-0 p-6 pt-4">
+          <Button variant="outline" onClick={onCancel} disabled={purchasing}>{pbnT("m486")}</Button>
           <Button onClick={handleConfirm} disabled={isDisabled}>
-            {purchasing ? (
-              <><Loader2 className="h-4 w-4 animate-spin" />处理中...</>
-            ) : (
-              <>
+            {purchasing ? <><Loader2 className="h-4 w-4 animate-spin" />{pbnT("m1025")}</> : <>
                 {mode === 'gift' ? <Gift className="h-4 w-4" /> : <Check className="h-4 w-4" />}
-                {mode === 'gift' ? '确认赠送' : '确认购买'}
-              </>
-            )}
+                {mode === 'gift' ? pbnT("m2001") : pbnT("m2002")}
+              </>}
           </Button>
-        </DialogFooter>
-      }
-    >
+        </DialogFooter>}>
       <div className="space-y-4">
         {/* Tab 切换 */}
         <Tabs value={mode} onValueChange={setMode} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="buy" disabled={!canBuySelf}>自用购买</TabsTrigger>
-            <TabsTrigger value="gift">赠送好友</TabsTrigger>
+            <TabsTrigger value="buy" disabled={!canBuySelf}>{pbnT("m2003")}</TabsTrigger>
+            <TabsTrigger value="gift">{pbnT("m2004")}</TabsTrigger>
           </TabsList>
         </Tabs>
 
         {/* 商品信息：固定显示单价 */}
         <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-          {item.imageUrl && (
-            <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-background">
+          {item.imageUrl && <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-background">
               <img src={item.imageUrl} alt={item.name} className="object-cover w-full h-full" />
-            </div>
-          )}
+            </div>}
           <div className="flex-1 min-w-0">
             <div className="font-medium text-sm truncate">{item.name}</div>
-            <div className="text-xs text-muted-foreground">{getItemTypeLabel(item.type)}</div>
+            <div className="text-xs text-muted-foreground">{getItemTypeLabel(item.type, pbnT)}</div>
           </div>
           <div className="text-right shrink-0">
             <CreditsBadge amount={item.price} currencyCode={item.currencyCode} />
-            {isQuantifiable && <div className="text-[10px] text-muted-foreground">单价</div>}
+            {isQuantifiable && <div className="text-[10px] text-muted-foreground">{pbnT("m2005")}</div>}
           </div>
         </div>
 
         {/* 赠送对象（仅赠送模式） */}
-        {mode === 'gift' && (
-          <div className="space-y-2">
-            <SearchSelect
-              value={receiver}
-              onChange={setReceiver}
-              searchFn={searchUsers}
-              transformData={transformUser}
-              renderItem={renderUserItem}
-              renderSelected={renderSelectedUser}
-              label="赠送给"
-              placeholder="输入用户名搜索..."
-              autoSearch={true}
-              debounceMs={500}
-              emptyText="未找到相关用户"
-            />
-            {receiver && (
-              <div className="space-y-1.5">
-                <Label className="text-xs">赠言（可选）</Label>
-                <Textarea
-                  placeholder="写点什么..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  maxLength={200}
-                  rows={2}
-                  className="resize-none text-sm"
-                />
+        {mode === 'gift' && <div className="space-y-2">
+            <SearchSelect value={receiver} onChange={setReceiver} searchFn={searchUsers} transformData={transformUser} renderItem={renderUserItem} renderSelected={renderSelectedUser} label={pbnT("m2006")} placeholder={pbnT("m2007")} autoSearch={true} debounceMs={500} emptyText={pbnT("m79")} />
+            {receiver && <div className="space-y-1.5">
+                <Label className="text-xs">{pbnT("m2008")}</Label>
+                <Textarea placeholder={pbnT("m2009")} value={message} onChange={e => setMessage(e.target.value)} maxLength={200} rows={2} className="resize-none text-sm" />
                 <div className="text-[10px] text-right text-muted-foreground">{message.length}/200</div>
-              </div>
-            )}
-          </div>
-        )}
+              </div>}
+          </div>}
 
         {/* 数量选择（消耗品，买/赠共用） */}
-        {isQuantifiable && (
-          <div className="space-y-1.5">
-            <Label className="text-xs">数量</Label>
+        {isQuantifiable && <div className="space-y-1.5">
+            <Label className="text-xs">{pbnT("m1815")}</Label>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                disabled={quantity <= 1}
-              >
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={quantity <= 1}>
                 <Minus className="h-3 w-3" />
               </Button>
-              <Input
-                type="number"
-                min={1}
-                max={maxQty}
-                value={quantity}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (v === '') { setQuantity(''); return; }
-                  const n = parseInt(v);
-                  if (!isNaN(n)) setQuantity(Math.min(maxQty, n));
-                }}
-                onBlur={() => {
-                  const n = typeof quantity === 'number' ? quantity : parseInt(quantity);
-                  setQuantity(isNaN(n) || n < 1 ? 1 : Math.min(maxQty, n));
-                }}
-                className="w-16 text-center h-8 text-sm"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setQuantity(q => Math.min(maxQty, q + 1))}
-                disabled={quantity >= maxQty}
-              >
+              <Input type="number" min={1} max={maxQty} value={quantity} onChange={e => {
+            const v = e.target.value;
+            if (v === '') {
+              setQuantity('');
+              return;
+            }
+            const n = parseInt(v);
+            if (!isNaN(n)) setQuantity(Math.min(maxQty, n));
+          }} onBlur={() => {
+            const n = typeof quantity === 'number' ? quantity : parseInt(quantity);
+            setQuantity(isNaN(n) || n < 1 ? 1 : Math.min(maxQty, n));
+          }} className="w-16 text-center h-8 text-sm" />
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setQuantity(q => Math.min(maxQty, q + 1))} disabled={quantity >= maxQty}>
                 <Plus className="h-3 w-3" />
               </Button>
-              {maxQty < 99 && maxQty > 0 && (
-                <span className="text-[10px] text-muted-foreground">最多 {maxQty}</span>
-              )}
+              {maxQty < 99 && maxQty > 0 && <span className="text-[10px] text-muted-foreground">{pbnT("m2010")}{" "}{maxQty}</span>}
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* 结算摘要 */}
         <div className="rounded-lg border bg-card p-3 space-y-2 text-sm">
           {/* 单价 × 数量 */}
-          {isQuantifiable && (
-            <div className="flex justify-between text-muted-foreground">
-              <span>小计</span>
+          {isQuantifiable && <div className="flex justify-between text-muted-foreground">
+              <span>{pbnT("m2011")}</span>
               <span>{item.price} × {effectiveQty}</span>
-            </div>
-          )}
+            </div>}
           {/* 应付 */}
           <div className="flex justify-between font-medium">
-            <span>应付</span>
+            <span>{pbnT("m2012")}</span>
             <CreditsBadge amount={totalPrice} currencyCode={item.currencyCode} />
           </div>
-          {!canAfford && (
-            <>
+          {!canAfford && <>
               <Separator />
-              <div className="text-xs text-destructive text-right">余额不足</div>
-            </>
-          )}
+              <div className="text-xs text-destructive text-right">{pbnT("m2013")}</div>
+            </>}
         </div>
       </div>
-    </FormDialog>
-  );
+    </FormDialog>;
 }

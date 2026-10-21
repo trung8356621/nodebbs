@@ -1,13 +1,17 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { authApi } from '@/lib/api';
 import { toast } from 'sonner';
-
-export function usePhoneLoginForm({ onSuccess } = {}) {
-  const { loginByPhone } = useAuth();
-
+export function usePhoneLoginForm({
+  onSuccess
+} = {}) {
+  const pbnT = usePbnTranslations();
+  const {
+    loginByPhone
+  } = useAuth();
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [countdown, setCountdown] = useState(0);
@@ -22,88 +26,76 @@ export function usePhoneLoginForm({ onSuccess } = {}) {
     }
     return () => clearTimeout(timerRef.current);
   }, [countdown]);
-
-  const validatePhone = useCallback((value) => {
+  const validatePhone = useCallback(value => {
     return /^1[3-9]\d{9}$/.test(value);
   }, []);
 
   // 发送验证码
   const handleSendCode = useCallback(async () => {
     setError('');
-
     if (!phone.trim()) {
-      setError('请输入手机号');
+      setError(pbnT("m1236"));
       return;
     }
-
     if (!validatePhone(phone.trim())) {
-      setError('请输入有效的手机号');
+      setError(pbnT("m2053"));
       return;
     }
-
     setIsLoading(true);
-
     try {
       await authApi.sendCode(phone.trim(), 'phone_login');
       setCountdown(60);
-      toast.success('验证码已发送');
+      toast.success(pbnT("m2054"));
     } catch (err) {
-      setError(err.message || '发送验证码失败');
+      setError(err.message || pbnT("m2055"));
     } finally {
       setIsLoading(false);
     }
   }, [phone, validatePhone]);
 
   // 验证码登录
-  const handleSubmit = useCallback(async (e) => {
+  const handleSubmit = useCallback(async e => {
     e?.preventDefault();
     setError('');
-
     if (!phone.trim() || !code.trim()) {
-      setError('请填写手机号和验证码');
+      setError(pbnT("m2056"));
       return;
     }
-
     if (!validatePhone(phone.trim())) {
-      setError('请输入有效的手机号');
+      setError(pbnT("m2053"));
       return;
     }
-
     setIsLoading(true);
-
     try {
       const result = await loginByPhone(phone.trim(), code.trim());
-
       if (result.success) {
         if (result.isNewUser) {
-          toast.success('登录成功！建议前往「个人设置」设置你的用户名和密码');
+          toast.success(pbnT("m2057"));
         } else if (result.needSetPassword) {
-          toast.success('登录成功！建议前往设置页面设置登录密码');
+          toast.success(pbnT("m2058"));
         } else {
-          toast.success('登录成功！');
+          toast.success(pbnT("m31"));
         }
         resetForm();
         onSuccess?.();
       } else {
-        setError(result.error || '登录失败');
-        toast.error(result.error || '登录失败');
+        setError(result.error || pbnT("m33"));
+        toast.error(result.error || pbnT("m33"));
       }
     } catch (err) {
-      const errorMsg = err.message || '登录失败';
+      const errorMsg = err.message || pbnT("m33");
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
   }, [phone, code, loginByPhone, onSuccess, validatePhone]);
-
   const resetForm = useCallback(() => {
     setPhone('');
     setCode('');
     setError('');
     setCountdown(0);
   }, []);
-
   return {
     phone,
     setPhone,
@@ -115,6 +107,6 @@ export function usePhoneLoginForm({ onSuccess } = {}) {
     setError,
     handleSendCode,
     handleSubmit,
-    resetForm,
+    resetForm
   };
 }

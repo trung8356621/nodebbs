@@ -1,12 +1,8 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import UploadTab from './UploadTab';
 import DraftsTab from './DraftsTab';
@@ -32,13 +28,13 @@ export default function AttachmentDialog({
   onOpenChange,
   onCreated,
   topicId,
-  onCloseAutoFocus,
+  onCloseAutoFocus
 }) {
+  const pbnT = usePbnTranslations();
   const [activeTab, setActiveTab] = useState('upload');
   const [editingDraft, setEditingDraft] = useState(null);
   const [draftsRefreshKey, setDraftsRefreshKey] = useState(0);
-
-  const handleOpenChange = (next) => {
+  const handleOpenChange = next => {
     // 关闭时不重置 state — 让淡出动画播完，否则会闪烁
     onOpenChange?.(next);
   };
@@ -50,41 +46,38 @@ export default function AttachmentDialog({
       setEditingDraft(null);
     }
   }, [open]);
-
   const handleSubmitted = (attachmentId, wasEditing) => {
     if (wasEditing) {
       setEditingDraft(null);
-      setDraftsRefreshKey((k) => k + 1);
+      setDraftsRefreshKey(k => k + 1);
     } else {
       onCreated?.(attachmentId);
       handleOpenChange(false);
     }
   };
-
-  const handleEditDraft = (draft) => {
+  const handleEditDraft = draft => {
     setEditingDraft(draft);
     setActiveTab('upload');
   };
-
-  const handleInsert = (attachmentId) => {
+  const handleInsert = attachmentId => {
     onCreated?.(attachmentId);
     handleOpenChange(false);
   };
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+  return <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg" onCloseAutoFocus={onCloseAutoFocus}>
         <DialogHeader>
           <DialogTitle>
-            {editingDraft ? `编辑草稿 #${editingDraft.id}` : '插入附件'}
+            {editingDraft ? pbnT("m2212", {
+            arg0: editingDraft.id
+          }) : pbnT("m1315")}
           </DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className={topicId ? 'grid grid-cols-3 w-full' : 'grid grid-cols-2 w-full'}>
-            <TabsTrigger value="upload">上传</TabsTrigger>
-            <TabsTrigger value="drafts">草稿</TabsTrigger>
-            {topicId && <TabsTrigger value="bound">本话题已有</TabsTrigger>}
+            <TabsTrigger value="upload">{pbnT("m1300")}</TabsTrigger>
+            <TabsTrigger value="drafts">{pbnT("m409")}</TabsTrigger>
+            {topicId && <TabsTrigger value="bound">{pbnT("m2213")}</TabsTrigger>}
           </TabsList>
 
           {/*
@@ -92,30 +85,19 @@ export default function AttachmentDialog({
             组件内 state——用户传完文件、点一下「草稿」再切回来，列表就空了，可服务端
             文件还在（且此后再无入口删它，只能等孤儿回收）。保持挂载让 state 存活。
             非激活时 Radix 会加 hidden 属性，视觉上仍是隐藏的。
-          */}
+           */}
           <TabsContent value="upload" forceMount hidden={activeTab !== 'upload'}>
-            <UploadTab
-              editingDraft={editingDraft}
-              onSubmitted={handleSubmitted}
-              onCancelEdit={() => setEditingDraft(null)}
-            />
+            <UploadTab editingDraft={editingDraft} onSubmitted={handleSubmitted} onCancelEdit={() => setEditingDraft(null)} />
           </TabsContent>
 
           <TabsContent value="drafts">
-            <DraftsTab
-              refreshKey={draftsRefreshKey}
-              onInsert={handleInsert}
-              onEdit={handleEditDraft}
-            />
+            <DraftsTab refreshKey={draftsRefreshKey} onInsert={handleInsert} onEdit={handleEditDraft} />
           </TabsContent>
 
-          {topicId && (
-            <TabsContent value="bound">
+          {topicId && <TabsContent value="bound">
               <BoundTab topicId={topicId} onInsert={handleInsert} />
-            </TabsContent>
-          )}
+            </TabsContent>}
         </Tabs>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }

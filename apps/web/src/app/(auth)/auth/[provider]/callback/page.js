@@ -1,5 +1,7 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
+import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,14 +18,17 @@ import { getProviderName } from '@/components/auth/OAuthProviderIcon';
  * 因此两者共用本页，靠后端下发的 state 前缀区分（见 oauthService.generateLinkState）。
  */
 export default function OAuthCallback() {
+  const pbnT = usePbnTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
-  const { updateUser, refreshUser } = useAuth();
+  const {
+    updateUser,
+    refreshUser
+  } = useAuth();
   const [status, setStatus] = useState('processing'); // processing, success, error
   const [errorMessage, setErrorMessage] = useState('');
   const [isLink, setIsLink] = useState(false);
-
   const provider = params.provider; // 从 URL 路径获取 provider
 
   useEffect(() => {
@@ -43,8 +48,12 @@ export default function OAuthCallback() {
       if (!validProviders.includes(provider)) {
         console.error('Invalid provider:', provider);
         setStatus('error');
-        setErrorMessage(`不支持的登录方式: ${provider}`);
-        toast.error(`不支持的登录方式: ${provider}`);
+        setErrorMessage(pbnT("m11", {
+          arg0: provider
+        }));
+        toast.error(pbnT("m11", {
+          arg0: provider
+        }));
         setTimeout(() => router.push(backPath), 2000);
         return;
       }
@@ -53,7 +62,7 @@ export default function OAuthCallback() {
       if (error) {
         console.error(`${provider} OAuth error:`, error);
         setStatus('error');
-        const errorMsg = getErrorMessage(error, provider, isLinkFlow);
+        const errorMsg = getErrorMessage(error, provider, isLinkFlow, pbnT);
         setErrorMessage(errorMsg);
         toast.error(errorMsg);
         setTimeout(() => router.push(backPath), 2000);
@@ -64,23 +73,23 @@ export default function OAuthCallback() {
       if (isLinkFlow) {
         if (!code) {
           setStatus('error');
-          setErrorMessage('关联失败，缺少授权凭证');
+          setErrorMessage(pbnT("m12"));
           setTimeout(() => router.push(backPath), 2000);
           return;
         }
-
         try {
           setStatus('processing');
           const result = await authApi.linkOAuthCallback(provider, code, state);
           setStatus('success');
-          toast.success(result.message || '关联成功');
+          toast.success(result.message || pbnT("m13"));
           await refreshUser();
           setTimeout(() => router.push(backPath), 500);
         } catch (err) {
           console.error(`${provider} link error:`, err);
           setStatus('error');
-          const errorMsg =
-            err.message || `${getProviderName(provider)} 关联失败`;
+          const errorMsg = err.message || pbnT("m14", {
+            arg0: getProviderName(provider, pbnT)
+          });
           setErrorMessage(errorMsg);
           toast.error(errorMsg);
           setTimeout(() => router.push(backPath), 3000);
@@ -91,37 +100,38 @@ export default function OAuthCallback() {
       // 1. 如果有 token (Apple 直连模式)，尝试恢复会话
       if (token && provider === 'apple') {
         try {
-           setStatus('processing');
-           // Apple 后端直连会自动设置 HttpOnly Cookie
-           // 我们尝试调用 refreshUser (或 checkAuth) 来从 Cookie 恢复用户会话
-           // 这里我们从 URL 获取了 token，但这只是一个标志，真正的鉴权依赖 Cookie
-           // 或者我们可以手动把 token 保存到 localStorage (如果应用逻辑需要)
-           
-           // 等待一下 Cookie 生效 (通常不需要，但为了稳妥)
-           // await new Promise(r => setTimeout(r, 100));
-           
-           // 刷新用户状态
-           // 注意：我们要确保 refreshUser 是从 authContext 获取的
-           // 由于 hook 规则，我们不能在这里调用 hook，但 refreshUser 是从 useAuth 解构出来的，可以直接用
-           const user = await refreshUser();
-           
-           if (user) {
-               setStatus('success');
-               toast.success(`欢迎回来，${user.name || user.username}！`);
-               setTimeout(() => router.push('/'), 500);
-               return;
-           } else {
-               // 如果 Cookie 没生效，可能需要手动处理 token?
-               // 但 authApi 是基于 fetch 的，需要我们手动把 token 设为 headers? 
-               // authApi 默认是 credentials: include.
-               // 如果 refreshUser 失败 (没拿到 user)，说明 cookie 没带上或者无效
-               throw new Error('无法获取用户信息');
-           }
-        } catch(e) { 
-            console.error('Apple login verify failed', e);
-            setErrorMessage('Apple 登录验证失败，请重试');
-            setStatus('error');
+          setStatus('processing');
+          // Apple 后端直连会自动设置 HttpOnly Cookie
+          // 我们尝试调用 refreshUser (或 checkAuth) 来从 Cookie 恢复用户会话
+          // 这里我们从 URL 获取了 token，但这只是一个标志，真正的鉴权依赖 Cookie
+          // 或者我们可以手动把 token 保存到 localStorage (如果应用逻辑需要)
+
+          // 等待一下 Cookie 生效 (通常不需要，但为了稳妥)
+          // await new Promise(r => setTimeout(r, 100));
+
+          // 刷新用户状态
+          // 注意：我们要确保 refreshUser 是从 authContext 获取的
+          // 由于 hook 规则，我们不能在这里调用 hook，但 refreshUser 是从 useAuth 解构出来的，可以直接用
+          const user = await refreshUser();
+          if (user) {
+            setStatus('success');
+            toast.success(pbnT("m15", {
+              arg0: user.name || user.username
+            }));
+            setTimeout(() => router.push('/'), 500);
             return;
+          } else {
+            // 如果 Cookie 没生效，可能需要手动处理 token?
+            // 但 authApi 是基于 fetch 的，需要我们手动把 token 设为 headers?
+            // authApi 默认是 credentials: include.
+            // 如果 refreshUser 失败 (没拿到 user)，说明 cookie 没带上或者无效
+            throw new Error(pbnT("m16"));
+          }
+        } catch (e) {
+          console.error('Apple login verify failed', e);
+          setErrorMessage(pbnT("m17"));
+          setStatus('error');
+          return;
         }
       }
 
@@ -129,11 +139,10 @@ export default function OAuthCallback() {
       if (!code && !token) {
         console.error('Missing code or token');
         setStatus('error');
-        setErrorMessage('授权失败，缺少凭证');
+        setErrorMessage(pbnT("m18"));
         setTimeout(() => router.push('/'), 1000);
         return;
       }
-
       try {
         setStatus('processing');
 
@@ -156,105 +165,77 @@ export default function OAuthCallback() {
             result = await authApi.wechatMpCallback(code, state);
             break;
           default:
-            throw new Error(`未知的 OAuth 提供商: ${provider}`);
+            throw new Error(pbnT("m19", {
+              arg0: provider
+            }));
         }
-
         if (result.user && result.token) {
           setStatus('success');
           // OAuth 回调已经在 authApi 中设置了 token，这里只需要设置用户状态
           updateUser(result.user);
-          toast.success(
-            `欢迎回来，${result.user.name || result.user.username}！`
-          );
+          toast.success(pbnT("m15", {
+            arg0: result.user.name || result.user.username
+          }));
 
           // 延迟跳转，让用户看到成功提示
           setTimeout(() => router.push('/'), 500);
         } else {
-          throw new Error('登录响应格式错误');
+          throw new Error(pbnT("m20"));
         }
       } catch (err) {
         console.error(`${provider} callback error:`, err);
         setStatus('error');
 
         // 提取友好的错误消息
-        let errorMsg = err.message || `${getProviderName(provider)} 登录失败`;
+        let errorMsg = err.message || pbnT("m21", {
+          arg0: getProviderName(provider, pbnT)
+        });
 
         // 处理特定的错误消息
-        if (errorMsg.includes('已关闭用户注册')) {
-          errorMsg =
-            '系统当前已关闭新用户注册，如果您已有账号，请使用邮箱密码登录';
-        } else if (errorMsg.includes('账号已被封禁')) {
-          errorMsg = '您的账号已被封禁，如有疑问请联系管理员';
+        if (errorMsg.includes(pbnT("m22"))) {
+          errorMsg = pbnT("m23");
+        } else if (errorMsg.includes(pbnT("m24"))) {
+          errorMsg = pbnT("m25");
         }
-
         setErrorMessage(errorMsg);
         toast.error(errorMsg);
         setTimeout(() => router.push('/'), 3000); // 延长到3秒，让用户看清错误消息
       }
     };
-
     if (provider) {
       handleCallback();
     }
   }, []); // 只在组件挂载时执行一次
 
-  return (
-    <div className='text-center space-y-4 max-w-md px-4'>
-        {status === 'processing' && (
-          <Loading
-            text={`正在${isLink ? '关联' : '通过'} ${getProviderName(provider)}${isLink ? '' : ' 登录'}...`}
-          />
-        )}
+  return <div className='text-center space-y-4 max-w-md px-4'>
+        {status === 'processing' && <Loading text={pbnT("m26", {
+      arg0: isLink ? pbnT("m27") : pbnT("m28"),
+      arg1: getProviderName(provider, pbnT),
+      arg2: isLink ? '' : pbnT("m29")
+    })} />}
 
-        {status === 'success' && (
-          <>
+        {status === 'success' && <>
             <div className='rounded-full h-12 w-12 bg-green-100 dark:bg-green-900 flex items-center justify-center mx-auto'>
-              <svg
-                className='h-6 w-6 text-green-600 dark:text-green-400'
-                fill='none'
-                viewBox='0 0 24 24'
-                stroke='currentColor'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M5 13l4 4L19 7'
-                />
+              <svg className='h-6 w-6 text-green-600 dark:text-green-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
               </svg>
             </div>
-            <p className='text-muted-foreground'>{isLink ? '关联成功！' : '登录成功！'}</p>
-          </>
-        )}
+            <p className='text-muted-foreground'>{isLink ? pbnT("m30") : pbnT("m31")}</p>
+          </>}
 
-        {status === 'error' && (
-          <>
+        {status === 'error' && <>
             <div className='rounded-full h-12 w-12 bg-red-100 dark:bg-red-900 flex items-center justify-center mx-auto'>
-              <svg
-                className='h-6 w-6 text-red-600 dark:text-red-400'
-                fill='none'
-                viewBox='0 0 24 24'
-                stroke='currentColor'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M6 18L18 6M6 6l12 12'
-                />
+              <svg className='h-6 w-6 text-red-600 dark:text-red-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
               </svg>
             </div>
-            <p className='text-muted-foreground font-medium'>{isLink ? '关联失败' : '登录失败'}</p>
-            {errorMessage && (
-              <p className='text-sm text-muted-foreground'>{errorMessage}</p>
-            )}
+            <p className='text-muted-foreground font-medium'>{isLink ? pbnT("m32") : pbnT("m33")}</p>
+            {errorMessage && <p className='text-sm text-muted-foreground'>{errorMessage}</p>}
             <p className='text-xs text-muted-foreground'>
-              {isLink ? '正在返回设置页...' : '正在返回首页...'}
+              {isLink ? pbnT("m34") : pbnT("m35")}
             </p>
-          </>
-        )}
-    </div>
-  );
+          </>}
+    </div>;
 }
 
 /**
@@ -265,7 +246,6 @@ export default function OAuthCallback() {
  * 注意这里只用于前端选择调用哪个接口，真正的安全校验在后端（独立的 state cookie）。
  */
 const LINK_STATE_PREFIX = 'lk';
-
 function isLinkState(state) {
   return typeof state === 'string' && state.startsWith(LINK_STATE_PREFIX);
 }
@@ -273,19 +253,27 @@ function isLinkState(state) {
 /**
  * 获取友好的错误信息
  */
-function getErrorMessage(error, provider, isLink = false) {
-  const providerName = getProviderName(provider);
-  const action = isLink ? '关联' : '登录';
-
+function getErrorMessage(error, provider, isLink = false, pbnT = pbnRuntimeT) {
+  const providerName = getProviderName(provider, pbnT);
+  const action = isLink ? pbnT("m27") : pbnT("m4");
   const errorMessages = {
-    access_denied: `您拒绝了 ${providerName} 授权`,
-    invalid_request: '授权请求无效',
-    unauthorized_client: '应用未授权',
-    unsupported_response_type: '不支持的响应类型',
-    invalid_scope: '无效的授权范围',
-    server_error: `${providerName} 服务器错误`,
-    temporarily_unavailable: `${providerName} 服务暂时不可用`,
+    access_denied: pbnT("m36", {
+      arg0: providerName
+    }),
+    invalid_request: pbnT("m37"),
+    unauthorized_client: pbnT("m38"),
+    unsupported_response_type: pbnT("m39"),
+    invalid_scope: pbnT("m40"),
+    server_error: pbnT("m41", {
+      arg0: providerName
+    }),
+    temporarily_unavailable: pbnT("m42", {
+      arg0: providerName
+    })
   };
-
-  return errorMessages[error] || `${providerName} ${action}失败: ${error}`;
+  return errorMessages[error] || pbnT("m43", {
+    arg0: providerName,
+    arg1: action,
+    arg2: error
+  });
 }

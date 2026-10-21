@@ -1,3 +1,4 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +15,13 @@ import { Check } from 'lucide-react';
  * @param {Function} props.onPurchase - 点击购买按钮时的回调
  * @param {boolean} props.isAuthenticated - 用户是否已认证
  */
-export function ShopItemCard({ item, userBalance, onPurchase, isAuthenticated }) {
+export function ShopItemCard({
+  item,
+  userBalance,
+  onPurchase,
+  isAuthenticated
+}) {
+  const pbnT = usePbnTranslations();
   const isOutOfStock = item.stock !== null && item.stock <= 0;
   const canAfford = userBalance !== null && userBalance >= item.price;
   const consumeType = item.consumeType || 'non_consumable';
@@ -37,14 +44,12 @@ export function ShopItemCard({ item, userBalance, onPurchase, isAuthenticated })
 
   // 按钮文案
   const getButtonText = () => {
-    if (isOutOfStock) return '售罄';
-    if (isAlreadyOwned) return '已拥有';
-    if (isMaxOwned) return '持有上限';
-    return '购买';
+    if (isOutOfStock) return pbnT("m2014");
+    if (isAlreadyOwned) return pbnT("m2015");
+    if (isMaxOwned) return pbnT("m1961");
+    return pbnT("m2016");
   };
-
-  return (
-    <Card className={`shadow-sm hover:border-primary/30 flex flex-col h-full border-border/50 ${isAlreadyOwned ? 'opacity-75' : ''}`}>
+  return <Card className={`shadow-sm hover:border-primary/30 flex flex-col h-full border-border/50 ${isAlreadyOwned ? 'opacity-75' : ''}`}>
       <CardHeader className="p-3 md:p-6 space-y-1 md:space-y-1.5 pb-0">
         <div className="flex items-start justify-between min-w-0 gap-2">
           <div className="flex items-center gap-1.5 md:gap-2 min-w-0 flex-1">
@@ -57,71 +62,35 @@ export function ShopItemCard({ item, userBalance, onPurchase, isAuthenticated })
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {/* 非消耗品已拥有标识 */}
-            {isAlreadyOwned && (
-              <Badge variant="secondary" className="text-[10px] md:text-xs px-1 h-5 md:h-auto whitespace-nowrap">
-                已拥有
-              </Badge>
-            )}
+            {isAlreadyOwned && <Badge variant="secondary" className="text-[10px] md:text-xs px-1 h-5 md:h-auto whitespace-nowrap">{pbnT("m2015")}</Badge>}
             {/* 消耗品/订阅型已拥有数量角标 */}
-            {!isNonConsumable && ownedCount > 0 && (
-              <Badge variant="secondary" className="text-[10px] md:text-xs px-1 h-5 md:h-auto whitespace-nowrap">
-                已有 ×{ownedCount}
-              </Badge>
-            )}
+            {!isNonConsumable && ownedCount > 0 && <Badge variant="secondary" className="text-[10px] md:text-xs px-1 h-5 md:h-auto whitespace-nowrap">{pbnT("m2017")}{ownedCount}
+              </Badge>}
             {/* 库存紧张 */}
-            {item.stock !== null && item.stock <= 10 && item.stock > 0 && (
-              <Badge variant="destructive" className="text-[10px] md:text-xs px-1 h-5 md:h-auto whitespace-nowrap">
-                仅 {item.stock}
-              </Badge>
-            )}
+            {item.stock !== null && item.stock <= 10 && item.stock > 0 && <Badge variant="destructive" className="text-[10px] md:text-xs px-1 h-5 md:h-auto whitespace-nowrap">{pbnT("m2018")}{" "}{item.stock}
+              </Badge>}
           </div>
         </div>
         <CardDescription className="text-xs md:text-sm line-clamp-1 md:line-clamp-2 min-h-0 md:min-h-10">
-            {item.description || '暂无描述'}
+            {item.description || pbnT("m2019")}
         </CardDescription>
       </CardHeader>
 
       <CardContent className="flex-1 p-3 md:p-6 pt-2 md:pt-0 flex items-center justify-center">
-        {item.imageUrl ? (
-          <div className="relative w-full aspect-square flex items-center justify-center rounded-lg bg-muted/20">
-            <img
-              src={item.imageUrl}
-              alt={item.name}
-              className="object-contain max-h-full transition-transform duration-300 hover:scale-110"
-            />
-          </div>
-        ) : (
-             <div className="w-full aspect-square bg-muted/10 rounded-lg flex items-center justify-center">
+        {item.imageUrl ? <div className="relative w-full aspect-square flex items-center justify-center rounded-lg bg-muted/20">
+            <img src={item.imageUrl} alt={item.name} className="object-contain max-h-full transition-transform duration-300 hover:scale-110" />
+          </div> : <div className="w-full aspect-square bg-muted/10 rounded-lg flex items-center justify-center">
                 <ItemTypeIcon type={item.type} className="h-8 w-8 text-muted-foreground/30" />
-             </div>
-        )}
+             </div>}
       </CardContent>
 
       <CardFooter className="p-3 md:p-6 pt-0 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="w-full md:w-auto flex justify-center md:justify-start">
              <CreditsBadge amount={item.price} currencyCode={item.currencyCode} variant="default" className="scale-90 md:scale-100 origin-left" />
         </div>
-        {canGift ? (
-          <Button
-            onClick={() => onPurchase(item, 'gift')}
-            size="sm"
-            variant="outline"
-            className="w-full md:w-auto h-8 md:h-10 text-xs md:text-sm"
-          >
-            赠送
-          </Button>
-        ) : (
-          <Button
-            onClick={() => onPurchase(item, 'buy')}
-            disabled={!canBuy}
-            size="sm"
-            variant={isOwnedOrMaxed ? 'outline' : 'default'}
-            className="w-full md:w-auto h-8 md:h-10 text-xs md:text-sm"
-          >
+        {canGift ? <Button onClick={() => onPurchase(item, 'gift')} size="sm" variant="outline" className="w-full md:w-auto h-8 md:h-10 text-xs md:text-sm">{pbnT("m2020")}</Button> : <Button onClick={() => onPurchase(item, 'buy')} disabled={!canBuy} size="sm" variant={isOwnedOrMaxed ? 'outline' : 'default'} className="w-full md:w-auto h-8 md:h-10 text-xs md:text-sm">
             {getButtonText()}
-          </Button>
-        )}
+          </Button>}
       </CardFooter>
-    </Card>
-  );
+    </Card>;
 }

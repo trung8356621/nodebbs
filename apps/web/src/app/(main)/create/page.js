@@ -1,11 +1,12 @@
+import { getPbnTranslations } from "@/i18n/server";
 import CreateTopicContent from './components/CreateTopicContent';
-
-export const metadata = {
-  title: '发布话题',
-  description: '分享你的想法，开启一场精彩的讨论。',
-};
-
+export async function generateMetadata() {
+  const pbnT = await getPbnTranslations();
+  return {
+    title: pbnT("m54"),
+    description: pbnT("m55")
+  };
+}
 export default function CreateTopic() {
   return <CreateTopicContent />;
 }
-

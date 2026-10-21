@@ -1,22 +1,19 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/common/PageHeader';
 import { InvitationList } from './components/InvitationList';
 import { InvitationRules } from './components/InvitationRules';
-
 export default function AdminInvitationsPage() {
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="邀请管理"
-        description="管理平台邀请码生成情况及各角色生成规则"
-      />
+  const pbnT = usePbnTranslations();
+  return <div className="space-y-6">
+      <PageHeader title={pbnT("m346")} description={pbnT("m347")} />
 
       <Tabs defaultValue="codes" className="gap-4">
         <TabsList className="">
-          <TabsTrigger value="codes">邀请码列表</TabsTrigger>
-          <TabsTrigger value="rules">邀请规则设置</TabsTrigger>
+          <TabsTrigger value="codes">{pbnT("m348")}</TabsTrigger>
+          <TabsTrigger value="rules">{pbnT("m349")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="codes" className="space-y-6">
@@ -27,6 +24,5 @@ export default function AdminInvitationsPage() {
             <InvitationRules />
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 }

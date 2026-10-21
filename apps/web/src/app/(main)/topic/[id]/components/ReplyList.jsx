@@ -1,5 +1,6 @@
 'use client';
 
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { MessageSquare, Reply } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Pager } from '@/components/common/Pagination';
@@ -24,70 +25,46 @@ export default function ReplyList({
   onReplyAdded,
   repliesContainerRef,
   onPageChange,
-  renderItem,
+  renderItem
 }) {
+  const pbnT = usePbnTranslations();
   const scrollToReplyForm = () => {
-    document
-      .getElementById('topic-reply-form')
-      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('topic-reply-form')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
   };
-
-  return (
-    <div className='space-y-4'>
+  return <div className='space-y-4'>
       <div ref={repliesContainerRef} className='relative -top-16' />
-      {totalPosts > 0 && (
-        <div className='flex items-center justify-between mb-4 px-3'>
+      {totalPosts > 0 && <div className='flex items-center justify-between mb-4 px-3'>
           <div className='flex items-center space-x-2 text-sm text-muted-foreground/70'>
             <MessageSquare className='h-4 w-4' />
-            <span className='font-medium'>{totalPosts} 条回复</span>
+            <span className='font-medium'>{totalPosts}{" "}{pbnT("m97")}</span>
           </div>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 text-muted-foreground hover:text-foreground'
-            onClick={scrollToReplyForm}
-          >
+          <Button variant='ghost' size='sm' className='h-8 text-muted-foreground hover:text-foreground' onClick={scrollToReplyForm}>
             <Reply className='h-4 w-4' />
-            <span className='text-xs'>回复</span>
+            <span className='text-xs'>{pbnT("m69")}</span>
           </Button>
-        </div>
-      )}
+        </div>}
 
-      {posts.map((reply) =>
-        renderItem
-          ? renderItem(reply, {
-              topicId,
-              onDeleted: onPostDeleted,
-              onReplyAdded,
-              isRewardEnabled,
-              rewardStats: rewardStatsMap[reply.id] || { totalAmount: 0, totalCount: 0 },
-              onRefreshRewards,
-            })
-          : (
-            <ReplyItem
-              key={reply.id}
-              reply={reply}
-              topicId={topicId}
-              onDeleted={onPostDeleted}
-              onReplyAdded={onReplyAdded}
-              isRewardEnabled={isRewardEnabled}
-              rewardStats={rewardStatsMap[reply.id] || { totalAmount: 0, totalCount: 0 }}
-              onRefreshRewards={onRefreshRewards}
-            />
-          )
-      )}
+      {posts.map(reply => renderItem ? renderItem(reply, {
+      topicId,
+      onDeleted: onPostDeleted,
+      onReplyAdded,
+      isRewardEnabled,
+      rewardStats: rewardStatsMap[reply.id] || {
+        totalAmount: 0,
+        totalCount: 0
+      },
+      onRefreshRewards
+    }) : <ReplyItem key={reply.id} reply={reply} topicId={topicId} onDeleted={onPostDeleted} onReplyAdded={onReplyAdded} isRewardEnabled={isRewardEnabled} rewardStats={rewardStatsMap[reply.id] || {
+      totalAmount: 0,
+      totalCount: 0
+    }} onRefreshRewards={onRefreshRewards} />)}
 
       {/* 分页 */}
-      {totalPages > 1 && (
-        <div className='mb-6'>
-          <Pager
-            total={totalPosts}
-            page={currentPage}
-            pageSize={limit}
-            onPageChange={onPageChange}
-          />
-        </div>
-      )}
-    </div>
-  );
+      {totalPages > 1 && <div className='mb-6'>
+          <Pager total={totalPosts} page={currentPage} pageSize={limit} onPageChange={onPageChange} />
+        </div>}
+    </div>;
 }

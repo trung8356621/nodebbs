@@ -1,3 +1,4 @@
+import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { postApi } from '@/lib/api';
@@ -14,11 +15,21 @@ import { useTopicContext } from '@/modules/forum/contexts/TopicContext';
  * @returns {Object} 包含表单状态和操作方法的对象
  */
 export function useReplyForm({
-  onReplyAdded,
+  onReplyAdded
 }) {
+  const pbnT = usePbnTranslations();
   const router = useRouter();
-  const { topic, toggleTopicStatus, refreshTopic } = useTopicContext();
-  const { user, isAuthenticated, openLoginDialog, loading } = useAuth();
+  const {
+    topic,
+    toggleTopicStatus,
+    refreshTopic
+  } = useTopicContext();
+  const {
+    user,
+    isAuthenticated,
+    openLoginDialog,
+    loading
+  } = useAuth();
   const [replyContent, setReplyContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -28,29 +39,23 @@ export function useReplyForm({
    */
   const handleSubmitReply = async () => {
     if (!replyContent.trim()) {
-      toast.error('请输入回复内容');
+      toast.error(pbnT("m971"));
       return;
     }
-
     if (!isAuthenticated) {
       openLoginDialog();
       return;
     }
-
     setSubmitting(true);
-
     try {
       const response = await postApi.create({
         topicId: topic.id,
-        content: replyContent,
+        content: replyContent
       });
-
       if (response.requiresApproval) {
-        toast.success(
-          response.message || '您的回复已提交，等待审核后将公开显示'
-        );
+        toast.success(response.message || pbnT("m2402"));
       } else {
-        toast.success(response.message || '回复成功！');
+        toast.success(response.message || pbnT("m2403"));
 
         // 如果返回了新帖子数据，立即添加到列表
         if (response.post && onReplyAdded) {
@@ -71,7 +76,7 @@ export function useReplyForm({
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             editCount: 0,
-            ...response.post,
+            ...response.post
           };
           onReplyAdded(newPost);
 
@@ -84,11 +89,10 @@ export function useReplyForm({
           router.refresh();
         }
       }
-
       setReplyContent('');
     } catch (err) {
-      console.error('发布回复失败:', err);
-      toast.error(err.message || '发布回复失败');
+      console.error("Could not post reply:", err);
+      toast.error(err.message || pbnT("m2405"));
     } finally {
       setSubmitting(false);
     }
@@ -101,7 +105,6 @@ export function useReplyForm({
   const handleToggleTopicStatus = async () => {
     await toggleTopicStatus();
   };
-
   return {
     /** 当前登录用户 */
     user,
@@ -126,6 +129,6 @@ export function useReplyForm({
     /** 当前话题是否已删除 (来自 Context) */
     isDeleted: topic.isDeleted,
     /** 当前用户是否有权关闭话题 (来自后端) */
-    canClose: topic.canClose || false,
+    canClose: topic.canClose || false
   };
 }
