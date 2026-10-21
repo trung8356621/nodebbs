@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-21T17:31:38.178Z",
+  "trackedFilesScanned": 815,
+  "knownSecretMatches": [],
+  "credentialPatternMatches": [],
+  "trackedSensitiveRuntimePaths": [],
+  "privatePathsIgnored": 8,
+  "publicForumConfigs": "No credentials; database names and loopback ports only",
+  "recordedEvidence": {
+    "bootstrap": {
+      "pass": true
+    },
+    "test": {
+      "pass": true,
+      "checks": 17
+    },
+    "restore": {
+      "pass": true,
+      "checks": 19
+    },
+    "final-checks": {
+      "pass": true,
+      "checks": 8
+    }
+  },
+  "live": [
+    {
+      "port": 3100,
+      "status": "UNAVAILABLE",
+      "error": "ECONNREFUSED"
+    },
+    {
+      "port": 7100,
+      "status": 200
+    },
+    {
+      "port": 3200,
+      "status": "UNAVAILABLE",
+      "error": "ECONNREFUSED"
+    },
+    {
+      "port": 7200,
+      "status": 200
+    }
+  ],
+  "preserved": {
+    "counts": {
+      "users": 7,
+      "topics": 117,
+      "posts": 122,
+      "categories": 57
+    },
+    "passwordHashUnchanged": true,
+    "adminRole": true
+  },
+  "branch": "chore/pbn-phase1-5-i18n",
+  "implementationCommit": "331fbab9bdf56338ed48a8ffb0c554ba42bf9a7c",
+  "uncommittedAtAudit": "",
+  "unpushedBeforeFinalReport": "",
+  "liveAfterWebRestart": [
+    {
+      "port": 3100,
+      "status": 200
+    },
+    {
+      "port": 7100,
+      "status": 200
+    },
+    {
+      "port": 3200,
+      "status": 200
+    },
+    {
+      "port": 7200,
+      "status": 200
+    }
+  ],
+  "liveRecheckTime": "2026-10-21T17:32:43.208Z",
+  "webRecovery": "Only stopped Web processes restarted; API PIDs and database data preserved",
+  "auditPass": true
+}

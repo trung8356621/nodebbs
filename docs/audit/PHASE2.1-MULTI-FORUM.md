@@ -157,8 +157,13 @@ Automated acceptance entrypoints: `node scripts/test-forum-isolation.mjs` and `n
 
 - Both per-forum Next production-check builds exited **0**. Existing `DYNAMIC_SERVER_USAGE` messages from cookie-based robots/sitemap handlers remain; those routes are classified dynamic. API is native JavaScript and has no separate build task.
 - ESLint exited **0**; full-source lint reports the same **11 pre-existing unused-disable warnings**. Finalized new scripts have no lint errors. `pnpm i18n:check` passed with **0 errors**. `git diff --check` passed.
-- Secret scans found no live JWT/cookie/Admin secrets in Git-visible files or built frontend assets. Actual database URLs are absent from client assets. Local secrets, dumps, logs, uploads and all per-forum build directories are ignored. No commit/push was performed.
+- Secret scans found no live JWT/cookie/Admin secrets in Git-visible files or built frontend assets. Actual database URLs are absent from client assets. Local secrets, dumps, logs, uploads and all per-forum build directories are ignored. No commit/push was performed during implementation verification; the subsequent final Git audit is recorded below.
 - A's new migration ledger is not adopted; read-only schema equivalence is verified as described above. No future live migration of A is authorized by this result.
 - Development uses the existing Laragon database role/Redis server. Separate processes/databases/namespaces are application isolation, not protection from a compromised Windows account or PostgreSQL superuser. No OS/VPS isolation or production role hardening was deployed.
 - Scheduler/provider state is process-local; multi-hour expiry behavior and every external provider integration were not exhaustively exercised. Existing wallet concurrency/idempotency and paid-pin/link-policy limitations remain unchanged.
 - Export/restore was tested locally, not on a real VPS. No Central Server, Billing Server, SEO-OPS, Central Policy API or Phase 2.2 implementation was added.
+
+
+## Final report and repository review — 2026-10-22
+
+See [final technical/Git audit](PHASE2.1B-FINAL-GIT-AUDIT.md) and [current audit evidence](PHASE2.1B-git-audit-results.json). Implementation was already committed/pushed as `331fbab9bdf56338ed48a8ffb0c554ba42bf9a7c` before finalization; no history is rewritten. This finalization adds reports only. Current HTTP recheck found API services available and Web processes stopped; only the two Web processes were restarted, after which both homepage/API pairs returned 200. The initial unavailability is retained in the evidence. Historical functional/build PASS results are distinguished from this current read-only audit; no additional business fixtures or schema changes were introduced.
