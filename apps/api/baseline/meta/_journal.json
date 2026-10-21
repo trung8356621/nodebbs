@@ -8,6 +8,13 @@
       "when": 1792601999243,
       "tag": "0000_simple_guardsmen",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792604575045,
+      "tag": "0001_keen_bulldozer",
+      "breakpoints": true
     }
   ]
 }

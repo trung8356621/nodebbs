@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-21T18:25:11.932Z",
+  "checks": [
+    {
+      "name": "forum_a API health",
+      "pass": true
+    },
+    {
+      "name": "forum_a homepage/locale/theme",
+      "pass": true,
+      "status": 200,
+      "locale": "vi-VN",
+      "color": "#2563eb"
+    },
+    {
+      "name": "forum_b API health",
+      "pass": true
+    },
+    {
+      "name": "forum_b homepage/locale/theme",
+      "pass": true,
+      "status": 200,
+      "locale": "en-US",
+      "color": "#9333ea"
+    },
+    {
+      "name": "Independent Admin login and host-only cookie names",
+      "pass": true
+    },
+    {
+      "name": "Cross-forum credentials/bearer/cookie/admin/ledger/write rejection both directions",
+      "pass": true
+    },
+    {
+      "name": "Two cookies on same IP select only the correct forum session",
+      "pass": true
+    },
+    {
+      "name": "Unknown hosts and foreign browser Origin fail closed",
+      "pass": true
+    },
+    {
+      "name": "Rerun Forum B baseline leaves Forum A counts/history unchanged",
+      "pass": true
+    },
+    {
+      "name": "User/topic isolation both directions; B user/topic/comment/pin API writes verified in B only",
+      "pass": true
+    },
+    {
+      "name": "Real auth/RBAC caches isolated with colliding user ID 7; Redis prefixes independent",
+      "pass": true
+    },
+    {
+      "name": "Real multipart upload/provider/staging/static/proxy/file-row isolation",
+      "pass": true
+    },
+    {
+      "name": "Portable wallet/transaction/banner fixtures present; pinned topic and comment persisted",
+      "pass": true
+    },
+    {
+      "name": "Forum names/settings independent",
+      "pass": true,
+      "a": "NodeBBS",
+      "b": "PBN Forum B"
+    },
+    {
+      "name": "Browser homepages, B form login/Admin, A dashboard denied with B session, proxy/SSR cross-cookie checks",
+      "pass": true
+    },
+    {
+      "name": "Restart B keeps A process IDs and API availability",
+      "pass": true,
+      "samples": 214,
+      "statuses": [
+        200
+      ]
+    },
+    {
+      "name": "Forum A business row counts, owner password hash and RBAC preserved",
+      "pass": true,
+      "counts": {
+        "users": 7,
+        "topics": 152,
+        "posts": 166,
+        "categories": 57,
+        "sys_accounts": 0,
+        "sys_transactions": 0,
+        "ads": 0,
+        "files": 0,
+        "user_roles": 7
+      }
+    }
+  ],
+  "fixtures": {
+    "user": 45,
+    "username": "b_member_mvifzyi3",
+    "topic": 71,
+    "title": "Forum B isolated topic mvifzyi3",
+    "upload": "/uploads/assets/6a955508-06b6-4b9b-9ec5-7f508d1d106f.png"
+  },
+  "limitations": [],
+  "pass": true
+}

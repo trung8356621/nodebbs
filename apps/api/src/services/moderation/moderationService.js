@@ -79,11 +79,11 @@ export class ModerationService {
    * 约定：调用前业务行已持久化（已提交），本方法只翻状态 / 写队列 / 通过时发事件。
    * @returns {Promise<{status:'approved'|'pending', moderated:boolean, itemId?:number}>}
    */
-  async enqueueIfNeeded({ targetType, targetId, submittedBy = null, snapshot = null }) {
+  async enqueueIfNeeded({ targetType, targetId, submittedBy = null, snapshot = null, forceReview = false }) {
     const adapter = this.getAdapter(targetType);
     if (!adapter) throw new Error(`未注册的审核类型: ${targetType}`);
 
-    const enabled = await this.isEnabled(targetType);
+    const enabled = forceReview || await this.isEnabled(targetType);
 
     if (!enabled) {
       // 直接通过：状态置 approved（幂等）并触发通过副作用（发事件）
@@ -149,11 +149,11 @@ export class ModerationService {
    * 约定：调用方不要自行写线上字段——写与否由本方法/适配器决定。
    * @returns {Promise<{status:'applied'|'pending', moderated:boolean, itemId?:number}>}
    */
-  async stageIfNeeded({ targetType, targetId, field = null, value, oldValue = null, submittedBy = null, snapshot = null }) {
+  async stageIfNeeded({ targetType, targetId, field = null, value, oldValue = null, submittedBy = null, snapshot = null, forceReview = false }) {
     const adapter = this.getAdapter(targetType);
     if (!adapter) throw new Error(`未注册的审核类型: ${targetType}`);
 
-    const enabled = await this.isEnabled(targetType);
+    const enabled = forceReview || await this.isEnabled(targetType);
     if (!enabled) {
       // 审核关：直接写回线上字段
       await adapter.apply(db, targetId, { value });
@@ -202,7 +202,7 @@ export class ModerationService {
       .select()
       .from(moderationItems)
       .where(eq(moderationItems.id, itemId))
-      .limit(1);
+      .limit(1).for('update');
 
     if (!item) throw new Error('审核项不存在');
     if (item.status !== 'pending') throw new Error('该审核项已处理');
@@ -210,6 +210,8 @@ export class ModerationService {
     const adapter = this.getAdapter(item.targetType);
     if (!adapter) throw new Error(`未注册的审核类型: ${item.targetType}`);
 
+    if (!['approve', 'reject'].includes(action)) throw new Error('Invalid moderation action');
+    if (action === 'approve') await this.fastify.policy.approval({...item,reviewedBy:reviewerId});
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
 
     await db.transaction(async (tx) => {
@@ -236,6 +238,7 @@ export class ModerationService {
         action === 'approve'
           ? { type: 'moderation_approved', message: `你提交的${adapter.label}已通过审核` }
           : { type: 'moderation_rejected', message: `你提交的${adapter.label}未通过审核${reason ? `：${reason}` : ''}` };
+      if(['policy_ad','policy_page'].includes(item.targetType)) notif.message=action==='approve'?'Your content was approved.':'Your content was rejected.';
       // 是否附内容位置链接：
       //   通过：内容已生效，一键去看；
       //   驳回：gate（话题/回复）行仍在且作者本人可访问，附链接可跳去查看/修改；

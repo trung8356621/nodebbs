@@ -741,3 +741,5 @@ export * from '../extensions/emojis/schema.js';
 //    模块 schema 会 `import { users } from '#core/db/schema.js'`，形成 core↔module 循环；
 //    因 users 在文件靠前已定义、且模块仅在函数/关系内引用，循环可安全解析。勿将本行上移。
 export * from '../modules/forum/db/schema.js';
+
+export * from './policy-schema.js';

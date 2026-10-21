@@ -122,6 +122,11 @@ export default function DashboardSidebar() {
       label: pbnT("m180"),
       permission: 'dashboard.moderation'
     }, {
+      href: '/dashboard/policy',
+      icon: Shield,
+      label: pbnT('policyTitle'),
+      permission: 'dashboard.moderation'
+    }, {
       href: '/dashboard/oplogs',
       icon: History,
       label: pbnT("m387"),

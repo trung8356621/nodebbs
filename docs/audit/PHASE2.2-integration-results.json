@@ -1,0 +1,21 @@
+{
+  "database": "pbn_phase22_empty_mvifubs1",
+  "checks": [
+    {
+      "name": "Real PostgreSQL sync: signature/checksum/size/schema/duplicate/replay/conflict and concurrency",
+      "status": "PASS"
+    },
+    {
+      "name": "Injected publishing failure rolls back topic/post/case rows; domain events run only after commit",
+      "status": "PASS"
+    },
+    {
+      "name": "Scan batch cap/checkpoints, duplicate-active-job rejection and dry run preserves visibility/cases",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent resumable scan workers hide mandatory-blocked topic/body and preserve content with one case",
+      "status": "PASS"
+    }
+  ]
+}

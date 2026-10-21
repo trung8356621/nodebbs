@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "version": 1,
+  "rules": [
+    {
+      "id": "g:blocked-fixture",
+      "category": "phishing",
+      "type": "domain_subdomains",
+      "value": "blocked.example.test",
+      "action": "BLOCK",
+      "reason": "FIXTURE_PROHIBITED_DESTINATION",
+      "enabled": true
+    },
+    {
+      "id": "g:redirect-fixture",
+      "category": "custom_domain",
+      "type": "verify_redirect",
+      "value": "redirect.example.test",
+      "action": "REVIEW",
+      "reason": "DESTINATION_UNVERIFIED",
+      "enabled": true
+    },
+    {
+      "id": "g:promotion-fixture",
+      "category": "gambling_promotion",
+      "type": "text_signals",
+      "value": "{\"subject\":[\"example casino offer\"],\"promotion\":[\"join with referral\",\"đăng ký nhận thưởng\"],\"context\":[\"news report\",\"warning\",\"educational\",\"cảnh báo\"]}",
+      "action": "BLOCK",
+      "reason": "FIXTURE_COMMERCIAL_PROMOTION",
+      "enabled": true
+    }
+  ]
+}

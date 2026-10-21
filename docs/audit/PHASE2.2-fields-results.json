@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Admin account create/edit obey mandatory block; profile REVIEW stages original value and supports rejection",
+    "status": "PASS"
+  },
+  {
+    "name": "Banner create/edit enforce rules; review image held until approval; executable formats cannot be approved",
+    "status": "PASS"
+  },
+  {
+    "name": "Published page create/edit enforce mandatory rules; REVIEW stays draft until moderation; active HTML cannot be approved",
+    "status": "PASS"
+  },
+  {
+    "name": "Member topic/reply review states and allowed approve/reject transitions",
+    "status": "PASS"
+  },
+  {
+    "name": "Real registration and registration-name policy enforcement",
+    "status": "PASS"
+  }
+]

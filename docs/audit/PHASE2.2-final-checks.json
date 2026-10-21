@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-22",
+  "timezone": "Asia/Bangkok",
+  "status": "PASS",
+  "branch": "chore/pbn-phase1-5-i18n",
+  "origin": "https://github.com/trung8356621/nodebbs.git",
+  "secretScan": {
+    "status": "PASS",
+    "changedAndUntrackedFiles": 75,
+    "knownSecretMatches": 0,
+    "privateKeys": 0
+  },
+  "migrationBytes": "PASS",
+  "preservation": {
+    "categories": {
+      "originalRows": 57,
+      "exactRowHash": "b1eb6f0293c1c6f8bf2e2bdc22929016ba4441dff8db3495cfc6236e965fd523",
+      "unchanged": true
+    },
+    "topics": {
+      "originalRows": 117,
+      "exactRowHash": "c7c4eb58926fb06f5e17aa7cb8807f88339f2cd6450aa4afd21ef6043247396e",
+      "unchanged": true
+    },
+    "posts": {
+      "originalRows": 122,
+      "exactRowHash": "94cb9f00f215ca1a4ab62060bbf542e1dbd4b2c3133cd05a6ef30eb698b823fb",
+      "unchanged": true
+    },
+    "users": {
+      "originalRows": 7,
+      "identityPasswordRoleUnchanged": true,
+      "rbacUnchanged": true
+    },
+    "wallets": {
+      "originalRows": 0,
+      "originalBalancesUnchanged": true
+    }
+  },
+  "runtime": [
+    {
+      "forum": "forum_a",
+      "kind": "web",
+      "port": 3100,
+      "status": 200
+    },
+    {
+      "forum": "forum_a",
+      "kind": "api",
+      "port": 7100,
+      "status": 200
+    },
+    {
+      "forum": "forum_b",
+      "kind": "web",
+      "port": 3200,
+      "status": 200
+    },
+    {
+      "forum": "forum_b",
+      "kind": "api",
+      "port": 7200,
+      "status": 200
+    }
+  ],
+  "builds": {
+    "forumA": {
+      "status": "PASS",
+      "exitCode": 0
+    },
+    "forumB": {
+      "status": "PASS",
+      "exitCode": 0
+    },
+    "existingDynamicSitemapMessages": true
+  },
+  "unitAssertions": 37,
+  "lint": {
+    "status": "PASS",
+    "existingWarnings": 11
+  },
+  "i18n": {
+    "status": "PASS",
+    "webKeysPerLocale": 2561,
+    "backendTemplatesPerLocale": 707
+  },
+  "evidenceFiles": [
+    "PHASE2.2-adoption-results.json",
+    "PHASE2.2-api-results.json",
+    "PHASE2.2-bootstrap-results.json",
+    "PHASE2.2-browser-results.json",
+    "PHASE2.2-concurrency-results.json",
+    "PHASE2.2-fields-results.json",
+    "PHASE2.2-integration-results.json",
+    "PHASE2.2-isolation-results.json",
+    "PHASE2.2-restore-results.json",
+    "PHASE2.2-security-results.json",
+    "PHASE2.2-upload-results.json"
+  ]
+}

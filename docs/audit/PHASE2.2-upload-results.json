@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "checks": [
+    "Admin HTML/SVG multipart uploads rejected",
+    "Active markup presign/confirm rejected",
+    "Blocked uploads create no file records",
+    "Six rejected paths audited",
+    "Raster PNG multipart/static serve works with nosniff"
+  ],
+  "blockedAudits": 42
+}

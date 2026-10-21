@@ -948,6 +948,7 @@ export default async function topicRoutes(fastify, options) {
       const [newTopic] = await db
         .insert(topics)
         .values({
+          approvalStatus: request.policyDecision?.action === 'REVIEW' ? 'pending' : 'approved',
           title,
           slug,
           categoryId,
@@ -970,6 +971,7 @@ export default async function topicRoutes(fastify, options) {
           userId: request.user.id,
           content: cleanContent,
           rawContent: cleanContent,
+          approvalStatus: request.policyDecision?.action === 'REVIEW' ? 'pending' : 'approved',
           postNumber: 1,
         })
         .returning();
@@ -1020,6 +1022,7 @@ export default async function topicRoutes(fastify, options) {
 
       // 通用审核：按配置决定是否转入待审；未开启则直接通过并触发 TOPIC_CREATED（发积分等）
       const moderation = await fastify.moderation.submit({
+        forceReview: request.policyDecision?.action === 'REVIEW',
         targetType: 'topic',
         targetId: newTopic.id,
         submittedBy: request.user.id,
@@ -1125,7 +1128,7 @@ export default async function topicRoutes(fastify, options) {
 
       // 准备话题更新（排除内容和标签，它们需要特殊处理）
       const { content, tags: tagNames, ...topicUpdates } = request.body;
-      const updates = { ...topicUpdates };
+      const updates = { ...topicUpdates, updatedAt: new Date() };
 
       // 如果标题变更，更新 slug，并限制总长度不超过 100
       if (request.body.title) {
@@ -1156,6 +1159,10 @@ export default async function topicRoutes(fastify, options) {
         }
       }
 
+      if (request.policyDecision?.action === 'REVIEW') {
+        updates.approvalStatus = 'pending';
+        statusChanged = true;
+      }
       // 更新话题
       const [updatedTopic] = await db
         .update(topics)

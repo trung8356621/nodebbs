@@ -53,6 +53,7 @@ export default function Time({
 
   return (
     <time
+      suppressHydrationWarning={fromNow}
       dateTime={dayjs(date).toISOString()}
       title={showTooltip ? obj.title : undefined}
       className={className}

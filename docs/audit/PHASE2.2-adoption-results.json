@@ -1,0 +1,267 @@
+{
+  "status": "PASS",
+  "database": "pbn_dev",
+  "catalog": {
+    "columns": {
+      "count": 586,
+      "sha256": "4a4daea924685857aee9cc8089bb9110be9aa43f1773d63ffa46c61932798be2"
+    },
+    "constraints": {
+      "count": 178,
+      "sha256": "ad5e5ae8e3d1ad86f6543e0a3a06a54d40ea6a20fe423d5e168e29623b335e03"
+    },
+    "indexes": {
+      "count": 276,
+      "sha256": "eec477a4a969608a48d175af06a3680d7c3cd1c636ea24fdfbf5ca787f2e8db0"
+    }
+  },
+  "rows": {
+    "accounts": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "ad_slots": {
+      "count": 9,
+      "checksum": "908948922e0f25ffe6be47a43ca20cbc"
+    },
+    "ads": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "attachment_purchases": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "badges": {
+      "count": 15,
+      "checksum": "bb2618143ebb691ed66c0f847cf8b937"
+    },
+    "blocked_users": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "bookmarks": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "captcha_providers": {
+      "count": 4,
+      "checksum": "470209aca69781ffd8145dcbc358f5d9"
+    },
+    "categories": {
+      "count": 57,
+      "checksum": "6fdb2d426e60152bf27b049ed7a52c51"
+    },
+    "conversations": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "email_providers": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "emoji_groups": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "emojis": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "files": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "follows": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "invitation_codes": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "invitation_rules": {
+      "count": 2,
+      "checksum": "1c56302f6d20c0719b7e1b986f7ffb48"
+    },
+    "likes": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "lotteries": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "lottery_ledger_refs": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "lottery_participants": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "message_providers": {
+      "count": 6,
+      "checksum": "64b48ed4e53eb5c12de65a2a29b92da3"
+    },
+    "messages": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "moderation_items": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "notifications": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "oauth_providers": {
+      "count": 6,
+      "checksum": "8369c31a14f83b0f3fd8200dfdb9cca1"
+    },
+    "oplogs": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "pages": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "permissions": {
+      "count": 41,
+      "checksum": "b7c9c3b33784081c5b6004443dfb8404"
+    },
+    "poll_options": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "poll_votes": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "polls": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "post_rewards": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "posts": {
+      "count": 122,
+      "checksum": "6eedde270d0b02093206239733e924f2"
+    },
+    "qr_login_requests": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "reports": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "role_permissions": {
+      "count": 62,
+      "checksum": "3404a537c31197b79f7d6c454f9dffb8"
+    },
+    "roles": {
+      "count": 3,
+      "checksum": "08802504f4dfd09ea8ed84149b4740b3"
+    },
+    "sessions": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "shop_items": {
+      "count": 1,
+      "checksum": "c354e8ae50b99328bb24ef1dcc162387"
+    },
+    "storage_providers": {
+      "count": 4,
+      "checksum": "3e4889a3ff0b519f24c175f29b6f4649"
+    },
+    "subscriptions": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "sys_accounts": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "sys_currencies": {
+      "count": 2,
+      "checksum": "d87213b1f1a104198b9217f4eba42c04"
+    },
+    "sys_transactions": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "system_settings": {
+      "count": 39,
+      "checksum": "26cea024796cd4ac26eacb667cb0080d"
+    },
+    "tags": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "topic_attachment_files": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "topic_attachments": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "topic_tags": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "topics": {
+      "count": 117,
+      "checksum": "74e066b206c1254cd791c227d21ba64a"
+    },
+    "user_badges": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "user_check_ins": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "user_item_logs": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "user_items": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "user_roles": {
+      "count": 7,
+      "checksum": "a5033314fd6b33e2906159c224e979f3"
+    },
+    "users": {
+      "count": 7,
+      "checksum": "10fac55d28e2227efced4bd5c778017e"
+    },
+    "verifications": {
+      "count": 0,
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+  },
+  "ledger": {
+    "version": 1,
+    "checksum": "9efcd5dbdc2427e0c8cb5512e93349a6921f31871d689df7af55a8959b665c97"
+  },
+  "rerun": false,
+  "forumBLedger": [
+    {
+      "version": 1,
+      "checksum": "9efcd5dbdc2427e0c8cb5512e93349a6921f31871d689df7af55a8959b665c97"
+    }
+  ],
+  "rerunVerified": true,
+  "rehearsalDatabase": "pbn_phase22_adoption_rehearsal",
+  "dataMatchesRehearsal": true,
+  "dataFingerprint": "3ffbcd35758b53f7f53c88638dc40eed3a62efb519585268cb5c3800ed7ae457"
+}

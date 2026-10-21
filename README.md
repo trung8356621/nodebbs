@@ -2,7 +2,7 @@
 
 Multi-forum platform based on NodeBBS, built with Next.js, Fastify and PostgreSQL.
 
-PBN currently runs as a single forum installation. The network capabilities below are a roadmap, not implemented tenant isolation.
+PBN runs independent fixed Forum A/B installations with separate databases, sessions, caches and media. Phase 2.2 adds per-forum policy enforcement, signed global snapshots, local rules, moderation and migration-ledger adoption.
 
 ## Upstream and license
 
@@ -69,7 +69,7 @@ No credentials are required in this README. `.env`, runtime logs, local accounts
 
 ### Versioned new-forum bootstrap
 
-The upstream migration journal is preserved but cannot bootstrap an empty database. Use the separate checksummed baseline and fixed-instance scripts. Existing Forum A is preserved and live schema adoption is blocked. Do not run upstream db:migrate, db:push, reset or seed on existing A.
+The upstream migration journal is preserved but cannot bootstrap an empty database. Use the separate checksummed baseline and fixed-instance scripts. Forum A has now completed schema-validated baseline adoption after a restore rehearsal; A/B use baseline v2. Existing nonempty databases require verified adoption before versioned upgrades. Do not run upstream db:migrate, db:push, reset or seed on A/B. See the [Phase 2.2 migration and recovery procedures](docs/audit/PHASE2.2-POLICY-ENGINE.md).
 
 For an entirely new forum, copy a config in forums/ and give it a unique ID, database and ports, then run:
 
@@ -118,16 +118,26 @@ Browser smoke requires running local services and local smoke account access, as
 
 ## Current status and roadmap
 
-Core forum flows run locally: registration/sign-in, categories/topics, topic creation, replies, admin statistics and manual pin/unpin. Native services, Web SSR and API proxy were verified. Phase 1.5 adds bilingual interface text, response messages, repository hygiene and project documentation; review is pending. Phase 2.1B verifies independent per-forum processes/databases/auth/cache/media and a portable B restore. Wallet concurrency/idempotency, paid pin expiry and outbound link policy remain outside this phase.
+Core forum flows run locally: registration/sign-in, categories/topics, topic creation, replies, admin statistics and manual pin/unpin. Native services, Web SSR and API proxy were verified. Phase 1.5 adds bilingual interface text, response messages, repository hygiene and project documentation; review is pending. Phase 2.1B verifies independent per-forum processes/databases/auth/cache/media and a portable B restore. Phase 2.2 verifies local/global outbound policy, moderation, signed synchronization, resumable scanning and migration adoption. Wallet concurrency/idempotency and paid pin expiry remain outside this phase.
 
 | Phase | Status |
 | --- | --- |
 | Phase 1: Bootstrap NodeBBS | Completed |
 | Phase 1.5: i18n / Git / README | In progress — implemented, awaiting review |
 | Phase 2.1B: Separate-process multi-forum foundation and portable DB | Implemented and tested locally |
-| Phase 2.2 | Not started |
-| Phase 3: Wallet / Paid Pin / Link Policy | Planned |
+| Phase 2.2: Policy engine and migration hardening | Implemented and verified locally; see the audit report |
+| Phase 3: Wallet / Paid Pin | Planned; not started |
 | Phase 4: Banner Management | Planned |
 | SEO-OPS integration | Deferred |
 
 These roadmap entries do not authorize automatic implementation. See [Phase 1 setup](docs/audit/PHASE1-SETUP.md), [feature matrix](docs/audit/PHASE1-FEATURE-MATRIX.md), [architecture audit](docs/audit/PHASE1-ARCHITECTURE.md), [blockers](docs/audit/PHASE1-BLOCKERS.md) and the [Phase 1.5 report](docs/audit/PHASE1.5-I18N-GIT-README.md) for evidence and limitations.
+
+## Policy and moderation — Phase 2.2
+
+Open `/dashboard/policy` inside each forum for read-only global policy status, local rule management, audit/resolution history and resumable content scans. Existing `/dashboard/moderation` handles held content. Global mandatory BLOCK rules cannot be overridden by a local rule or administrator approval.
+
+Policy checks run in the forum API, with no per-post Central Server call. Configure an operator-trusted Ed25519 public-key/signed-snapshot file provider before ordinary publishing; an installation without its first verified snapshot holds submissions for review. For reserved-domain development fixtures, run `node scripts/policy-fixture.mjs` and restart the selected managed forums. This helper keeps signing keys and source references in ignored owner-protected local directories and preserves newer snapshots. No Central Policy Server or production threat feed is deployed.
+
+Verification-required redirects remain pending until explicit review; no live redirect scanning is claimed. Script/HTML ads stay inactive until converted to an inspectable image; active HTML pages stay drafted until converted to Markdown/text. Active HTML/SVG/XML/script uploads cannot bypass Admin wildcard permissions; raster uploads and existing download-only attachments remain supported. Existing active media is preserved with safe download headers.
+
+Publishing/content/credit/queue writes share a transaction; domain events run after commit. Policy locking uses a bounded extra two-connection pool per forum beside the existing maximum-five application pool. See [Phase 2.2 implementation, configuration, tests and production limits](docs/audit/PHASE2.2-POLICY-ENGINE.md).

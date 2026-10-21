@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "database": "pbn_phase22_empty_mvifubs1",
+  "rows": {
+    "users": 0,
+    "policy_rules": 0
+  },
+  "versions": [
+    {
+      "version": 1,
+      "checksum": "9efcd5dbdc2427e0c8cb5512e93349a6921f31871d689df7af55a8959b665c97"
+    },
+    {
+      "version": 2,
+      "checksum": "6f5ca235df1aaa8e41c10c1854f1166f576d5b97538377d0288d8cfe91a67ba8"
+    }
+  ]
+}

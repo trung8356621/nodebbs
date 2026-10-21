@@ -493,6 +493,7 @@ export default async function userRoutes(fastify, options) {
       try {
         const res = await fastify.moderation.submit({
           targetType,
+          forceReview: request.policyDecision?.action === 'REVIEW',
           targetId: userId,
           field,
           value,

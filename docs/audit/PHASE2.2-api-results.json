@@ -1,0 +1,51 @@
+{
+  "checks": [
+    {
+      "name": "Real A/B administrator login",
+      "status": "PASS"
+    },
+    {
+      "name": "forum_a global block, HTML bypass denied, no partial content/credit writes",
+      "status": "PASS"
+    },
+    {
+      "name": "forum_a topic/reply create/edit and profile enforcement",
+      "status": "PASS"
+    },
+    {
+      "name": "forum_a unverified redirect held from first insertion",
+      "status": "PASS"
+    },
+    {
+      "name": "forum_a global policy immutable through local admin API",
+      "status": "PASS"
+    },
+    {
+      "name": "forum_b global block, HTML bypass denied, no partial content/credit writes",
+      "status": "PASS"
+    },
+    {
+      "name": "forum_b topic/reply create/edit and profile enforcement",
+      "status": "PASS"
+    },
+    {
+      "name": "forum_b unverified redirect held from first insertion",
+      "status": "PASS"
+    },
+    {
+      "name": "forum_b global policy immutable through local admin API",
+      "status": "PASS"
+    }
+  ],
+  "created": "2026-10-21T18:21:01.469Z",
+  "forum_a": {
+    "topic": 148,
+    "post": 162,
+    "reviewTopic": 149
+  },
+  "forum_b": {
+    "topic": 62,
+    "post": 84,
+    "reviewTopic": 63
+  }
+}

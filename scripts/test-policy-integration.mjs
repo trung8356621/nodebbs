@@ -1,0 +1,68 @@
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import {createRequire} from 'node:module';
+import {api,config,runtime,readJson} from './forum.mjs';
+const bootstrap=readJson('docs/audit/PHASE2.2-bootstrap-results.json');
+const c={...config('forums/forum-b.json'),id:bootstrap.database,database:bootstrap.database};
+Object.assign(process.env,runtime(c));
+const require=createRequire(api+'/package.json');const {Pool}=require('pg');
+const testPool=new Pool({connectionString:runtime(c).DATABASE_URL,max:5});
+const {synchronize}=await import('../apps/api/src/services/policy/sync.js');
+const {PolicyService}=await import('../apps/api/src/services/policy/service.js');
+const {scanBatch}=await import('../apps/api/src/services/policy/scan.js');
+const {default:db,atomicWrite,pool}=await import('../apps/api/src/db/index.js');
+const {afterCommit}=await import('../apps/api/src/db/write-context.js');
+const {users,categories,topics,posts,moderationItems}=await import('../apps/api/src/db/schema.js');
+const results=[];const pass=name=>{results.push({name,status:'PASS'});console.log('PASS '+name);};
+const keys=crypto.generateKeyPairSync('ed25519');const fixture=readJson('scripts/fixtures/policy-development.json');
+const sign=payload=>{const bytes=Buffer.from(JSON.stringify(payload));return {payload:bytes.toString('base64'),checksum:crypto.createHash('sha256').update(bytes).digest('hex'),signature:crypto.sign(null,bytes,keys.privateKey).toString('base64')};};
+try {
+  const unsigned={...sign(fixture),signature:Buffer.alloc(64).toString('base64')};
+  await assert.rejects(synchronize(testPool,unsigned,keys.publicKey),/authentication/);
+  await assert.rejects(synchronize(testPool,{...sign(fixture),checksum:'0'.repeat(64)},keys.publicKey),/authentication/);
+  await assert.rejects(synchronize(testPool,sign({...fixture,rules:[{...fixture.rules[0],type:'unknown'}]}),keys.publicKey),/Invalid rule/);
+  await assert.rejects(synchronize(testPool,sign({...fixture,rules:[fixture.rules[0],fixture.rules[0]]}),keys.publicKey),/Duplicate/);
+  await assert.rejects(synchronize(testPool,sign({...fixture,version:0}),keys.publicKey),/Invalid policy/);
+  await assert.rejects(synchronize(testPool,{payload:'x'.repeat(1400001),signature:'x'},keys.publicKey),/Invalid signed/);
+  await synchronize(testPool,sign(fixture),keys.publicKey);
+  await Promise.all([synchronize(testPool,sign({...fixture,version:2}),keys.publicKey),synchronize(testPool,sign({...fixture,version:2}),keys.publicKey)]);
+  await assert.rejects(synchronize(testPool,sign(fixture),keys.publicKey),/downgrade/);
+  await assert.rejects(synchronize(testPool,sign({...fixture,version:2,rules:[]}),keys.publicKey),/replay/);
+  assert.equal((await testPool.query("SELECT version FROM policy_versions WHERE scope='global'")).rows[0].version,2);
+  assert.equal((await testPool.query("SELECT count(*)::int AS n FROM policy_rules WHERE scope='global'")).rows[0].n,fixture.rules.length);
+  pass('Real PostgreSQL sync: signature/checksum/size/schema/duplicate/replay/conflict and concurrency');
+  let events=0;
+  const before=(await testPool.query('SELECT count(*)::int AS n FROM users')).rows[0].n;
+  await assert.rejects(atomicWrite(async()=>{await db.insert(users).values({username:'rollback_fixture'});afterCommit(()=>events++);throw new Error('injected failure');}),/injected/);
+  assert.equal((await testPool.query('SELECT count(*)::int AS n FROM users')).rows[0].n,before);assert.equal(events,0);
+  const [user]=await db.insert(users).values({username:'scanner_fixture_'+Date.now().toString(36)}).returning();
+  const [category]=await db.insert(categories).values({name:'Policy isolated tests',slug:'policy-isolated-'+Date.now().toString(36)}).returning();
+  const baseline=(await testPool.query('SELECT (SELECT count(*) FROM topics)::int AS topics,(SELECT count(*) FROM posts)::int AS posts,(SELECT count(*) FROM moderation_items)::int AS cases')).rows[0];
+  await assert.rejects(atomicWrite(async()=>{
+    const [t]=await db.insert(topics).values({title:'Rollback fixture',slug:'rollback-'+Date.now(),userId:user.id,categoryId:category.id}).returning();
+    await db.insert(posts).values({topicId:t.id,userId:user.id,content:'rollback',rawContent:'rollback',postNumber:1});
+    await db.insert(moderationItems).values({targetType:'topic',targetId:t.id,submittedBy:user.id});
+    afterCommit(()=>events++);throw new Error('injected multi-table failure');
+  }),/injected/);
+  assert.deepEqual((await testPool.query('SELECT (SELECT count(*) FROM topics)::int AS topics,(SELECT count(*) FROM posts)::int AS posts,(SELECT count(*) FROM moderation_items)::int AS cases')).rows[0],baseline);assert.equal(events,0);
+  await atomicWrite(async()=>afterCommit(()=>events++));assert.equal(events,1);
+  pass('Injected publishing failure rolls back topic/post/case rows; domain events run only after commit');
+  const [topic]=await db.insert(topics).values({title:'Historical fixture',slug:'historical-'+Date.now(),userId:user.id,categoryId:category.id}).returning();
+  await db.insert(posts).values({topicId:topic.id,userId:user.id,content:'https://blocked.example.test',rawContent:'https://blocked.example.test',postNumber:1});
+  await testPool.query("UPDATE policy_scans SET dry_run=true WHERE status IN ('pending','running')");
+  await assert.rejects(testPool.query('INSERT INTO policy_scans(dry_run) VALUES(true)'),/duplicate key/);
+  const policy=new PolicyService({});
+  for(let n=0;n<50;n++){const result=await scanBatch(testPool,policy,1);if(!result||result.status==='completed')break;assert(result.scanned<=1);}
+  assert.equal((await testPool.query('SELECT approval_status FROM topics WHERE id=$1',[topic.id])).rows[0].approval_status,'approved');
+  assert.equal((await testPool.query('SELECT count(*)::int AS n FROM moderation_items')).rows[0].n,baseline.cases);
+  pass('Scan batch cap/checkpoints, duplicate-active-job rejection and dry run preserves visibility/cases');
+  await testPool.query('INSERT INTO policy_scans(dry_run) VALUES(false)');
+  await Promise.all([scanBatch(testPool,policy,1),scanBatch(testPool,policy,1)]);
+  for(let n=0;n<50;n++){const result=await scanBatch(testPool,policy,1);if(!result||result.status==='completed')break;}
+  assert.equal((await testPool.query('SELECT approval_status FROM topics WHERE id=$1',[topic.id])).rows[0].approval_status,'pending');
+  assert.equal((await testPool.query('SELECT approval_status FROM posts WHERE topic_id=$1',[topic.id])).rows[0].approval_status,'pending');
+  assert.equal((await testPool.query("SELECT count(*)::int AS n FROM moderation_items WHERE target_type='topic' AND target_id=$1",[topic.id])).rows[0].n,1);
+  pass('Concurrent resumable scan workers hide mandatory-blocked topic/body and preserve content with one case');
+  fs.writeFileSync('docs/audit/PHASE2.2-integration-results.json',JSON.stringify({database:c.database,checks:results},null,2)+'\n');
+}finally{await testPool.end();await pool.end();}

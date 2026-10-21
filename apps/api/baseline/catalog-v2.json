@@ -1,0 +1,14 @@
+{
+  "columns": {
+    "count": 626,
+    "sha256": "59a6602fb3954b8c17beaf4e7353bb4cade1c0670b655cced46987288457abec"
+  },
+  "constraints": {
+    "count": 183,
+    "sha256": "28b4ea3d16261d8faf217ddb044070226b993decdcc6cc2a3b171621d89bf510"
+  },
+  "indexes": {
+    "count": 284,
+    "sha256": "23ffb3ccece4c39fda20fbf101973eb4ec5c96c56450f0a79a738af758820447"
+  }
+}

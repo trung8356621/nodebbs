@@ -742,7 +742,7 @@ export default async function postRoutes(fastify, options) {
 
     // ============ 积分扣除逻辑 (Reply Cost) ============
     // 4. 检查积分扣除 (如果配置为负数)
-    if (postNumber > 1) {
+    if (postNumber > 1 && request.policyDecision?.action !== 'REVIEW') {
       try {
         const replyCreditChange = await fastify.ledger.getCurrencyConfig(DEFAULT_CURRENCY_CODE, 'post_reply_amount', 2); // 默认值2，表示回复奖励2积分
         const replyCost = replyCreditChange < 0 ? Math.abs(Number(replyCreditChange)) : 0;
@@ -795,6 +795,7 @@ export default async function postRoutes(fastify, options) {
       userId: request.user.id,
       content,
       rawContent: content,
+      approvalStatus: request.policyDecision?.action === 'REVIEW' ? 'pending' : 'approved',
       postNumber,
       replyToPostId
     }).returning();
@@ -809,7 +810,7 @@ export default async function postRoutes(fastify, options) {
 
     // 如果不是回复自己的话题，为话题所有者创建通知
     // 检查是否存在拉黑关系
-    if (topic.userId !== request.user.id) {
+    if (request.policyDecision?.action !== 'REVIEW' && topic.userId !== request.user.id) {
       const blocked = await isBlocked(request.user.id, topic.userId);
       if (!blocked) {
         await fastify.notification.send({
@@ -893,7 +894,7 @@ export default async function postRoutes(fastify, options) {
 
       const validSubscribers = subscribers.filter(sub => !blockedSubscriberIds.has(sub.userId));
 
-      if (validSubscribers.length > 0) {
+      if (request.policyDecision?.action !== 'REVIEW' && validSubscribers.length > 0) {
         const notificationList = validSubscribers.map(sub => ({
           userId: sub.userId,
           type: 'topic_reply',
@@ -909,6 +910,7 @@ export default async function postRoutes(fastify, options) {
 
     // 通用审核：按配置决定是否转入待审；未开启则直接通过并触发 POST_CREATED（发积分等，仅限楼层>1，由适配器判断）
     const moderation = await fastify.moderation.submit({
+      forceReview: request.policyDecision?.action === 'REVIEW',
       targetType: 'post',
       targetId: newPost.id,
       submittedBy: request.user.id,
@@ -1020,6 +1022,10 @@ export default async function postRoutes(fastify, options) {
       }
     }
 
+    if (request.policyDecision?.action === 'REVIEW') {
+      updates.approvalStatus = 'pending';
+      statusChanged = true;
+    }
     const [updatedPost] = await db
       .update(posts)
       .set(updates)

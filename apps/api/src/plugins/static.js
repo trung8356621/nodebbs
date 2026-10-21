@@ -35,6 +35,7 @@ async function staticPlugin(fastify, options) {
       },
     },
     async (request, reply) => {
+      if(/\.(html?|xhtml|shtml|mhtml|svgz?|xml|[cm]?js)$/i.test(request.params['*'] || '')) return reply.code(415).send({error:'Unsupported active media'});
       // 关键：剥离 /uploads 前缀
       const cleanPath = request.url.replace(/^\/uploads/, '');
 
@@ -51,6 +52,13 @@ async function staticPlugin(fastify, options) {
   fastify.register(fastifyStatic, {
     root: uploadsDir,
     prefix: '/uploads/',
+    setHeaders: (response,file) => {
+      response.setHeader('X-Content-Type-Options','nosniff');
+      if(/\.(html?|xhtml|shtml|mhtml|svgz?|xml|[cm]?js)$/i.test(file)) {
+        response.setHeader('Content-Disposition','attachment');
+        response.setHeader('Content-Security-Policy',"sandbox; default-src 'none'");
+      }
+    },
     // 话题附件受下载策略约束（登录/回复/积分/角色），不能由公开静态路径直取。
     // 一律走 /api/attachments/:id/download 鉴权后出内容。
     // 注意：上方 IPX 图片处理路由的 types 白名单同样不含 attachments，请勿加入。

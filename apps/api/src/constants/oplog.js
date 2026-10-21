@@ -28,6 +28,8 @@ export const OPLOG_TARGET_TYPES = {
   POST: 'post',
   USER: 'user',
   REPORT: 'report',
+  POLICY_AD: 'policy_ad',
+  POLICY_PAGE: 'policy_page',
 };
 
 /** 所有合法 action 值集合，用于服务层验证 */

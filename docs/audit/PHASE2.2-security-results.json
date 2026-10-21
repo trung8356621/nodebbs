@@ -1,0 +1,33 @@
+{
+  "checks": [
+    {
+      "name": "forum_a local create/duplicate/update/disable, global precedence and bidirectional isolation",
+      "status": "PASS"
+    },
+    {
+      "name": "forum_b local create/duplicate/update/disable, global precedence and bidirectional isolation",
+      "status": "PASS"
+    },
+    {
+      "name": "Ordinary member cannot administer rules/sync/scans and cannot bypass global block",
+      "status": "PASS"
+    },
+    {
+      "name": "Authenticated signed increasing-version global sync and concurrent identical snapshots",
+      "status": "PASS"
+    },
+    {
+      "name": "Invalid signature/replay rejected, failures audited, last verified policy still enforced",
+      "status": "PASS"
+    },
+    {
+      "name": "New global deny triggers bounded retrospective hiding; both moderation approval paths reject bypass",
+      "status": "PASS"
+    },
+    {
+      "name": "Local rule deletion audited",
+      "status": "PASS"
+    }
+  ],
+  "created": "2026-10-21T18:21:06.790Z"
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "forum": "forum_a",
+    "locale": "vi-VN",
+    "status": "PASS",
+    "checks": "Translated policy page, verified global rules, no browser errors"
+  },
+  {
+    "forum": "forum_a",
+    "locale": "en-US",
+    "status": "PASS",
+    "checks": "Translated policy page, verified global rules, no browser errors"
+  },
+  {
+    "forum": "forum_b",
+    "locale": "vi-VN",
+    "status": "PASS",
+    "checks": "Translated policy page, verified global rules, no browser errors"
+  },
+  {
+    "forum": "forum_b",
+    "locale": "en-US",
+    "status": "PASS",
+    "checks": "Translated policy page, verified global rules, no browser errors; real local-rule create/edit/disable/search/delete"
+  }
+]

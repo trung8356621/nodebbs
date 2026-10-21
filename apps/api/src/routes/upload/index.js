@@ -1,3 +1,4 @@
+import { rejectActiveUpload } from '../../services/policy/upload.js';
 import { pipeline } from 'stream/promises';
 import { Transform } from 'stream';
 import fs from 'fs';
@@ -72,6 +73,7 @@ export default async function uploadRoutes(fastify) {
       return reply.code(400).send({ error: '请选择要上传的文件' });
     }
 
+    if(await rejectActiveUpload(fastify,request,reply,data.filename,data.mimetype,category)) {data.file.resume();return reply;}
     // 4. 验证文件后缀
     const ext = path.extname(data.filename).toLowerCase().replace('.', '');
     if (!ext) {
@@ -282,6 +284,7 @@ export default async function uploadRoutes(fastify) {
     }
 
     // 4. 验证 MIME 类型一致性
+    if(await rejectActiveUpload(fastify,request,reply,originalName,mimetype,category)) return reply;
     const expectedMimes = EXT_MIME_MAP[ext];
     if (expectedMimes && !expectedMimes.includes(mimetype)) {
       return reply.code(400).send({ error: '文件内容与后缀不匹配' });
@@ -357,6 +360,7 @@ export default async function uploadRoutes(fastify) {
       return reply.code(403).send({ error: `没有上传 ${category} 的权限` });
     }
 
+    if(await rejectActiveUpload(fastify,request,reply,filename,mimetype,category)) return reply;
     // 2. 验证文件确实已上传到存储
     try {
       const exists = await fastify.storage.exists(key, provider);

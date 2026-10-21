@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Concurrent disjoint title/body edits serialize, exactly one prohibited combination is rejected",
+    "status": "PASS"
+  },
+  {
+    "name": "Editing first-post API includes existing topic title in mandatory policy evaluation",
+    "status": "PASS"
+  },
+  {
+    "name": "Profile edits evaluate unchanged public fields and cannot assemble a prohibited promotion across fields",
+    "status": "PASS"
+  }
+]

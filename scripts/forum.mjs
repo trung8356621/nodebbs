@@ -61,6 +61,7 @@ export function runtime(c) {
   const uploads = c.legacyUploads ? path.join(api, 'uploads') : path.join(dir, 'uploads');
   fs.mkdirSync(uploads, { recursive: true });
   return {
+    POLICY_TRUST_KEY_FILE: s.policyTrustKeyFile || '', POLICY_SNAPSHOT_FILE: s.policySnapshotFile || '',
     NODE_ENV: 'development', FORUM_ID: c.id, FORUM_DATABASE_NAME: c.database,
     DATABASE_URL: s.databaseUrl, REDIS_URL: s.redisUrl,
     REDIS_KEY_PREFIX: `pbn:${c.id}:`, DB_POOL_MAX: '5',
@@ -122,7 +123,7 @@ export function manifest() {
   return { version: 1, files: files.map(file => ({ file, sha256: sha(fs.readFileSync(path.join(dir, file))) })) };
 }
 export async function migrate(c) {
-  if (c.database === 'pbn_dev') throw new Error('pbn_dev migration forbidden; baseline adoption needs separate restore rehearsal');
+  // Existing databases, including A, must already have a verified/adopted baseline ledger.
   const dir = path.join(api, 'baseline');
   const document = readJson(path.join(dir, 'manifest.json'));
   // Preserve the v1 checksum format; append immutable records for future versions.
@@ -148,6 +149,9 @@ export async function migrate(c) {
       await client.query('CREATE TABLE pbn_meta.schema_versions(version integer PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now())');
     }
     const rows = (await client.query('SELECT version,checksum FROM pbn_meta.schema_versions ORDER BY version')).rows;
+    const { publicCatalog } = await import('./forum-catalog.mjs');
+    const catalogFile = rows.at(-1)?.version > 1 ? 'catalog-v'+rows.at(-1).version+'.json' : 'catalog.json';
+    if (rows.length && JSON.stringify(await publicCatalog(client)) !== JSON.stringify(readJson(path.join(dir,catalogFile)))) throw new Error('Schema drift before migration');
     if (rows.some((row,index) => migrations[index]?.version !== row.version)) throw new Error('Unexpected applied migration history; refusing downgrade or gaps');
     for (const migration of migrations) {
       const checksum = sha(JSON.stringify(migration));
@@ -163,9 +167,9 @@ export async function migrate(c) {
         console.log('Migration applied: ' + c.database + ' v' + migration.version);
       }
     }
-    if (migrations.at(-1).version === 1) {
+    {
       const { publicCatalog } = await import('./forum-catalog.mjs');
-      if (JSON.stringify(await publicCatalog(client)) !== JSON.stringify(readJson(path.join(dir,'catalog.json')))) throw new Error('Schema drift from baseline v1');
+      if (JSON.stringify(await publicCatalog(client)) !== JSON.stringify(readJson(path.join(dir,migrations.at(-1).version > 1 ? 'catalog-v'+migrations.at(-1).version+'.json' : 'catalog.json')))) throw new Error('Schema drift from expected migration catalog');
     }
     await client.query('COMMIT');
   } catch (e) { await client.query('ROLLBACK'); throw e; }

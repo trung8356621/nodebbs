@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
+import { writeContext } from './write-context.js';
 import env from '../config/env.js';
 import * as schema from './schema.js';
 
@@ -20,4 +21,22 @@ pool.on('error', (err) => {
 // 传入 schema 以启用查询构建器的智能提示和关系查询
 const db = drizzle(pool, { schema });
 
-export default db;
+// Existing service imports join only explicitly wrapped publishing transactions.
+const contextualDb = new Proxy(db, {
+  get(target, property) {
+    const selected=writeContext.getStore()?.db || target;
+    const value=Reflect.get(selected,property,selected);
+    return typeof value==='function' ? value.bind(selected) : value;
+  },
+});
+export async function atomicWrite(callback) {
+  const context={db:null,afterCommit:[]};
+  const result=await db.transaction(async tx=> {
+    context.db=tx;
+    return writeContext.run(context,callback);
+  });
+  // Listeners run outside the completed transaction and only after successful publication.
+  for(const task of context.afterCommit) writeContext.exit(task);
+  return result;
+}
+export default contextualDb;
