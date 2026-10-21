@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-21T17:14:44.612Z",
+  "checks": [
+    {
+      "name": "Dump checksum, all row contents/counts, schema constraints/indexes, sequences, schema version and media match exactly",
+      "pass": true,
+      "tables": 59,
+      "schemaSha256": "f1335b1cc0a1b30083d1d4d66d01bffcfe97fc6b660fe38718e718a25215ae2f",
+      "versions": [
+        {
+          "version": 1,
+          "checksum": "9efcd5dbdc2427e0c8cb5512e93349a6921f31871d689df7af55a8959b665c97"
+        }
+      ],
+      "mediaFiles": 3
+    },
+    {
+      "name": "Restored users intact",
+      "pass": true,
+      "rows": 5
+    },
+    {
+      "name": "Restored roles intact",
+      "pass": true,
+      "rows": 3
+    },
+    {
+      "name": "Restored userRoles intact",
+      "pass": true,
+      "rows": 5
+    },
+    {
+      "name": "Restored topics intact",
+      "pass": true,
+      "rows": 3
+    },
+    {
+      "name": "Restored comments intact",
+      "pass": true,
+      "rows": 6
+    },
+    {
+      "name": "Restored wallets intact",
+      "pass": true,
+      "rows": 3
+    },
+    {
+      "name": "Restored walletTransactions intact",
+      "pass": true,
+      "rows": 3
+    },
+    {
+      "name": "Restored banners intact",
+      "pass": true,
+      "rows": 3
+    },
+    {
+      "name": "Restored settings intact",
+      "pass": true,
+      "rows": 41
+    },
+    {
+      "name": "Restored files intact",
+      "pass": true,
+      "rows": 3
+    },
+    {
+      "name": "Pinned topic preserved",
+      "pass": true
+    },
+    {
+      "name": "Comment reply preserved",
+      "pass": true
+    },
+    {
+      "name": "Source and restored forum have no foreign servers/dblink/postgres_fdw",
+      "pass": true
+    },
+    {
+      "name": "Restored Admin uses unchanged password and normal RBAC/API routes",
+      "pass": true
+    },
+    {
+      "name": "Fresh restore JWT identity cannot authenticate against either source forum",
+      "pass": true
+    },
+    {
+      "name": "Restored Web homepage/media/name/theme/locale operate without Central API",
+      "pass": true
+    },
+    {
+      "name": "Source and restored media roots remain separate",
+      "pass": true
+    },
+    {
+      "name": "Forum A business row counts unchanged after export/restore",
+      "pass": true
+    }
+  ],
+  "pass": true
+}

@@ -23,12 +23,14 @@ apps/api/       Fastify plugins, core routes, business modules and extensions
   src/db/       Drizzle schema composition
   src/modules/  Forum routes, services and schema
   src/i18n/     Response message catalogs (no database content translation)
-  drizzle/      Upstream SQL migration history
+  drizzle/      Preserved upstream SQL migration history
+  baseline/     Versioned fresh-forum schema and checksummed migration manifest
+forums/         Public fixed-instance configurations (no credentials)
 scripts/        Development helpers and verification tools
 docs/audit/     Bootstrap and implementation audit reports
 ```
 
-Core services and the forum module are composed statically. Ledger, rewards, shop, badges, emoji and advertisement extensions already exist upstream. One database connection pool currently serves one installation. There is no hostname-based tenant isolation or cross-forum Topic Registry yet.
+Core services and the forum module are composed statically. Ledger, rewards, shop, badges, emoji and advertisement extensions already exist upstream. Each forum runs its own Web/API processes and database pool from the same source. Forum A/B isolation and portable export/restore are verified; there is no dynamic in-process tenant resolver or Central Server. See the [Phase 2.1B report](docs/audit/PHASE2.1-MULTI-FORUM.md).
 
 ## Local development — Windows + Laragon
 
@@ -37,7 +39,7 @@ Core services and the forum module are composed statically. Ledger, rewards, sho
 1. Open the existing Laragon installation and start PostgreSQL. Do not install another PostgreSQL instance or reset another project's data directory.
 2. In `D:\workspace-2026\pbn`, run `pnpm install --frozen-lockfile`.
 3. Copy `apps/api/.env.example` to `apps/api/.env` and `apps/web/.env.example` to `apps/web/.env` if local files do not already exist. Configure your own local database access and generate a random JWT secret. Never overwrite an existing local configuration blindly.
-4. Create **only** the `pbn_dev` database if it does not exist, using Laragon's PostgreSQL tools and your local database role. Confirm `SELECT current_database()` returns `pbn_dev` before schema or seed operations.
+4. Preserve existing `pbn_dev` and its owner Admin. Provision a new database through the versioned forum workflow below; do not repeat the historical Phase 1 schema-push setup.
 5. Start a dedicated native Redis process using `powershell -File scripts/start-pbn-redis.ps1`. The helper defaults to the Redis executable already installed in Laragon; supply `-RedisExe` if its path differs. An occupied port is rejected for manual ownership verification.
 
 | Service | Local address | Scope |
@@ -65,40 +67,36 @@ Check port ownership before starting services. Never stop all Node, Redis or Pos
 
 No credentials are required in this README. `.env`, runtime logs, local accounts, uploads, backups and smoke artifacts are ignored. `.env.example` templates remain tracked.
 
-### Database initialization and migration limitation
+### Versioned new-forum bootstrap
 
-The upstream migration journal **fails on a fresh database**, because its first registered data migration reads the missing legacy table `user_credits`. Phase 1 used the README-supported schema-push workflow on the newly created `pbn_dev` database:
+The upstream migration journal is preserved but cannot bootstrap an empty database. Use the separate checksummed baseline and fixed-instance scripts. Existing Forum A is preserved and live schema adoption is blocked. Do not run upstream db:migrate, db:push, reset or seed on existing A.
 
-```powershell
-pnpm --dir apps/api exec dotenvx run -- pnpm db:push
-pnpm --dir apps/api seed
-```
+For an entirely new forum, copy a config in forums/ and give it a unique ID, database and ports, then run:
 
-Schema, search extension/index initialization and seeds succeeded. This does **not** repair the migration history: zero historical migrations were recorded as applied. Do not run `db:migrate` against this bootstrapped database until a reviewed baseline/upgrade procedure is ready. Never run reset/clean commands against existing data. No schema migration is required for i18n.
+~~~powershell
+node scripts/forum.mjs provision forums/forum-c.json
+node scripts/forum.mjs start forums/forum-c.json
+~~~
 
-### Start Web and API
+Secrets are generated into owner-protected, ignored .local/forums/<id>/ files. The existing local API environment supplies development connection references; PBN_DATABASE_URL/PBN_REDIS_URL can override them. Provisioning refuses to overwrite an existing database or Admin. See the [full migration and portability procedures](docs/audit/PHASE2.1-MULTI-FORUM.md).
 
-Run each command in a separate terminal, after PostgreSQL and Redis are ready:
+### Start/restart the two configured forums
 
-```powershell
-Set-Location D:\workspace-2026\pbn
-pnpm --dir apps/api dev
-```
+After PostgreSQL and dedicated PBN Redis are ready, use these commands from the repository root. They launch hidden background processes and independent logs/build caches; do not start a second copy of an already running instance.
 
-```powershell
-Set-Location D:\workspace-2026\pbn
-pnpm --dir apps/web exec next dev --turbopack -p 3100 --hostname 127.0.0.1
-```
+~~~powershell
+node scripts/forum.mjs start forums/forum-a.json
+node scripts/forum.mjs start forums/forum-b.json
+# Stop only the selected managed forum before restarting it:
+node scripts/forum.mjs stop forums/forum-b.json
+node scripts/forum.mjs start forums/forum-b.json
+~~~
 
-`pnpm dev` runs both applications through Turbo. The upstream Web script may listen beyond loopback; the explicit command above limits access to this machine. Use Ctrl+C to stop each foreground process. After restarting Windows, reopen Laragon, start PostgreSQL, start the dedicated Redis helper and run these two commands again. Re-running schema setup and seeds is unnecessary.
-
-- Frontend: [http://127.0.0.1:3100](http://127.0.0.1:3100)
-- API health: [http://127.0.0.1:7100/api](http://127.0.0.1:7100/api)
-- API documentation: [http://127.0.0.1:7100/docs](http://127.0.0.1:7100/docs)
+Forum A: [Web](http://127.0.0.1:3100), [API](http://127.0.0.1:7100/api). Forum B: [Web](http://127.0.0.1:3200), [API](http://127.0.0.1:7200/api). Logs and process state: .local/forums/<id>/. The upstream pnpm dev commands remain legacy single-installation entrypoints; use forum.mjs for the verified isolated configuration. No migration/seed is needed on normal restart.
 
 ## Internationalization — Vietnamese and English
 
-The interface supports **vi-VN** and **en-US** using next-intl. Vietnamese is the development default. The header language selector writes the `pbn-locale` cookie for one year and reloads the current URL. The cookie is host-scoped, allowing independent future forum installations to choose their own defaults. This is configuration preparation, not multi-tenant implementation.
+The interface supports **vi-VN** and **en-US** using next-intl. Vietnamese is the development default. The header language selector writes a forum-specific locale cookie for one year and reloads the current URL. Forum A defaults to Vietnamese; Forum B defaults to English. Legacy single-instance mode retains pbn-locale.
 
 There are no locale URL prefixes, routing rewrites or language-specific sitemap/canonical variants. The existing route paths are retained. Server Components resolve the locale per request; Client Components share the same provider. Dictionaries under `apps/web/src/i18n/messages/` are organized into auth, forum, common, admin, profile, wallet, shop, ads, badges and rewards namespaces, with matching keys and English fallback.
 
@@ -120,13 +118,14 @@ Browser smoke requires running local services and local smoke account access, as
 
 ## Current status and roadmap
 
-Core forum flows run locally: registration/sign-in, categories/topics, topic creation, replies, admin statistics and manual pin/unpin. Native services, Web SSR and API proxy were verified. Phase 1.5 adds bilingual interface text, response messages, repository hygiene and project documentation; review is pending. Wallet concurrency/idempotency, paid pin expiry, outbound link policy and tenant isolation are not implemented by this phase.
+Core forum flows run locally: registration/sign-in, categories/topics, topic creation, replies, admin statistics and manual pin/unpin. Native services, Web SSR and API proxy were verified. Phase 1.5 adds bilingual interface text, response messages, repository hygiene and project documentation; review is pending. Phase 2.1B verifies independent per-forum processes/databases/auth/cache/media and a portable B restore. Wallet concurrency/idempotency, paid pin expiry and outbound link policy remain outside this phase.
 
 | Phase | Status |
 | --- | --- |
 | Phase 1: Bootstrap NodeBBS | Completed |
 | Phase 1.5: i18n / Git / README | In progress — implemented, awaiting review |
-| Phase 2: Multi-forum architecture | Planned |
+| Phase 2.1B: Separate-process multi-forum foundation and portable DB | Implemented and tested locally |
+| Phase 2.2 | Not started |
 | Phase 3: Wallet / Paid Pin / Link Policy | Planned |
 | Phase 4: Banner Management | Planned |
 | SEO-OPS integration | Deferred |

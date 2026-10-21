@@ -8,7 +8,7 @@ const { Pool } = pg;
 // 显式创建连接池，以便管理生命周期
 export const pool = new Pool({ 
   connectionString: env.db.url,
-  max: 10, // 连接池大小，可根据需求调整
+  max: Number(process.env.DB_POOL_MAX || 10), // 连接池大小，可根据需求调整
   idleTimeoutMillis: 30000
 });
 

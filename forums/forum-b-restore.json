@@ -1,0 +1,13 @@
+{
+  "id": "forum_b_restore",
+  "database": "pbn_forum_b_restore",
+  "webPort": 3300,
+  "apiPort": 7300,
+  "hostname": "127.0.0.1",
+  "name": "PBN Forum B",
+  "locale": "en-US",
+  "primaryColor": "#9333ea",
+  "logo": "/logo.svg",
+  "description": "Independent development forum B",
+  "status": "active"
+}

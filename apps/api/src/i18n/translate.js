@@ -12,7 +12,7 @@ const patterns = Object.entries(source).map(([key, text]) => ({
 
 export function responseLocale(headers) {
   const cookie = headers.cookie?.split(';').map((part) => part.trim())
-    .find((part) => part.startsWith('pbn-locale='))?.slice('pbn-locale='.length);
+    .find((part) => part.startsWith(`${process.env.NEXT_PUBLIC_FORUM_LOCALE_COOKIE || 'pbn-locale'}=`))?.slice((process.env.NEXT_PUBLIC_FORUM_LOCALE_COOKIE || 'pbn-locale').length + 1);
   if (cookie === 'vi-VN' || cookie === 'en-US') return cookie;
   const language = headers['accept-language']?.split(',')[0]?.trim();
   if (language === 'vi-VN' || language === 'en-US') return language;

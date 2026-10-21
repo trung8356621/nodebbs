@@ -11,7 +11,7 @@ import { StorageError, StorageErrorCode } from '../errors.js';
 
 // providers/ → storage/ → plugins/ → src/ → apps/api/
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.join(__dirname, '..', '..', '..', '..', 'uploads');
+const uploadsDir = process.env.UPLOAD_ROOT ? path.resolve(process.env.UPLOAD_ROOT) : path.join(__dirname, '..', '..', '..', '..', 'uploads');
 
 export class LocalStorageProvider extends BaseStorageProvider {
   constructor(config = {}) {

@@ -1,0 +1,14 @@
+{
+  "id": "forum_a",
+  "database": "pbn_dev",
+  "webPort": 3100,
+  "apiPort": 7100,
+  "hostname": "127.0.0.1",
+  "name": "PBN Forum A",
+  "locale": "vi-VN",
+  "primaryColor": "#2563eb",
+  "logo": "/logo.svg",
+  "description": "PBN Forum A",
+  "status": "active",
+  "legacyUploads": true
+}

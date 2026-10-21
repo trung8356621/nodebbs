@@ -80,3 +80,7 @@ Desktop.ini
 .cache/
 .eslintcache
 apps/api/uploads/
+
+# Isolated forum builds and versioned baseline
+apps/web/.next-*/
+!apps/api/baseline/*.sql

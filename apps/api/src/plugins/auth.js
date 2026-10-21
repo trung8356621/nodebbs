@@ -25,7 +25,7 @@ async function authPlugin(fastify) {
   fastify.decorateReply('setAuthCookie', function(token) {
     const expiresIn = env.security.jwtExpiresIn;
     
-    this.setCookie('auth_token', token, {
+    this.setCookie((process.env.AUTH_COOKIE_NAME || 'auth_token'), token, {
       path: '/',
       httpOnly: true,
       // 开发环境：
@@ -35,7 +35,7 @@ async function authPlugin(fastify) {
         ? env.security.cookieSecure
         : this.request.protocol === 'https',
       sameSite: env.security.cookieSameSite,
-      domain: env.security.cookieDomain, // 生产环境如果是子域名部署，需要设置主域名 (如 .example.com)
+      domain: process.env.FORUM_ID ? undefined : env.security.cookieDomain, // 生产环境如果是子域名部署，需要设置主域名 (如 .example.com)
       maxAge: ms(expiresIn) / 1000,
     });
   });
@@ -50,12 +50,14 @@ async function authPlugin(fastify) {
   // 注册 JWT 插件
   await fastify.register(jwt, {
     secret: env.security.jwtSecret,
+    verify: process.env.FORUM_ID ? { allowedIss: `pbn:${process.env.FORUM_ID}`, allowedAud: `pbn:${process.env.FORUM_ID}` } : {},
     cookie: {
-      cookieName: 'auth_token',
+      cookieName: (process.env.AUTH_COOKIE_NAME || 'auth_token'),
       signed: false,
     },
     sign: {
-      expiresIn: env.security.jwtExpiresIn
+      expiresIn: env.security.jwtExpiresIn,
+      ...(process.env.FORUM_ID ? { iss: `pbn:${process.env.FORUM_ID}`, aud: `pbn:${process.env.FORUM_ID}` } : {}),
     }
   });
 

@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-21T17:22:33.706Z",
+  "builds": {
+    "forum_a": {
+      "exitCode": 0,
+      "output": ".next-forum_a-production"
+    },
+    "forum_b": {
+      "exitCode": 0,
+      "output": ".next-forum_b-production"
+    }
+  },
+  "lint": {
+    "exitCode": 0,
+    "existingWarnings": 11
+  },
+  "checks": [
+    {
+      "name": "forum_a port 3100",
+      "status": 200
+    },
+    {
+      "name": "forum_a port 7100",
+      "status": 200
+    },
+    {
+      "name": "A business counts and owner password hash preserved",
+      "pass": true
+    },
+    {
+      "name": "forum_b port 3200",
+      "status": 200
+    },
+    {
+      "name": "forum_b port 7200",
+      "status": 200
+    },
+    {
+      "name": "Upstream SQL and migration journal unchanged",
+      "pass": true
+    },
+    {
+      "name": "No live secrets in Git-visible files or built frontend assets; private connections absent from client bundles; local secrets/export/build outputs ignored",
+      "pass": true,
+      "filesScanned": 814
+    },
+    {
+      "name": "Final stop script validates forum title marker; B restarts without changing A processes or API availability",
+      "pass": true,
+      "samples": 3,
+      "statuses": [
+        200
+      ]
+    }
+  ],
+  "pass": true
+}

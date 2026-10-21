@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { createIPX, ipxFSStorage, createIPXNodeServer } from 'ipx';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
+const uploadsDir = process.env.UPLOAD_ROOT ? path.resolve(process.env.UPLOAD_ROOT) : path.join(__dirname, '..', '..', 'uploads');
 
 // 创建 IPX 实例，指定 uploads 目录为存储源 https://github.com/unjs/ipx
 const ipx = createIPX({

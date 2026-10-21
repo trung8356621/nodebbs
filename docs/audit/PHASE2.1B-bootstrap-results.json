@@ -1,0 +1,15 @@
+{
+  "pass": true,
+  "database": "pbn_bootstrap_check",
+  "publicTables": 58,
+  "users": 0,
+  "versions": [
+    {
+      "version": 1,
+      "checksum": "9efcd5dbdc2427e0c8cb5512e93349a6921f31871d689df7af55a8959b665c97"
+    }
+  ],
+  "rerun": "no-op",
+  "transaction": "committed",
+  "upstreamMigrationHistory": "unchanged"
+}

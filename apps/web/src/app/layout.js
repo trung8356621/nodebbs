@@ -58,7 +58,9 @@ export default async function RootLayout({
 
   // 准备统计脚本
   const analyticsScript = settings?.site_analytics_scripts?.value || '';
-  return <html lang={locale} suppressHydrationWarning className='overflow-y-scroll'>
+  const primary = process.env.FORUM_PRIMARY_COLOR;
+  const forumStyle = /^#[0-9a-f]{6}$/i.test(primary || '') ? { '--primary': primary, '--ring': primary } : undefined;
+  return <html style={forumStyle} lang={locale} suppressHydrationWarning className='overflow-y-scroll'>
       <head>
         <script dangerouslySetInnerHTML={{
         __html: initScript

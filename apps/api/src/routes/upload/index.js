@@ -98,7 +98,7 @@ export default async function uploadRoutes(fastify) {
 
     // 6. 先将文件流缓存到临时文件（用于大小检查和图片元数据提取）
     const __dirname = dirname(import.meta.url);
-    const tmpDir = path.join(__dirname, '../../../uploads', '.tmp');
+    const tmpDir = path.join(process.env.UPLOAD_ROOT || path.resolve(__dirname, '../../../uploads'), '.tmp');
     await fs.promises.mkdir(tmpDir, { recursive: true });
     const tmpPath = path.join(tmpDir, filename);
 

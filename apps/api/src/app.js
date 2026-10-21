@@ -8,6 +8,7 @@
  */
 'use strict';
 
+import './config/forum-runtime.js';
 import Fastify from 'fastify';
 import server from './server.js';
 import env from './config/env.js';
@@ -37,13 +38,21 @@ const logger = {
 const app = Fastify({
   logger,
   disableRequestLogging: true, // 禁用默认的请求日志，由自定义中间件处理
-  trustProxy: true, // 信任反向代理（用于获取真实客户端 IP）
+  trustProxy: false, // 信任反向代理（用于获取真实客户端 IP）
   ajv: {
     customOptions: {
       allowUnionTypes: true, // 允许 JSON Schema 联合类型（如 type: ['integer', 'null']）
     },
   },
 });
+
+if (process.env.FORUM_ID) {
+  const hosts = process.env.FORUM_ALLOWED_HOSTS.split(',');
+  app.addHook('onRequest', async (request, reply) => {
+    if (!hosts.includes(request.headers.host?.toLowerCase())) return reply.code(421).send({ error: 'Unknown forum host' });
+    if (request.headers.origin && request.headers.origin !== process.env.FORUM_WEB_ORIGIN) return reply.code(403).send({ error: 'Foreign forum origin' });
+  });
+}
 
 // 注册服务器模块（包含所有插件、扩展和路由）
 app.register(server);

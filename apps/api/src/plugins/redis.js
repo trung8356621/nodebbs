@@ -9,6 +9,7 @@ import env from '../config/env.js'
 async function redisPlugin(fastify, options) {
   fastify.register(fastifyRedis, {
     url: env.redis.url,
+    keyPrefix: process.env.REDIS_KEY_PREFIX || '',
     // 可选：配置 ioredis 原生选项
     connectTimeout: 5000,
     maxRetriesPerRequest: 3,

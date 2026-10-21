@@ -3,6 +3,10 @@ import { NextResponse } from 'next/server';
 // Next.js 16 uses proxy.ts instead of middleware.ts
 export function proxy(request) {
   const { pathname } = request.nextUrl;
+  const hosts = process.env.FORUM_ALLOWED_HOSTS?.split(',');
+  if (hosts && !hosts.includes(request.headers.get('host')?.toLowerCase())) {
+    return new NextResponse('Unknown forum host', { status: 421 });
+  }
 
   // 获取运行时环境变量
   // 在 Docker 环境中，这会读取 docker-compose 传入的 SERVER_API_URL (e.g., http://api:7100)
@@ -30,6 +34,7 @@ export function proxy(request) {
 export const config = {
   // 匹配需要代理的路径
   matcher: [
+    '/((?!_next/static|_next/image|favicon.ico).*)',
     '/api/:path*',
     '/uploads/:path*',
     '/docs/json',
