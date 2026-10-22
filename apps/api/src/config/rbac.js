@@ -17,6 +17,7 @@ import {
 
 // 权限模块选项
 export const MODULE_OPTIONS = [
+  { value: 'editorial', label: 'Editorial review' },
   { value: 'topic', label: '话题' },
   { value: 'post', label: '回复' },
   { value: 'tag', label: '标签' },
@@ -195,6 +196,7 @@ export const CONDITION_TYPES = {
  * - 上传类：支持完整的上传限制条件
  */
 export const SYSTEM_PERMISSIONS = [
+  { slug: 'editorial.classify', name: 'Independent editorial review', module: 'editorial', action: 'classify', isSystem: true },
   // ========== 话题权限 ==========
   {
     slug: 'topic.create',
@@ -709,7 +711,7 @@ export const ALLOWED_ROLES_PERMISSIONS = {
     'system.stats',
   ],
   user: SYSTEM_PERMISSIONS
-    .filter(p => !p.slug.startsWith('dashboard.') && !['user.update', 'user.delete'].includes(p.slug))
+    .filter(p => !p.slug.startsWith('dashboard.') && !['user.update', 'user.delete', 'editorial.classify'].includes(p.slug))
     .map(p => p.slug),
 };
 

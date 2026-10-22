@@ -1,6 +1,7 @@
 'use client';
 
 import { usePbnTranslations } from "@/i18n/useTranslations";
+import {usePaidPinExpired} from '@/hooks/usePaidPinExpired';
 import Link from '@/components/common/Link';
 import UserAvatar from '@/components/user/UserAvatar';
 import Time from '@/components/common/Time';
@@ -13,7 +14,8 @@ export default function TopicCard({
 }) {
   const pbnT = usePbnTranslations();
   const replyCount = Math.max((topic.postCount || 1) - 1, 0);
-  const isPinned = topic.isPinned;
+  const expired=usePaidPinExpired(topic);
+  const isPinned = topic.adminPinned || (topic.isPinned && !expired);
 
   // 根据排序模式决定显示时间
   const displayTime = sort === 'newest' ? topic.createdAt : topic.lastPostAt || topic.createdAt;

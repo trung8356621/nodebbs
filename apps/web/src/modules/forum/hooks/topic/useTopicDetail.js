@@ -32,6 +32,7 @@ export function useTopicDetail({
   } = useAuth();
   const isRewardEnabled = initialIsRewardEnabled;
   const [topic, setTopic] = useState(initialTopic);
+  useEffect(()=>setTopic(initialTopic),[initialTopic]);
   const [rewardStats, setRewardStats] = useState(initialRewardStats);
 
   // 统一的操作 loading 状态管理
@@ -174,27 +175,15 @@ export function useTopicDetail({
   const togglePinTopic = async () => {
     if (!isAuthenticated) return openLoginDialog();
     setLoading('togglePin', true);
-    const previousState = topic.isPinned;
+    const previousState = topic.adminPinned ?? topic.isPinned;
     try {
-      // 乐观更新
-      updateTopic({
-        isPinned: !previousState
-      });
-      await topicApi.update(topic.id, {
-        isPinned: !previousState
-      });
+      await topicApi.update(topic.id, {isPinned:!previousState});
+      await refreshTopic();
       toast.success(!previousState ? pbnT("m2430") : pbnT("m2391"));
       router.refresh();
-    } catch (err) {
-      // 回滚
-      updateTopic({
-        isPinned: previousState
-      });
-      console.error("Pin action failed:", err);
+    } catch(err) {
       toast.error(err.message || pbnT("m568"));
-    } finally {
-      setLoading('togglePin', false);
-    }
+    } finally {setLoading('togglePin',false);}
   };
 
   /**

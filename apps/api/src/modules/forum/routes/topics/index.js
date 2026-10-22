@@ -1,3 +1,4 @@
+import {effectivePinned,pinExpiresAt,effectiveLinkPolicy} from '../../services/pinService.js';
 import { eq, sql, desc, and, or, like, inArray, not, count, lt, gt } from 'drizzle-orm';
 import { generateSlug } from '#core/utils/slug.js';
 import { nanoid } from 'nanoid';
@@ -348,7 +349,7 @@ export default async function topicRoutes(fastify, options) {
         }
       }
       if (isPinned !== undefined) {
-        conditions.push(eq(topics.isPinned, isPinned));
+        conditions.push(eq(effectivePinned, isPinned));
       }
       if (isClosed !== undefined) {
         conditions.push(eq(topics.isClosed, isClosed));
@@ -410,7 +411,12 @@ export default async function topicRoutes(fastify, options) {
           firstPostId: posts.id,
           firstPostLikeCount: sql`COALESCE(${posts.likeCount}, 0)`.mapWith(Number).as('firstPostLikeCount'),
           snippet: posts.rawContent,
-          isPinned: topics.isPinned,
+          isPinned: effectivePinned,
+          adminPinned: topics.isPinned,
+          pinExpiresAt,
+          linkPolicy: effectiveLinkPolicy,
+          canonicalOrigin: sql`${process.env.FORUM_WEB_ORIGIN || 'http://localhost:3100'}`,
+          pinServerNow: sql`statement_timestamp()`,
           isClosed: topics.isClosed,
           isDeleted: topics.isDeleted,
           approvalStatus: topics.approvalStatus,
@@ -443,26 +449,26 @@ export default async function topicRoutes(fastify, options) {
         const cData = paginator.cursorData;
         if (sort === 'latest' && cData.id !== undefined && cData.isPinned !== undefined && cData.lastPostAt) {
            cursorCondition = or(
-              lt(topics.isPinned, cData.isPinned),
+              lt(effectivePinned, cData.isPinned),
               and(
-                 eq(topics.isPinned, cData.isPinned),
+                 eq(effectivePinned, cData.isPinned),
                  lt(topics.lastPostAt, new Date(cData.lastPostAt))
               ),
               and(
-                 eq(topics.isPinned, cData.isPinned),
+                 eq(effectivePinned, cData.isPinned),
                  eq(topics.lastPostAt, new Date(cData.lastPostAt)),
                  lt(topics.id, cData.id)
               )
            );
         } else if (sort === 'newest' && cData.id !== undefined && cData.isPinned !== undefined && cData.createdAt) {
            cursorCondition = or(
-              lt(topics.isPinned, cData.isPinned),
+              lt(effectivePinned, cData.isPinned),
               and(
-                 eq(topics.isPinned, cData.isPinned),
+                 eq(effectivePinned, cData.isPinned),
                  lt(topics.createdAt, new Date(cData.createdAt))
               ),
               and(
-                 eq(topics.isPinned, cData.isPinned),
+                 eq(effectivePinned, cData.isPinned),
                  eq(topics.createdAt, new Date(cData.createdAt)),
                  lt(topics.id, cData.id)
               )
@@ -478,15 +484,15 @@ export default async function topicRoutes(fastify, options) {
 
       // 应用排序
       if (sort === 'latest') {
-        query = query.orderBy(desc(topics.isPinned), desc(topics.lastPostAt), desc(topics.id));
+        query = query.orderBy(desc(effectivePinned), desc(topics.lastPostAt), desc(topics.id));
       } else if (sort === 'newest') {
-        query = query.orderBy(desc(topics.isPinned), desc(topics.createdAt), desc(topics.id));
+        query = query.orderBy(desc(effectivePinned), desc(topics.createdAt), desc(topics.id));
       } else if (sort === 'popular') {
         // 受欢迎排序：综合浏览量和回复数，不考虑时间衰减
         // 人气分数 = 浏览量 * 0.3 + 回复数 * 5
         // 回复数权重更高，因为回复代表更深度的互动
         query = query.orderBy(
-          desc(topics.isPinned),
+          desc(effectivePinned),
           desc(sql`(${topics.viewCount} * 0.3 + ${topics.postCount} * 5)`)
         );
       } else if (sort === 'trending') {
@@ -494,7 +500,7 @@ export default async function topicRoutes(fastify, options) {
         // 热度分数 = (浏览量 * 0.1 + 回复数 * 2) / (天数 + 2)^1.5
         // 这样可以让新话题有更高的权重，同时考虑互动程度
         query = query.orderBy(
-          desc(topics.isPinned),
+          desc(effectivePinned),
           desc(sql`(
             (${topics.viewCount} * 0.1 + ${topics.postCount} * 2) / 
             POWER(EXTRACT(EPOCH FROM (NOW() - ${topics.createdAt})) / 86400 + 2, 1.5)
@@ -661,7 +667,12 @@ export default async function topicRoutes(fastify, options) {
           viewCount: topics.viewCount,
           // 注意：likeCount 已从 topics 表移除，通过 firstPostLikeCount 获取
           postCount: topics.postCount,
-          isPinned: topics.isPinned,
+          isPinned: effectivePinned,
+          adminPinned: topics.isPinned,
+          pinExpiresAt,
+          linkPolicy: effectiveLinkPolicy,
+          canonicalOrigin: sql`${process.env.FORUM_WEB_ORIGIN || 'http://localhost:3100'}`,
+          pinServerNow: sql`statement_timestamp()`,
           isClosed: topics.isClosed,
           isDeleted: topics.isDeleted,
           approvalStatus: topics.approvalStatus,

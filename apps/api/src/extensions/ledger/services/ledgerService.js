@@ -19,43 +19,9 @@ export class LedgerService {
    * @param {object} [tx] - 可选的事务上下文
    */
   async getAccount(userId, currencyCode, tx = db) {
-    let [account] = await tx
-      .select()
-      .from(sysAccounts)
-      .where(and(
-        eq(sysAccounts.userId, userId),
-        eq(sysAccounts.currencyCode, currencyCode)
-      ))
-      .limit(1);
-
-    if (!account) {
-      // 先检查货币是否存在以避免外键错误，还是让数据库处理？
-      // 最好检查或信任应用逻辑。为了性能我们信任外键约束，但有效的货币检查是好的。
-      // 目前假设货币存在，否则会抛出异常。
-      try {
-        [account] = await tx.insert(sysAccounts).values({
-          userId,
-          currencyCode,
-          balance: 0,
-          totalEarned: 0,
-          totalSpent: 0
-        }).returning();
-      } catch (error) {
-        // 如果唯一约束失败，处理竞态条件
-        if (error.code === '23505') { // unique_violation
-          [account] = await tx
-            .select()
-            .from(sysAccounts)
-            .where(and(
-              eq(sysAccounts.userId, userId),
-              eq(sysAccounts.currencyCode, currencyCode)
-            ))
-            .limit(1);
-        } else {
-          throw error;
-        }
-      }
-    }
+    await tx.insert(sysAccounts).values({userId,currencyCode,balance:0,totalEarned:0,totalSpent:0}).onConflictDoNothing();
+    const [account] = await tx.select().from(sysAccounts).where(and(eq(sysAccounts.userId,userId),eq(sysAccounts.currencyCode,currencyCode))).limit(1).for('update');
+    if(account.isFrozen) throw Object.assign(new Error('Account is frozen'),{statusCode:409});
     return account;
   }
 
@@ -72,7 +38,7 @@ export class LedgerService {
    * @param {object} [params.metadata]
    */
   async grant({ userId, amount, currencyCode, type, referenceType, referenceId, description, metadata }) {
-    if (amount <= 0) throw new Error('Grant amount must be positive');
+    if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Grant amount must be positive');
 
     return await db.transaction(async (tx) => {
       const account = await this.getAccount(userId, currencyCode, tx);
@@ -80,6 +46,7 @@ export class LedgerService {
       const newBalance = Number(account.balance) + amount;
       const newTotalEarned = Number(account.totalEarned) + amount;
 
+      if(!Number.isSafeInteger(newBalance)||!Number.isSafeInteger(newTotalEarned))throw new Error('Credit arithmetic exceeds the supported range');
       // 更新账户
       await tx.update(sysAccounts)
         .set({
@@ -117,21 +84,21 @@ export class LedgerService {
    * @param {string} params.referenceId
    * @param {string} [params.description]
    * @param {object} [params.metadata]
-   * @param {boolean} [params.allowNegative=false]
    */
-  async deduct({ userId, amount, currencyCode, type, referenceType, referenceId, description, metadata, allowNegative = false }) {
-    if (amount <= 0) throw new Error('Deduct amount must be positive');
+  async deduct({ userId, amount, currencyCode, type, referenceType, referenceId, description, metadata }) {
+    if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Deduct amount must be positive');
 
     return await db.transaction(async (tx) => {
       const account = await this.getAccount(userId, currencyCode, tx);
 
-      if (!allowNegative && Number(account.balance) < amount) {
-        throw new Error(`Insufficient funds. Balance: ${account.balance}, Required: ${amount}`);
+      if (Number(account.balance) < amount) {
+        throw Object.assign(new Error(`Insufficient funds. Balance: ${account.balance}, Required: ${amount}`),{statusCode:409});
       }
 
       const newBalance = Number(account.balance) - amount;
       const newTotalSpent = Number(account.totalSpent) + amount;
 
+      if(!Number.isSafeInteger(newTotalSpent))throw new Error('Credit arithmetic exceeds the supported range');
       await tx.update(sysAccounts)
         .set({
           balance: newBalance,
@@ -170,18 +137,22 @@ export class LedgerService {
    * @param {object} [params.metadata]
    */
   async transfer({ fromUserId, toUserId, amount, currencyCode, type, referenceType, referenceId, description, metadata }) {
-    if (amount <= 0) throw new Error('Transfer amount must be positive');
+    if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Transfer amount must be positive');
     if (fromUserId === toUserId) throw new Error('Cannot transfer to self');
 
     return await db.transaction(async (tx) => {
-      const fromAccount = await this.getAccount(fromUserId, currencyCode, tx);
-      const toAccount = await this.getAccount(toUserId, currencyCode, tx);
+      // Consistent lock order also protects existing transfer callers; no new transfer API.
+      const first=await this.getAccount(Math.min(fromUserId,toUserId),currencyCode,tx);
+      const second=await this.getAccount(Math.max(fromUserId,toUserId),currencyCode,tx);
+      const fromAccount=fromUserId<toUserId?first:second;
+      const toAccount=fromUserId<toUserId?second:first;
 
       // 检查余额
       if (Number(fromAccount.balance) < amount) {
         throw new Error(`Insufficient funds. Balance: ${fromAccount.balance}, Required: ${amount}`);
       }
 
+      if(![Number(fromAccount.totalSpent)+amount,Number(toAccount.totalEarned)+amount,Number(toAccount.balance)+amount].every(Number.isSafeInteger))throw new Error('Credit arithmetic exceeds the supported range');
       // 更新来源账户
       const fromNewBalance = Number(fromAccount.balance) - amount;
       await tx.update(sysAccounts)

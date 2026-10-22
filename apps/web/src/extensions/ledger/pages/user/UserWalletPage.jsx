@@ -136,7 +136,7 @@ export default function UserWalletPage() {
                </div>
                <CardHeader className="pb-2">
                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                   {account.currency.name}
+                   {account.currency.code===DEFAULT_CURRENCY_CODE?'Credit':account.currency.name}
                  </CardTitle>
                </CardHeader>
                <CardContent>

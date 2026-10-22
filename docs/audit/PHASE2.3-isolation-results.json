@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "checks": [
+    "Both directions: foreign bearer, own-name/renamed foreign cookies, owner purchase, wallet/admin routes and foreign Origin rejected; fixture users isolated",
+    "Redis namespaces remain independent and fixture keys cleaned",
+    "A/B homepage default locale and configured theme remain operational"
+  ]
+}

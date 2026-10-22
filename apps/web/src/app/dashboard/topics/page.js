@@ -105,9 +105,9 @@ export default function AdminTopicsPage() {
     }, {
       separator: true
     }, {
-      label: row.isPinned ? pbnT("m106") : pbnT("m107"),
-      icon: row.isPinned ? PinOff : Pin,
-      onClick: () => handleTogglePin(row.id, row.isPinned),
+      label: row.adminPinned ? pbnT("m106") : pbnT("m107"),
+      icon: row.adminPinned ? PinOff : Pin,
+      onClick: () => handleTogglePin(row.id, row.adminPinned),
       hidden: !hasPermission('dashboard.topics')
     }, {
       label: row.isClosed ? pbnT("m92") : pbnT("m93"),

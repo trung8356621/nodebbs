@@ -33,10 +33,10 @@ export const request = async (endpoint, options = {}, pbnT = pbnRuntimeT) => {
   // 「失败 → 返回兜底默认值」的降级策略统一由 fetchData / 各调用方的 catch 决定。
   let response;
   try {
-    const defaultCache = options.method && options.method !== 'GET' ? 'no-store' : undefined;
+    const defaultCache = 'no-store';
     response = await fetch(url, {
       ...options,
-      // GET 用默认缓存让 Next.js 在同一渲染周期内去重；其它方法用 no-store
+      // Privileges and moderation depend on database time; do not retain API responses.
       cache: options.cache ?? defaultCache,
       headers,
       signal: controller.signal

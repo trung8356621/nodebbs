@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "checks": [
+    "forum_a: real HTTP caller timeout after upstream processing; retry returned one committed entitlement and exactly one debit",
+    "forum_b: real HTTP caller timeout after upstream processing; retry returned one committed entitlement and exactly one debit"
+  ]
+}

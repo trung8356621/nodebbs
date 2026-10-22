@@ -21,6 +21,24 @@
           "sha256": "759346aabbd3cf8aca8f4c2d3f9c8ab396e3b636c23e842dbb9274c199e50636"
         }
       ]
+    },
+    {
+      "version": 3,
+      "files": [
+        {
+          "file": "0002_right_malice.sql",
+          "sha256": "635dfe3b3a46fd97228164d45b391cfd53a2fcabae2f2718f0535da99df43217"
+        }
+      ]
+    },
+    {
+      "version": 4,
+      "files": [
+        {
+          "file": "0003_pin_currency.sql",
+          "sha256": "00532a40d15ec5c22520579f77a982807af2aa8bd99726187c234c3f9c8b5b67"
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,105 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "forum": "forum_a",
+      "clone": "pbn_phase23_before_a_mvism7vq",
+      "checks": {
+        "users": {
+          "originalRows": 7,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "user_roles": {
+          "originalRows": 7,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "categories": {
+          "originalRows": 57,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "topics": {
+          "originalRows": 152,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "posts": {
+          "originalRows": 166,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "sys_accounts": {
+          "originalRows": 0,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "sys_transactions": {
+          "originalRows": 0,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "shop_items": {
+          "originalRows": 1,
+          "migrationIdentical": true,
+          "livePreserved": true
+        }
+      }
+    },
+    {
+      "forum": "forum_b",
+      "clone": "pbn_phase23_before_b_mvismb1a",
+      "checks": {
+        "users": {
+          "originalRows": 41,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "user_roles": {
+          "originalRows": 41,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "categories": {
+          "originalRows": 1,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "topics": {
+          "originalRows": 71,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "posts": {
+          "originalRows": 96,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "sys_accounts": {
+          "originalRows": 6,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "sys_transactions": {
+          "originalRows": 6,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "shop_items": {
+          "originalRows": 1,
+          "migrationIdentical": true,
+          "livePreserved": true
+        }
+      }
+    }
+  ],
+  "authenticationActivityExcluded": [
+    "last_seen_at",
+    "last_login_ip",
+    "updated_at"
+  ],
+  "readCountersExcluded": [
+    "topics.view_count"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "status": "PASS",
+  "appAndScriptIndexSha256": "4c01d9882f7966d85abf4948b0dc88bd11b5e64d8b40b054abed166eb6f7b00d",
+  "checks": [
+    {
+      "command": "node scripts/forum.mjs build forums/forum-a.json",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/forum.mjs build forums/forum-b.json",
+      "exitCode": 0
+    },
+    {
+      "command": "pnpm lint",
+      "exitCode": 0,
+      "existingWarnings": 11
+    },
+    {
+      "command": "pnpm i18n:check",
+      "exitCode": 0,
+      "webKeysPerLocale": 2600,
+      "backendTemplatesPerLocale": 730
+    },
+    {
+      "command": "git diff --cached --check",
+      "exitCode": 0
+    }
+  ],
+  "notes": [
+    "Final builds include the manual-pin UI fix and canonical Credit/reward display",
+    "Builds are verification only; local development services remain running",
+    "Known dynamic robots/sitemap diagnostics end in successful dynamic-route builds"
+  ]
+}

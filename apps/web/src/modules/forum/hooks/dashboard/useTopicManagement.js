@@ -61,21 +61,15 @@ export function useTopicManagement() {
   // ===== 置顶 =====
   const handleTogglePin = useCallback(async (topicId, isPinned) => {
     try {
-      await topicApi.update(topicId, {
-        isPinned: !isPinned
-      });
+      await topicApi.update(topicId, {isPinned:!isPinned});
+      const fresh=await topicApi.getById(topicId);
       toast.success(isPinned ? pbnT("m2391") : pbnT("m2392"));
-      if (filters.statusFilter === 'pinned' && isPinned) {
-        removeItem(topicId);
-      } else {
-        updateItem(topicId, {
-          isPinned: !isPinned
-        });
-      }
-    } catch (err) {
+      if(filters.statusFilter==='pinned'&&!fresh.isPinned)removeItem(topicId);
+      else updateItem(topicId,fresh);
+    } catch(err) {
       toast.error(err.message || pbnT("m568"));
     }
-  }, [filters, removeItem, updateItem]);
+  },[filters,removeItem,updateItem]);
 
   // ===== 关闭/开启 =====
   const handleToggleClosed = useCallback(async (topicId, isClosed) => {

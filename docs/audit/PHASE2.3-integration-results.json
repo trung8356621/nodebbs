@@ -1,0 +1,58 @@
+{
+  "status": "PASS",
+  "database": "pbn_phase23_test_mviswlxx_fresh",
+  "checks": [
+    {
+      "name": "Two purchases compete for 15 Credit: one 10-Credit purchase succeeds, one fails, 5 remain",
+      "status": "PASS"
+    },
+    {
+      "name": "20 concurrent distinct purchases: exactly 5 affordable charges, balance 5, no overspend or lost update",
+      "status": "PASS"
+    },
+    {
+      "name": "Concurrent internal fixture grants and purchases conserve Credit exactly without lost updates",
+      "status": "PASS"
+    },
+    {
+      "name": "20 concurrent duplicate keys return one committed purchase; conflicting topic payload is 409",
+      "status": "PASS"
+    },
+    {
+      "name": "Stale price confirmation is rejected without charging",
+      "status": "PASS"
+    },
+    {
+      "name": "Moderator pin flag and paid entitlement remain independent; a moderator pin alone never grants editorial links",
+      "status": "PASS"
+    },
+    {
+      "name": "Renewal extends the existing end exactly; ordinary content edit is free and preserves terms",
+      "status": "PASS"
+    },
+    {
+      "name": "Injected event persistence failure rolls back wallet debit, transaction and entitlement together",
+      "status": "PASS"
+    },
+    {
+      "name": "Ownership, pending moderation and global policy blocks deny purchase without charging",
+      "status": "PASS"
+    },
+    {
+      "name": "Editorial review is explicit, edits revoke it, and paid history or advertising cannot be laundered",
+      "status": "PASS"
+    },
+    {
+      "name": "Cancellation has no refund; original history immutable; technical correction creates one linked compensating entry",
+      "status": "PASS"
+    },
+    {
+      "name": "Past-due active row has no ranking/link privilege before worker; expired renewal starts now; concurrent workers record expiration once",
+      "status": "PASS"
+    },
+    {
+      "name": "Existing Shop purchase and gift writers compete safely with paid-pin purchases for the same wallet",
+      "status": "PASS"
+    }
+  ]
+}

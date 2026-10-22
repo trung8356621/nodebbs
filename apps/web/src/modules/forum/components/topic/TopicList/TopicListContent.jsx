@@ -1,4 +1,7 @@
+'use client';
+
 import { usePbnTranslations } from "@/i18n/useTranslations";
+import {usePaidPinExpired} from '@/hooks/usePaidPinExpired';
 import Link from '@/components/common/Link';
 import { Fragment } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +33,8 @@ export function TopicItem({
 }) {
   const pbnT = usePbnTranslations();
   const categoryName = topic.categoryName || topic.category?.name || pbnT("m77");
-  const isPinned = topic.isPinned;
+  const expired=usePaidPinExpired(topic);
+  const isPinned = topic.adminPinned || (topic.isPinned && !expired);
   const replyCount = Math.max((topic.postCount || 1) - 1, 0);
   const viewCount = topic.viewCount || 0;
   return <div className={`p-3 sm:p-5 group relative transition-colors ${isPinned ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-accent/50'}`} style={{

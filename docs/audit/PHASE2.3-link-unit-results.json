@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "checks": [
+    "Exact external HTTP(S) tokens for normal, paid, sponsored and independently reviewed editorial; mixed-case and protocol-relative URLs",
+    "Relative, fragment and exact-origin internal links remain separate; different scheme or port is external; no invented dofollow token"
+  ]
+}

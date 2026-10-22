@@ -22,7 +22,7 @@ function equalKeys(a, b, label) {
   }
 }
 equalKeys(en, vi, 'web');
-const placeholders = (value) => [...value.matchAll(/\{(arg\d+)\}/g)].map((m) => m[1]).sort().join(',');
+const placeholders = (value) => [...value.matchAll(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g)].map((m) => m[1]).sort().join(',');
 for (const key of keys) {
   for (const [locale, value] of [['en-US', en[key]], ['vi-VN', vi[key]]]) {
     if (typeof value !== 'string' || !value.trim()) { errors.push(`${locale}: empty ${key}`); continue; }
@@ -32,7 +32,10 @@ for (const key of keys) {
 }
 for (const [locale, messages] of [['en-US', english], ['vi-VN', vietnamese]]) {
   const t = createTranslator({ locale, messages, onError: (error) => errors.push(`${locale}: ${error.message}`) });
-  for (const key of keys) t(key, Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`arg${i}`, String(i)])));
+  for (const key of keys) {
+    const params=[...messages[key.split('.')[0]][key.split('.')[1]].matchAll(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g)].map(m=>[m[1],'1']);
+    t(key,Object.fromEntries(params));
+  }
 }
 function files(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => entry.isDirectory()

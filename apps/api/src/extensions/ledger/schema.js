@@ -8,7 +8,9 @@ import {
   index,
   unique,
   bigint,
+  check,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { relations } from 'drizzle-orm';
 import { users } from '../../db/schema.js';
 import { $defaults } from '../../db/columns.js';
@@ -55,6 +57,7 @@ export const sysAccounts = pgTable(
   },
   (table) => [
     unique().on(table.userId, table.currencyCode),
+    check('sys_accounts_balance_safe',sql`${table.balance} >= 0 AND ${table.balance} <= 9007199254740991`),
     index('sys_accounts_user_idx').on(table.userId),
     index('sys_accounts_currency_idx').on(table.currencyCode),
   ]

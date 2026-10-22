@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "checks": [
+    "Topic sidebar toggles manual pin independently of active paid placement",
+    "Dashboard action label and row refresh reflect manual pin on/off without losing paid placement",
+    "Manual pin never changes paid-link classification or purchased end"
+  ]
+}

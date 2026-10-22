@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "database": "pbn_phase23_test_mviswlxx_fresh",
+  "rehearsal": "pbn_phase23_test_mviswlxx",
+  "versions": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "catalog": {
+    "columns": {
+      "count": 656,
+      "sha256": "97828316c0c07eedb7642732855d641a2ba5d89bcc11edd443e5eaf7ce07c0eb"
+    },
+    "constraints": {
+      "count": 200,
+      "sha256": "5603a11b88aaa2adc6e3d630b07e642c45875f7c0d3016e152aed23a47053d3c"
+    },
+    "indexes": {
+      "count": 293,
+      "sha256": "da34aa6e9c06de12c6c0bc2e3104f447c4e22661802554aae66e60c5fa78e2c1"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import PaidPinPanel from '@/modules/forum/components/topic/PaidPinPanel';
 import TopicAlerts from '@/modules/forum/components/topic/TopicDetail/TopicAlerts';
 import TopicHeader from '@/modules/forum/components/topic/TopicDetail/TopicHeader';
 import TopicMetaLine from '@/modules/forum/components/topic/TopicDetail/TopicMetaLine';
@@ -28,13 +29,14 @@ export default function TopicContent() {
         <TopicMetaLine />
       </div>
 
+      <PaidPinPanel />
       {/* 话题内容 - 首帖 */}
       <div
         className='content-card mb-6'
         data-post-number='1'
       >
         <div className='px-3 sm:px-6 py-4 sm:py-5'>
-          <TopicBody content={topic.content} />
+          <TopicBody content={topic.content} topic={topic} />
           <div className='pt-4 mt-4 border-t border-border/50'>
             <FirstPostActions />
           </div>

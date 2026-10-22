@@ -3,6 +3,7 @@
 import { usePbnTranslations } from "@/i18n/useTranslations";
 import { MessageSquare, Eye, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import MarkdownRender from '@/components/common/MarkdownRender';
 import Link from '@/components/common/Link';
 import Time from '@/components/common/Time';
 import { Loading } from '@/components/common/Loading';
@@ -133,9 +134,7 @@ function PostItem({
             </Link>
           </div>}
         <div className='prose prose-sm dark:prose-invert max-w-none mb-3'>
-          <div className='line-clamp-3 text-sm' dangerouslySetInnerHTML={{
-          __html: post.content
-        }} />
+          <div className='line-clamp-3 text-sm'><MarkdownRender content={post.content} /></div>
         </div>
         <div className='flex flex-wrap items-center gap-3 text-xs text-muted-foreground'>
           <span className='flex items-center gap-1'><Clock className='h-3 w-3' /><Time date={post.createdAt} fromNow /></span>

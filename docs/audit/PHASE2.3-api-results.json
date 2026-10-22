@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "forum_a real API purchase/retry/conflict, own-only debit, free edits, listing, no-store, editorial permission and paid-history ban, policy enforcement",
+      "status": "PASS"
+    },
+    {
+      "name": "forum_b real API purchase/retry/conflict, own-only debit, free edits, listing, no-store, editorial permission and paid-history ban, policy enforcement",
+      "status": "PASS"
+    }
+  ],
+  "forums": {
+    "forum_a": {
+      "topic": 154,
+      "reply": 170,
+      "editorialTopic": 156,
+      "plan": 5,
+      "user": 9
+    },
+    "forum_b": {
+      "topic": 72,
+      "reply": 99,
+      "editorialTopic": 74,
+      "plan": 4,
+      "user": 46
+    }
+  }
+}

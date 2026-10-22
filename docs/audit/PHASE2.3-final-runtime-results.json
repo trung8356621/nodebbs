@@ -1,0 +1,71 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "forum": "forum_a",
+      "status": "PASS",
+      "retiredTestPlans": 0,
+      "versions": [
+        {
+          "version": 1,
+          "checksum": "9efcd5dbdc2427e0c8cb5512e93349a6921f31871d689df7af55a8959b665c97"
+        },
+        {
+          "version": 2,
+          "checksum": "6f5ca235df1aaa8e41c10c1854f1166f576d5b97538377d0288d8cfe91a67ba8"
+        },
+        {
+          "version": 3,
+          "checksum": "0fd3f8bf9e8df8b08f3524e088753655f52a3ebdd5f9421bddd0d3998e24f727"
+        },
+        {
+          "version": 4,
+          "checksum": "ef0cb0a4cc4740fd90a1e37d2bced1647254ea2331953d45f843411be62d83a1"
+        }
+      ],
+      "balances": {
+        "accounts": 3,
+        "negative": 0
+      },
+      "transactions": {
+        "purchases": 14
+      },
+      "orphanedOrMismatchedCharges": 0
+    },
+    {
+      "forum": "forum_b",
+      "status": "PASS",
+      "retiredTestPlans": 0,
+      "versions": [
+        {
+          "version": 1,
+          "checksum": "9efcd5dbdc2427e0c8cb5512e93349a6921f31871d689df7af55a8959b665c97"
+        },
+        {
+          "version": 2,
+          "checksum": "6f5ca235df1aaa8e41c10c1854f1166f576d5b97538377d0288d8cfe91a67ba8"
+        },
+        {
+          "version": 3,
+          "checksum": "0fd3f8bf9e8df8b08f3524e088753655f52a3ebdd5f9421bddd0d3998e24f727"
+        },
+        {
+          "version": 4,
+          "checksum": "ef0cb0a4cc4740fd90a1e37d2bced1647254ea2331953d45f843411be62d83a1"
+        }
+      ],
+      "balances": {
+        "accounts": 8,
+        "negative": 0
+      },
+      "transactions": {
+        "purchases": 19
+      },
+      "orphanedOrMismatchedCharges": 0
+    }
+  ],
+  "notes": [
+    "Temporary test plans disabled through authorized Admin API; purchase/audit history retained",
+    "Original ports/databases, normal expiration worker intervals, Credit enabled and homepages operational"
+  ]
+}

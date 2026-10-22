@@ -118,7 +118,7 @@ Browser smoke requires running local services and local smoke account access, as
 
 ## Current status and roadmap
 
-Core forum flows run locally: registration/sign-in, categories/topics, topic creation, replies, admin statistics and manual pin/unpin. Native services, Web SSR and API proxy were verified. Phase 1.5 adds bilingual interface text, response messages, repository hygiene and project documentation; review is pending. Phase 2.1B verifies independent per-forum processes/databases/auth/cache/media and a portable B restore. Phase 2.2 verifies local/global outbound policy, moderation, signed synchronization, resumable scanning and migration adoption. Wallet concurrency/idempotency and paid pin expiry remain outside this phase.
+Core forum flows run locally: registration/sign-in, categories/topics, topic creation, replies, admin statistics and manual pin/unpin. Native services, Web SSR and API proxy were verified. Phase 1.5 adds bilingual interface text, response messages, repository hygiene and project documentation; review is pending. Phase 2.1B verifies independent per-forum processes/databases/auth/cache/media and a portable B restore. Phase 2.2 verifies local/global outbound policy, moderation, signed synchronization, resumable scanning and migration adoption. Phase 2.3 adds atomic Credit purchases, paid-pin renewal/expiration and classified outbound links.
 
 | Phase | Status |
 | --- | --- |
@@ -126,7 +126,7 @@ Core forum flows run locally: registration/sign-in, categories/topics, topic cre
 | Phase 1.5: i18n / Git / README | In progress — implemented, awaiting review |
 | Phase 2.1B: Separate-process multi-forum foundation and portable DB | Implemented and tested locally |
 | Phase 2.2: Policy engine and migration hardening | Implemented and verified locally; see the audit report |
-| Phase 3: Wallet / Paid Pin | Planned; not started |
+| Phase 2.3: Wallet / Paid Pin / expiring SEO policy | Implemented and verified locally; see audit report |
 | Phase 4: Banner Management | Planned |
 | SEO-OPS integration | Deferred |
 
@@ -141,3 +141,25 @@ Policy checks run in the forum API, with no per-post Central Server call. Config
 Verification-required redirects remain pending until explicit review; no live redirect scanning is claimed. Script/HTML ads stay inactive until converted to an inspectable image; active HTML pages stay drafted until converted to Markdown/text. Active HTML/SVG/XML/script uploads cannot bypass Admin wildcard permissions; raster uploads and existing download-only attachments remain supported. Existing active media is preserved with safe download headers.
 
 Publishing/content/credit/queue writes share a transaction; domain events run after commit. Policy locking uses a bounded extra two-connection pool per forum beside the existing maximum-five application pool. See [Phase 2.2 implementation, configuration, tests and production limits](docs/audit/PHASE2.2-POLICY-ENGINE.md).
+
+## Credit and paid topic pins — Phase 2.3
+
+Topic owners purchase or renew paid placement from their topic page. The payment dialog shows the price and duration and states that cancellation and calendar expiration do not refund Credit. Edits remain free. Plans reuse Shop products; balances and transaction history reuse `/profile/wallet`. Existing moderator pins remain separate.
+
+Manage plans, purchases, expiration events, independent editorial review and privileged technical corrections at `/dashboard/pins`. Plan management requires `dashboard.shop`; compensating corrections require `dashboard.ledger`; editorial review requires `editorial.classify`, which is excluded from the default user role. Corrections require a reason and append a new linked ledger entry.
+
+After taking a backup, apply the additive migrations to each selected native forum and restart it:
+
+```powershell
+node scripts/forum.mjs migrate forums/forum-a.json
+node scripts/forum.mjs migrate forums/forum-b.json
+node scripts/forum-pins.mjs reconcile forums/forum-a.json
+```
+
+The reconciler processes at most 50 due purchases per run, every 60 seconds by default (`PBN_PIN_EXPIRE_INTERVAL_MS`, restart required). The Admin button and operator command use the same bounded, multi-worker-safe implementation. Database timestamps determine placement and link policy on fresh reads, independently of worker progress. API and SSR reads do not retain time-dependent content responses; open pages downgrade at the expiration deadline without polling.
+
+External topic links are ordinary `ugc nofollow`, active-paid `ugc sponsored`, or explicitly reviewed independent editorial links with security tokens only. Paid history and advertising cannot obtain the editorial exception; replies keep their own UGC policy. Existing raw HTML remains escaped in topic Markdown. Existing image advertisement links always retain sponsored classification. No authored URLs or stored Markdown are rewritten.
+
+Both development forums have their existing `credits` currency enabled. Existing reward settings remain unchanged; enabling Credit also enables those configured existing rewards. Test funding and charges are confined to dedicated fixture accounts. Temporary test plans are disabled after verification. No external deposits, payment gateway, withdrawals, ordinary refund flow or production deployment is included.
+
+See [the Phase 2.3 report](docs/audit/PHASE2.3-WALLET-PAID-PIN.md) for database/concurrency tests, browser evidence, migration/restore results, tested URLs and limits. Do not run the live fixture scripts against a production forum.

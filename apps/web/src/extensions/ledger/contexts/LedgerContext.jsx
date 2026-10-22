@@ -19,8 +19,8 @@ export function LedgerProvider({ children, activeCurrencies = [] }) {
       isRewardsEnabled: !!defaultCurrency,
       isWalletEnabled: !!defaultCurrency,
       isShopEnabled: !!defaultCurrency,
-      currencies: activeCurrencies,
-      defaultCurrency: defaultCurrency || null,
+      currencies: activeCurrencies.map(c=>c.code===DEFAULT_CURRENCY_CODE?{...c,name:'Credit'}:c),
+      defaultCurrency: defaultCurrency ? {...defaultCurrency,name:'Credit'} : null,
       loading: false,
     };
   }, [activeCurrencies]);

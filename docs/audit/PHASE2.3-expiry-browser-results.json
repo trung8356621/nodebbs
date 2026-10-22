@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "topic": 72,
+  "entitlement": "125b8bd0-6f34-4b1f-96f5-caccb94d3f4c",
+  "endsAt": "2026-10-22T00:34:40.618Z",
+  "checks": [
+    "Active paid rel is present in actual server HTML with JavaScript disabled",
+    "Open browser downgrades to ugc nofollow at calendar expiration while row remains active and worker is stalled",
+    "Fresh API and pinned ranking disregard the past-due active row without reconciliation",
+    "Fresh no-JavaScript SSR reverts immediately to UGC after expiration"
+  ]
+}

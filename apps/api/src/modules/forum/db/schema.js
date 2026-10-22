@@ -575,3 +575,5 @@ export const attachmentPurchasesRelations = relations(attachmentPurchases, ({ on
   }),
   user: one(users, { fields: [attachmentPurchases.userId], references: [users.id] }),
 }));
+
+export * from './pin-schema.js';

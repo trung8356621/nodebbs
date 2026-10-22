@@ -58,8 +58,8 @@ export default function TopicActions() {
             {canEdit && <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
                 <Edit className='h-4 w-4' />{pbnT("m105")}</DropdownMenuItem>}
             {canPin && <DropdownMenuItem onClick={togglePinTopic}>
-                <Pin className={`h-4 w-4 ${topic.isPinned ? 'fill-current' : ''}`} />
-                {topic.isPinned ? pbnT("m106") : pbnT("m107")}
+                <Pin className={`h-4 w-4 ${topic.adminPinned ? 'fill-current' : ''}`} />
+                {topic.adminPinned ? pbnT("m106") : pbnT("m107")}
               </DropdownMenuItem>}
             {canClose && <DropdownMenuItem onClick={toggleTopicStatus}>
                 <Lock className='h-4 w-4' />

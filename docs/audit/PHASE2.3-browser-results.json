@@ -1,0 +1,53 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "forum": "forum_a",
+      "locale": "vi-VN",
+      "status": "PASS",
+      "checks": "Owner balance/plans/confirm/purchase/renew/cancel/history; reply UGC; internal links; raw HTML escaped; no-JS SSR; editorial rel; no page errors"
+    },
+    {
+      "forum": "forum_a",
+      "locale": "vi-VN",
+      "status": "PASS",
+      "checks": "Localized admin plans, purchases, audit events and real expiration reconciliation"
+    },
+    {
+      "forum": "forum_a",
+      "locale": "en-US",
+      "status": "PASS",
+      "checks": "Owner balance/plans/confirm/purchase/renew/cancel/history; reply UGC; internal links; raw HTML escaped; no-JS SSR; editorial rel; no page errors"
+    },
+    {
+      "forum": "forum_a",
+      "locale": "en-US",
+      "status": "PASS",
+      "checks": "Localized admin plans, purchases, audit events and real expiration reconciliation"
+    },
+    {
+      "forum": "forum_b",
+      "locale": "vi-VN",
+      "status": "PASS",
+      "checks": "Owner balance/plans/confirm/purchase/renew/cancel/history; reply UGC; internal links; raw HTML escaped; no-JS SSR; editorial rel; no page errors"
+    },
+    {
+      "forum": "forum_b",
+      "locale": "vi-VN",
+      "status": "PASS",
+      "checks": "Localized admin plans, purchases, audit events and real expiration reconciliation"
+    },
+    {
+      "forum": "forum_b",
+      "locale": "en-US",
+      "status": "PASS",
+      "checks": "Owner balance/plans/confirm/purchase/renew/cancel/history; reply UGC; internal links; raw HTML escaped; no-JS SSR; editorial rel; no page errors"
+    },
+    {
+      "forum": "forum_b",
+      "locale": "en-US",
+      "status": "PASS",
+      "checks": "Localized admin plans, purchases, audit events and real expiration reconciliation"
+    }
+  ]
+}

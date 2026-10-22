@@ -42,7 +42,7 @@ export async function getShopItems(options = {}) {
   try {
     let query = db.select().from(shopItems);
 
-    const conditions = [];
+    const conditions = [ne(shopItems.type,'topic_pin')];
     if (!includeInactive) {
       conditions.push(eq(shopItems.isActive, true));
     }
@@ -198,13 +198,15 @@ export async function buyItem(userId, itemId, quantity = 1) {
       }
 
       // 3. 检查用户积分余额 (Ledger: sys_accounts)
+      if(item.type==='topic_pin') throw new Error('Use the topic paid-pin purchase action');
       const currencyCode = item.currencyCode;
       
+      await tx.insert(sysAccounts).values({userId,currencyCode,balance:0,totalEarned:0,totalSpent:0}).onConflictDoNothing();
       let [account] = await tx
         .select()
         .from(sysAccounts)
         .where(and(eq(sysAccounts.userId, userId), eq(sysAccounts.currencyCode, currencyCode)))
-        .limit(1);
+        .limit(1).for('update');
 
       if (!account) {
          [account] = await tx.insert(sysAccounts).values({
@@ -220,13 +222,15 @@ export async function buyItem(userId, itemId, quantity = 1) {
 
       const totalPrice = item.price * quantity;
 
-      if (account.balance < totalPrice) {
+      if(account.isFrozen) throw new Error('Account is frozen');
+      if (!Number.isSafeInteger(totalPrice) || totalPrice<0 || account.balance < totalPrice) {
         throw new Error(`余额不足，需要 ${totalPrice} ${currencySymbol}`);
       }
 
       // 4. 扣除积分
       const newBalance = Number(account.balance) - totalPrice;
       const newTotalSpent = Number(account.totalSpent) + totalPrice;
+      if(!Number.isSafeInteger(newTotalSpent))throw new Error('Credit arithmetic exceeds the supported range');
 
       await tx
         .update(sysAccounts)
@@ -659,13 +663,15 @@ export async function giftItem(senderId, receiverId, itemId, message, quantity =
       if (!receiver) throw new Error('接收用户不存在');
 
       // 2. 检查发送者余额
+      if(item.type==='topic_pin') throw new Error('Use the topic paid-pin purchase action');
       const currencyCode = item.currencyCode;
       
+      await tx.insert(sysAccounts).values({userId:senderId,currencyCode,balance:0,totalEarned:0,totalSpent:0}).onConflictDoNothing();
       let [senderAccount] = await tx
          .select()
          .from(sysAccounts)
          .where(and(eq(sysAccounts.userId, senderId), eq(sysAccounts.currencyCode, currencyCode)))
-         .limit(1);
+         .limit(1).for('update');
 
       if (!senderAccount) {
         [senderAccount] = await tx
@@ -678,7 +684,8 @@ export async function giftItem(senderId, receiverId, itemId, message, quantity =
 
       const totalPrice = item.price * quantity;
 
-      if (senderAccount.balance < totalPrice) {
+      if(senderAccount.isFrozen) throw new Error('Account is frozen');
+      if (!Number.isSafeInteger(totalPrice) || totalPrice<0 || senderAccount.balance < totalPrice) {
         throw new Error(`余额不足，需要 ${totalPrice} ${currencySymbol}`);
       }
 
@@ -724,6 +731,7 @@ export async function giftItem(senderId, receiverId, itemId, message, quantity =
       // 4. 扣除发送者积分
       const newBalance = Number(senderAccount.balance) - totalPrice;
       const newTotalSpent = Number(senderAccount.totalSpent) + totalPrice;
+      if(!Number.isSafeInteger(newTotalSpent))throw new Error('Credit arithmetic exceeds the supported range');
       
       await tx
         .update(sysAccounts)

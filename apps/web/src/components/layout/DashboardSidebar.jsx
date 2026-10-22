@@ -27,6 +27,7 @@ export default function DashboardSidebar() {
     }));
   };
   const navItems = [
+  {href: '/dashboard/pins', icon: ShoppingCart, label: pbnT('pinAdmin'), permission: 'dashboard.shop'},
   // 概览 - 独立项
   {
     href: '/dashboard',

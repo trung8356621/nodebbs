@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "checks": [
+    "Browser creates, edits, orders and disables a real Shop-backed pin plan",
+    "Browser privileged editorial classification requires and persists an explicit reason",
+    "Browser privileged technical correction appends a compensating Credit entry and preserves original purchase",
+    "Reused wallet balance and paid-pin transaction labels render in English and Vietnamese"
+  ]
+}

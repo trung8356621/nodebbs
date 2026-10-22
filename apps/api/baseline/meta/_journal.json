@@ -15,6 +15,13 @@
       "when": 1792604575045,
       "tag": "0001_keen_bulldozer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792627227036,
+      "tag": "0002_right_malice",
+      "breakpoints": true
     }
   ]
 }

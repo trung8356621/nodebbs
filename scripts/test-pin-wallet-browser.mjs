@@ -1,0 +1,5 @@
+import assert from 'node:assert/strict';
+import {chromium} from '@playwright/test';
+import {readJson} from './forum.mjs';
+const f=readJson('.local/phase23/live-fixtures.json').forum_b,browser=await chromium.launch({headless:true});
+try{for(const locale of ['vi-VN','en-US']){const context=await browser.newContext({viewport:{width:1440,height:1000}});await context.addCookies([{name:'pbn_forum_b_auth',value:f.token,domain:'127.0.0.1',path:'/'},{name:'pbn_forum_b_locale',value:locale,domain:'127.0.0.1',path:'/'}]);const page=await context.newPage();await page.goto('http://127.0.0.1:3200/profile/wallet',{waitUntil:'networkidle',timeout:120000});await page.getByText('Credit',{exact:true}).first().waitFor();const text=await page.locator('body').innerText();if(/\p{Script=Han}/u.test(text))console.log(text.split('\n').filter(s=>/\p{Script=Han}/u.test(s)));assert(!/\p{Script=Han}/u.test(text));await page.screenshot({path:`docs/audit/screenshots/phase23/forum_b-${locale}-wallet.png`});await context.close();}console.log('PASS canonical Credit name and bilingual wallet UI have no legacy Chinese display labels');}finally{await browser.close();}

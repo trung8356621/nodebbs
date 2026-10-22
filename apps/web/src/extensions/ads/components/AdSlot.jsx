@@ -1,5 +1,6 @@
 'use client';
 
+import {contentLinkRel} from '@/lib/content-link-policy';
 import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useEffect, useRef } from 'react';
 import { useAds } from '../contexts/AdsContext';
@@ -38,7 +39,7 @@ function AdItem({
   let content = null;
   switch (ad.type) {
     case 'image':
-      content = <a href={ad.linkUrl || '#'} target={ad.targetBlank ? '_blank' : '_self'} rel={ad.targetBlank ? 'noopener noreferrer' : undefined} onClick={handleClick} className="block">
+      content = <a href={ad.linkUrl || '#'} target={ad.targetBlank ? '_blank' : '_self'} rel={contentLinkRel(ad.linkUrl || '#',{policy:'sponsored'})} onClick={handleClick} className="block">
           <img src={ad.content} alt={ad.title} loading="lazy" decoding="async" className={cn('block mx-auto w-full h-auto', isBanner ? 'object-cover' : 'object-contain')} style={{
           ...(isBanner ? {
             maxHeight: `${slot.height}px`

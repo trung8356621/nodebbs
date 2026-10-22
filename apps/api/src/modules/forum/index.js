@@ -1,4 +1,5 @@
 import fp from 'fastify-plugin';
+import { PinService } from './services/pinService.js';
 import path from 'node:path';
 import AutoLoad from '@fastify/autoload';
 import { sql } from 'drizzle-orm';
@@ -27,6 +28,12 @@ const __dirname = dirname(import.meta.url);
  *    依赖反转：core 不再 import 任何论坛服务。
  */
 async function forumModule(fastify, opts) {
+  const pins=new PinService(fastify);fastify.decorate('pins',pins);
+  fastify.cleanup.registerTask('paid-pin-expiration',()=>pins.expire());
+  let busy=false;
+  const timer=setInterval(async()=>{if(busy)return;busy=true;try{const expired=await pins.expire();if(expired)fastify.log.info({expired},'Paid pins reconciled');}catch(error){fastify.log.error(error,'Paid pin reconciliation failed');}finally{busy=false;}},Math.max(1000,Number(process.env.PBN_PIN_EXPIRE_INTERVAL_MS)||60000));timer.unref();
+  fastify.addHook('onClose',async()=>clearInterval(timer));
+  fastify.addHook('onSend',async(request,reply,payload)=>{if(/^\/api\/(topics|posts|search|pins)(\/|$)/.test(request.url.split('?')[0]))reply.header('Cache-Control','private, no-store, max-age=0');return payload;});
   // 论坛清理任务自注册到核心调度器
   if (fastify.cleanup) {
     fastify.cleanup.registerTask('expired-draft-polls', () => cleanupExpiredDraftPolls());
@@ -85,5 +92,5 @@ async function forumModule(fastify, opts) {
 export default fp(forumModule, {
   name: 'forum-module',
   // cleanup / rbac 提供注册 API；db/认证/权限/账本/存储由 plugins+extensions 先行注册
-  dependencies: ['db', 'cleanup', 'rbac'],
+  dependencies: ['db', 'cleanup', 'rbac', 'policy', 'ledger'],
 });

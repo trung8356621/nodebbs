@@ -2,6 +2,7 @@ import { usePbnTranslations } from "@/i18n/useTranslations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/common/DataTable';
 import { Loading } from '@/components/common/Loading';
+import {getTransactionTypeLabel} from '../../utils/transactionTypes';
 import { TransactionTypeBadge } from './TransactionTypeBadge';
 import Time from '@/components/common/Time';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -50,7 +51,7 @@ export function LedgerTransactionTable({
     label: pbnT("m1863"),
     key: 'currencyName',
     render: (value, row) => <span className="text-sm" title={row.currencyCode}>
-          {value || row.currencyCode}
+          {row.currencyCode==='credits'?'Credit':value || row.currencyCode}
         </span>
   }, {
     label: pbnT("m406"),
@@ -88,6 +89,12 @@ export function LedgerTransactionTable({
           console.error('Failed to parse metadata:', e);
         }
       }
+      if(['check_in','post_topic','post_reply'].includes(row.type)){
+        const title=row.type==='post_topic'?String(value||'').replace(/^[^:：]*[:：]\s*/,''):'';
+        return <span>{getTransactionTypeLabel(row.type,pbnT)}{title?' · '+title:''}</span>;
+      }
+      if(row.type==='pin_purchase')return <a href={`/topic/${meta?.topicId}`} title={row.referenceId} className='underline'>{pbnT('pinTitle')} · #{meta?.topicId}</a>;
+      if(row.type==='pin_correction')return <span>{pbnT('pinCorrect')}: {meta?.reason}</span>;
       const hasBonus = meta && meta.effectBonus > 0;
 
       // 检查特定交易类型
