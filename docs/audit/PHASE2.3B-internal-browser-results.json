@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "forum": "forum_a",
+      "locale": "en-US",
+      "status": "PASS",
+      "checks": "Actual Internal User zero-price activation of reserved owned topic; revocation and expired role immediately suppress fresh effect and checkout; regrant resumes unchanged remaining calendar; no new refund or rewritten term"
+    },
+    {
+      "forum": "forum_b",
+      "locale": "vi-VN",
+      "status": "PASS",
+      "checks": "Actual Internal User zero-price activation of reserved owned topic; revocation and expired role immediately suppress fresh effect and checkout; regrant resumes unchanged remaining calendar; no new refund or rewritten term"
+    }
+  ]
+}

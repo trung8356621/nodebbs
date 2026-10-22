@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "forum": "forum_a",
+      "status": "PASS",
+      "protectedTables": [
+        "users",
+        "user_roles",
+        "sys_accounts",
+        "sys_transactions",
+        "seo_purchases",
+        "seo_entitlements",
+        "seo_events",
+        "shop_items",
+        "user_items"
+      ],
+      "baselineVersion": 6
+    },
+    {
+      "forum": "forum_b",
+      "status": "PASS",
+      "protectedTables": [
+        "users",
+        "user_roles",
+        "sys_accounts",
+        "sys_transactions",
+        "seo_purchases",
+        "seo_entitlements",
+        "seo_events",
+        "shop_items",
+        "user_items"
+      ],
+      "baselineVersion": 6
+    }
+  ],
+  "guardedAutomaticCreditTypes": [
+    "check_in",
+    "post_topic",
+    "post_reply",
+    "receive_like",
+    "invite_user",
+    "register",
+    "registration",
+    "register_reward",
+    "badge_reward",
+    "achievement_reward"
+  ],
+  "adminImplicitOverride": false,
+  "comparisonExclusions": [
+    "last_seen_at",
+    "last_login_ip",
+    "updated_at"
+  ],
+  "note": "Original protected rows retained; new dedicated test accounts, additive role/permission and intended reward config changes excluded by original ID snapshots"
+}

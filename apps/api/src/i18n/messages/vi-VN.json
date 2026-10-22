@@ -739,5 +739,7 @@
   "seo_7": "Chỉ chủ chủ đề mới được ngừng quyền SEO",
   "seo_8": "Thay đổi điều kiện SEO cần có lý do cụ thể",
   "seo_9": "Mua ghim vị trí đã ngừng; vui lòng dùng gói SEO theo tháng",
-  "badge_commerce_unavailable": "Không còn mua vật phẩm trang trí. Hãy dùng huy hiệu để trang trí và chỉ mua gói SEO bằng Credit."
+  "badge_commerce_unavailable": "Không còn mua vật phẩm trang trí. Hãy dùng huy hiệu để trang trí và chỉ mua gói SEO bằng Credit.",
+  "credit_rewards_retired": "Tính năng thưởng Credit thương mại cho hoạt động đã ngừng.",
+  "seo_checkout_unavailable": "Chức năng kích hoạt SEO tạm thời không khả dụng. Vui lòng thử lại."
 }

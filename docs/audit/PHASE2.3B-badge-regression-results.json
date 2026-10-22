@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "forum": "forum_a",
+      "status": "PASS",
+      "checks": "Earned badge still equips and supplies avatar frame with reward UI disabled; VI/EN badge preview localized"
+    },
+    {
+      "forum": "forum_b",
+      "status": "PASS",
+      "checks": "Earned badge still equips and supplies avatar frame with reward UI disabled; VI/EN badge preview localized"
+    }
+  ]
+}

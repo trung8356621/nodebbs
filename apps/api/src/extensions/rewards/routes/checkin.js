@@ -1,6 +1,7 @@
 import { checkIn, getUserCheckInStatus } from '../services/rewardService.js';
 
 export default async function checkInRoutes(fastify, options) {
+  fastify.addHook('onRequest',async(request,reply)=>reply.code(410).send({error:'Commercial Credit engagement rewards are retired'}));
   // 每日签到
   fastify.post('/check-in', {
     preHandler: [fastify.authenticate],

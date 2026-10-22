@@ -257,7 +257,7 @@ export default async function registerRoute(fastify, options) {
           const usedInvitation = await markInvitationCodeAsUsed(invitationCode.trim(), newUser.id);
 
           if (usedInvitation && usedInvitation.createdBy) {
-            const isRewardsActive = await fastify.ledger.isCurrencyActive(DEFAULT_CURRENCY_CODE);
+            const isRewardsActive = false; // Commercial Credit invitation rewards are retired.
 
             if (isRewardsActive) {
               const inviteAmount = await fastify.ledger.getCurrencyConfig(DEFAULT_CURRENCY_CODE, 'invite_reward_amount', 50);

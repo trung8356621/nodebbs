@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "forum": "forum_a",
+      "status": "PASS",
+      "checks": "Registration/topic activity earns zero commercial Credit; check-in/tipping retired; operator funding works; free/no ledger and paid exact/idempotent checkout; contextual renewal/reserved/owner/insufficient/policy errors; existing RBAC grant/revoke/resume; no self assignment or cross-forum grants; historical SEO Wallet feed ownership; editorial commercial restriction"
+    },
+    {
+      "forum": "forum_b",
+      "status": "PASS",
+      "checks": "Registration/topic activity earns zero commercial Credit; check-in/tipping retired; operator funding works; free/no ledger and paid exact/idempotent checkout; contextual renewal/reserved/owner/insufficient/policy errors; existing RBAC grant/revoke/resume; no self assignment or cross-forum grants; historical SEO Wallet feed ownership; editorial commercial restriction"
+    }
+  ]
+}

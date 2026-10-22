@@ -49,7 +49,7 @@ export default function Badge({
   };
   const metadata = getMetadata();
   const effects = metadata.effects || {};
-  const hasEffects = Object.keys(effects).length > 0;
+  const hasEffects = false; // Commercial engagement effects are retired.
 
   // 尺寸映射
   const sizeMap = {

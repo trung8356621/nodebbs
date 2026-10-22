@@ -10,8 +10,8 @@ import { Wallet, Trophy, TrendingUp } from 'lucide-react';
 import Link from '@/components/common/Link';
 import { ledgerApi } from '../../api';
 import { DEFAULT_CURRENCY_CODE } from '../../constants';
-import { rewardsApi } from '@/lib/api';
-import { CheckInStatus } from '../../components/user/CheckInStatus';
+
+import SeoActivity from '../../components/user/SeoActivity';
 import { LedgerTransactionTable } from '../../components/common/LedgerTransactionTable';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,7 +22,6 @@ export default function UserWalletPage() {
   } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  const [checkInStatus, setCheckInStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const limit = 20;
@@ -35,21 +34,16 @@ export default function UserWalletPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [accountsData, txData, checkInResult] = await Promise.all([ledgerApi.getAccounts(), ledgerApi.getTransactions({
+      const [accountsData, txData] = await Promise.all([ledgerApi.getAccounts(), ledgerApi.getTransactions({
         page,
         limit,
         userId: user?.id
-      }), rewardsApi.getCheckInStatus().catch(() => null) // Fault tolerance for rewards status
+      })
       ]);
       setAccounts(accountsData);
       setTransactions(txData.items || []);
       setTotal(txData.total || 0);
-      if (checkInResult) {
-        setCheckInStatus({
-          checkInStreak: checkInResult.checkInStreak,
-          lastCheckInDate: checkInResult.lastCheckInDate
-        });
-      }
+
     } catch (err) {
       console.error('Failed to load wallet data:', err);
       toast.error(pbnT("m1894"));
@@ -80,39 +74,12 @@ export default function UserWalletPage() {
               <span className="p-2 rounded-lg bg-primary/10 text-primary">
                  <Wallet className="h-5 w-5" />
               </span>{pbnT("m1511")}</h1>
-            <p className="text-muted-foreground text-sm md:text-base max-w-lg">{pbnT("m1895")}</p>
+            <p className="text-muted-foreground text-sm md:text-base max-w-lg">{pbnT('seoWalletDescription')}</p>
           </div>
 
-          <div className="shrink-0">
-            <Link href="/rank">
-              <Button variant="outline" className="gap-2 bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-colors border-border/50 shadow-sm">
-                <Trophy className="h-4 w-4 text-yellow-500" />{pbnT("m1896")}</Button>
-            </Link>
-          </div>
+
         </div>
       </div>
-
-      {loading && !checkInStatus ? <Card className="shadow-none">
-          <CardHeader>
-            <div className="flex items-center gap-2 mb-1.5">
-              <Skeleton className="h-5 w-5 rounded-full" />
-              <Skeleton className="h-5 w-24" />
-            </div>
-            <Skeleton className="h-4 w-64" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col gap-2">
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-7 w-16" />
-              </div>
-              <div className="flex flex-col border-l pl-4 gap-2">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-4 w-24" />
-              </div>
-            </div>
-          </CardContent>
-        </Card> : checkInStatus && <CheckInStatus checkInStreak={checkInStatus.checkInStreak} lastCheckInDate={checkInStatus.lastCheckInDate} />}
 
       {/* Accounts Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -153,6 +120,8 @@ export default function UserWalletPage() {
                </CardContent>
             </Card>)}
       </div>
+
+      <SeoActivity />
 
       {/* Transactions */}
       <div className="space-y-4">

@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "forum": "forum_a",
+      "locale": "vi-VN",
+      "status": "PASS",
+      "checks": "Always visible responsive category CTA; global CTA retained; exact category preselected and actual publishing; restricted backend reason; guest auth guard; compact real free/paid SEO confirmation and exact balance; renewal-window message; Wallet free/paid history; standard reserved rejection; real expired quote rejection and successful explicit requote; no topic history table or fake ledger; no browser errors"
+    },
+    {
+      "forum": "forum_a",
+      "locale": "en-US",
+      "status": "PASS",
+      "checks": "Always visible responsive category CTA; global CTA retained; exact category preselected and actual publishing; restricted backend reason; guest auth guard; compact real free/paid SEO confirmation and exact balance; renewal-window message; Wallet free/paid history; standard reserved rejection; real expired quote rejection and successful explicit requote; no topic history table or fake ledger; no browser errors"
+    },
+    {
+      "forum": "forum_b",
+      "locale": "vi-VN",
+      "status": "PASS",
+      "checks": "Always visible responsive category CTA; global CTA retained; exact category preselected and actual publishing; restricted backend reason; guest auth guard; compact real free/paid SEO confirmation and exact balance; renewal-window message; Wallet free/paid history; standard reserved rejection; real expired quote rejection and successful explicit requote; no topic history table or fake ledger; no browser errors"
+    },
+    {
+      "forum": "forum_b",
+      "locale": "en-US",
+      "status": "PASS",
+      "checks": "Always visible responsive category CTA; global CTA retained; exact category preselected and actual publishing; restricted backend reason; guest auth guard; compact real free/paid SEO confirmation and exact balance; renewal-window message; Wallet free/paid history; standard reserved rejection; real expired quote rejection and successful explicit requote; no topic history table or fake ledger; no browser errors"
+    }
+  ],
+  "expiredQuoteFixture": "Created expired quote at insertion for a dedicated account; immutable quote not rewritten, real purchase API rejects, requote and confirmation use normal API"
+}

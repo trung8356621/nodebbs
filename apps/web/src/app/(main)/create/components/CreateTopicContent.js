@@ -2,7 +2,7 @@
 
 import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter,useSearchParams } from 'next/navigation';
 import { topicApi } from '@/lib/api';
 import { toast } from 'sonner';
 import TopicForm from '@/modules/forum/components/topic/TopicForm';
@@ -10,6 +10,8 @@ import RequireAuth from '@/components/auth/RequireAuth';
 export default function CreateTopicContent() {
   const pbnT = usePbnTranslations();
   const router = useRouter();
+  const params=useSearchParams();const categoryId=Number(params.get('categoryId'));
+  const initialData=Number.isSafeInteger(categoryId)&&categoryId>0?{categoryId}:{};
   const [submitting, setSubmitting] = useState(false);
   const handleSubmit = async formData => {
     setSubmitting(true);
@@ -45,7 +47,7 @@ export default function CreateTopicContent() {
           <p className='text-sm text-muted-foreground'>{pbnT("m53")}</p>
         </div>
 
-        <TopicForm onSubmit={handleSubmit} onCancel={handleCancel} isSubmitting={submitting} submitButtonText={pbnT("m54")} />
+        <TopicForm initialData={initialData} onSubmit={handleSubmit} onCancel={handleCancel} isSubmitting={submitting} submitButtonText={pbnT("m54")} />
       </div>
     </RequireAuth>;
 }

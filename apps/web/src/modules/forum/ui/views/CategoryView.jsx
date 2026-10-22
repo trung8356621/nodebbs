@@ -1,3 +1,4 @@
+import CategoryPostButton from '@/modules/forum/components/topic/CategoryPostButton';
 import { TopicList } from '@/modules/forum/components/topic/TopicList';
 import { TopicSortTabs } from '@/modules/forum/components/topic/TopicSortTabs';
 import SidebarLayout from '../layouts/SidebarLayout';
@@ -24,7 +25,7 @@ export default function CategoryView({ category, sort, data, page, totalPages, l
               <p className='text-sm text-muted-foreground mt-1'>{category.description}</p>
             )}
           </div>
-          <TopicSortTabs defaultValue={sort} className='w-auto' />
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center"><TopicSortTabs defaultValue={sort} className="w-auto"/><CategoryPostButton categoryId={category.id}/></div>
         </div>
 
         <TopicList

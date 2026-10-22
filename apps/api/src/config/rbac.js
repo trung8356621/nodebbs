@@ -17,6 +17,7 @@ import {
 
 // 权限模块选项
 export const MODULE_OPTIONS = [
+  {value:'seo',label:'SEO access'},
   { value: 'editorial', label: 'Editorial review' },
   { value: 'topic', label: '话题' },
   { value: 'post', label: '回复' },
@@ -196,6 +197,7 @@ export const CONDITION_TYPES = {
  * - 上传类：支持完整的上传限制条件
  */
 export const SYSTEM_PERMISSIONS = [
+  {slug:'seo.reserved_override',name:'Owned reserved-topic SEO access',module:'seo',action:'reserved_override',isSystem:true},
   { slug: 'editorial.classify', name: 'Independent editorial review', module: 'editorial', action: 'classify', isSystem: true },
   // ========== 话题权限 ==========
   {
@@ -607,6 +609,7 @@ export const PERMISSION_CONDITIONS = Object.fromEntries(
  * - guest: 访客，未登录用户
  */
 export const SYSTEM_ROLES = [
+  {slug:'internal_user',name:'Internal User',description:'Additional owned reserved-topic SEO access',isSystem:true,isDefault:false,isDisplayed:false,priority:5},
   {
     slug: 'admin',
     name: '管理员',
@@ -650,6 +653,7 @@ export const SYSTEM_ROLES = [
  * 特殊标记: ['*'] 表示拥有所有权限（用于 admin）
  */
 export const ROLE_PERMISSION_MAP = {
+  internal_user:['seo.reserved_override'],
   // 管理员：拥有所有权限
   admin: ['*'],
 
@@ -711,7 +715,7 @@ export const ALLOWED_ROLES_PERMISSIONS = {
     'system.stats',
   ],
   user: SYSTEM_PERMISSIONS
-    .filter(p => !p.slug.startsWith('dashboard.') && !['user.update', 'user.delete', 'editorial.classify'].includes(p.slug))
+    .filter(p => !p.slug.startsWith('dashboard.') && !['user.update', 'user.delete', 'editorial.classify','seo.reserved_override'].includes(p.slug))
     .map(p => p.slug),
 };
 

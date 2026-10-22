@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "database": "pbn_seo_test_mvj5h7ko_fresh",
+  "explicitGrant": [
+    {
+      "slug": "internal_user",
+      "permission": "seo.reserved_override"
+    }
+  ],
+  "check": "Existing fresh RBAC seeder creates internal role/capability; default and Admin roles do not receive it"
+}

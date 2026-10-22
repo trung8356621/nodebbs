@@ -134,7 +134,7 @@ export class RBACSeeder extends BaseSeeder {
 
       // 处理 ['*'] 特殊标记：展开为所有权限
       const actualPermSlugs = (permSlugs.length === 1 && permSlugs[0] === '*')
-        ? SYSTEM_PERMISSIONS.map(p => p.slug)
+        ? SYSTEM_PERMISSIONS.filter(p=>p.slug!=='seo.reserved_override').map(p => p.slug)
         : permSlugs;
 
       // --- 同步逻辑开始：清理废弃权限 ---

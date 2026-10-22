@@ -1,3 +1,4 @@
+function rejectRetiredCheckIn(){throw Object.assign(new Error('Commercial Credit engagement rewards are retired'),{statusCode:410});}
 import db from '../../../db/index.js';
 import {
   userCheckIns,
@@ -51,6 +52,7 @@ export async function getUserCheckInStatus(fastify, userId) {
  * 每日签到
  */
 export async function checkIn(fastify, userId) {
+  rejectRetiredCheckIn();
   const systemEnabled = await fastify.ledger.isCurrencyActive(DEFAULT_CURRENCY_CODE);
   if (!systemEnabled) throw new Error('奖励系统未启用');
 

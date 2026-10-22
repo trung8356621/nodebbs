@@ -1,0 +1,58 @@
+{
+  "status": "PASS",
+  "database": "pbn_seo_test_mvj5h7ko_fresh",
+  "checks": [
+    {
+      "name": "Signed price sync, replay rejection, invalid signatures, foreign target, downgrade/conflict and discount/missing/fractional validation",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed price invalidates the persisted quote without debit or entitlement",
+      "status": "PASS"
+    },
+    {
+      "name": "Zero-Credit activation is explicit, audited, 20-way idempotent, has no ledger entry, no placement, bounded renewal and owner-only access",
+      "status": "PASS"
+    },
+    {
+      "name": "Existing moderator pin flags alone control pin ordering, independently of active SEO",
+      "status": "PASS"
+    },
+    {
+      "name": "Free edits preserve terms; newly reserved topics immediately lose SEO effect while immutable history/calendar remain; commercial history cannot become editorial",
+      "status": "PASS"
+    },
+    {
+      "name": "20 concurrent real PostgreSQL purchases spend only 15 of 16 Credit; exact immutable paid/list/version snapshots and no overspend",
+      "status": "PASS"
+    },
+    {
+      "name": "Mid-transaction event failure rolls back debit/purchase/entitlement; mandatory policy BLOCK and moderation pending deny activation",
+      "status": "PASS"
+    },
+    {
+      "name": "Products, purchases and events are immutable; privileged correction appends one linked compensation",
+      "status": "PASS"
+    },
+    {
+      "name": "Vietnam calendar months clamp January 29–31 correctly, handle leap years and preserve local time across UTC midnight",
+      "status": "PASS"
+    },
+    {
+      "name": "Near-expiry monthly renewal extends exactly; expired renewal starts now; delayed/concurrent workers cannot preserve privileges; hiding/cancellation never refund",
+      "status": "PASS"
+    },
+    {
+      "name": "Authoritative interval changes without cron; crossing the scheduled boundary invalidates the old zero quote; Vietnam midnight maps to UTC exactly",
+      "status": "PASS"
+    },
+    {
+      "name": "Exact Vietnam 23:59:59 to 00:00:00 boundary selects zero then five Credit using the production database price selector",
+      "status": "PASS"
+    },
+    {
+      "name": "Disabled products and expired latest snapshots are unavailable, with no fallback to obsolete or invented pricing",
+      "status": "PASS"
+    }
+  ]
+}

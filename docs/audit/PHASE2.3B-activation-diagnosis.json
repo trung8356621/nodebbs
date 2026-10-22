@@ -1,0 +1,37 @@
+{
+  "status": "PASS",
+  "forum": "forum_a",
+  "evidence": [
+    {
+      "productId": "seo-monthly",
+      "topicId": 176,
+      "quoteStatus": 200,
+      "purchaseStatus": 200,
+      "repeatQuoteStatus": 409,
+      "repeatResponse": {
+        "statusCode": 409,
+        "error": "Conflict",
+        "message": "Chưa đến thời gian gia hạn được cho phép"
+      }
+    },
+    {
+      "productId": "seo-monthly-paid",
+      "topicId": 177,
+      "quoteStatus": 200,
+      "purchaseStatus": 200,
+      "repeatQuoteStatus": 409,
+      "repeatResponse": {
+        "statusCode": 409,
+        "error": "Conflict",
+        "message": "Chưa đến thời gian gia hạn được cho phép"
+      }
+    }
+  ],
+  "conclusion": "Fresh zero/paid activations tested against existing signed fixture. Repeating immediately after activation is intentionally rejected by the renewal window; original historical click has no correlation ID and cannot be attributed conclusively.",
+  "safeLogInspection": {
+    "forum": "forum_a",
+    "renewalRejectionLogMatches": 0,
+    "unexpectedSeoFailureLogMatches": 0,
+    "notes": "Inspected protected local backend log; only aggregate matches recorded, no headers, tokens or credentials. Expected client rejections may have no separate request log; captured HTTP responses identify the reproduced rejection."
+  }
+}

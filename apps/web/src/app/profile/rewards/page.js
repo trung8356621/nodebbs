@@ -1,1 +1,2 @@
-export { default } from '@/extensions/ledger/pages/user/UserWalletPage';
+import {redirect} from 'next/navigation';
+export default function LegacyRewardsPage(){redirect('/profile/wallet');}

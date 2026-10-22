@@ -739,5 +739,7 @@
   "seo_7": "Only the topic owner may cancel SEO activation",
   "seo_8": "SEO restriction requires an explicit reason",
   "seo_9": "Legacy placement checkout is retired; use monthly SEO packages",
-  "badge_commerce_unavailable": "Profile decoration commerce is unavailable; use badges for decoration and SEO packages for Credit purchases"
+  "badge_commerce_unavailable": "Profile decoration commerce is unavailable; use badges for decoration and SEO packages for Credit purchases",
+  "credit_rewards_retired": "Commercial Credit engagement rewards are retired",
+  "seo_checkout_unavailable": "SEO checkout is temporarily unavailable; please try again"
 }

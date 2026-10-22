@@ -993,7 +993,7 @@ class PermissionService {
    */
   async check(request, permissionSlug, context = {}, options = {}) {
     // 兼容 user.role
-    if (request.user?.isAdmin) {
+    if (request.user?.isAdmin && permissionSlug!=='seo.reserved_override') {
       return { granted: true, conditions: ADMIN_DEFAULT_CONDITIONS };
     }
     const { userId, ctx } = this._prepareFromRequest(request, context);
@@ -1021,7 +1021,7 @@ class PermissionService {
    * const canEdit = await fastify.permission.can(request, 'topic.update', { ownerId: topic.userId });
    */
   async can(request, permissionSlug, context = {}) {
-    if (request.user?.isAdmin) return true;
+    if (request.user?.isAdmin&&permissionSlug!=='seo.reserved_override') return true;
     const { userId, ctx } = this._prepareFromRequest(request, context);
     return this.hasPermission(userId, permissionSlug, ctx);
   }

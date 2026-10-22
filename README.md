@@ -168,3 +168,11 @@ See [Phase 2.3 FINAL implementation, contract and verification](docs/audit/PHASE
 Use `/profile/badges` to equip one earned badge and its associated lightweight avatar frame. Badges and frames are not Credit products. Decorative shop purchases, gifts and item equipment are disabled server-side; legacy shop/items pages redirect to badges. Existing inventory, financial history and SEO checkout are preserved.
 
 For existing demo data, run `node scripts/badge-cleanup.mjs` to normalize known seeded labels without changing ownership or commerce records. Fresh badge seeds already use neutral names. See [badge/profile cleanup and verification](docs/audit/PHASE2.3A-BADGE-CLEANUP.md) for frame themes, VI/EN behavior, tests and limits.
+
+## Posting, SEO checkout and internal access — Phase 2.3B
+
+Category pages now include an always-visible local posting button that opens the existing form with the actual category ID preselected. Topic SEO checkout is compact; full free/paid activation and entitlement history is centralized in `/profile/wallet#seo-activity`. Checkout failures show specific localized reasons and expired quotes require a fresh confirmation.
+
+Operators can assign the existing RBAC `internal_user` role for the narrow `seo.reserved_override` permission. It bypasses only reservation on an owned topic, preserving policy, ownership, moderation, price and balance checks. Revoking/expiring it suspends reserved-topic SEO on fresh reads without refund or changed dates; Admin/default roles do not receive it automatically.
+
+Commercial Credit engagement rewards/check-in are retired; existing balances/history and operator funding remain. For existing databases run `node scripts/setup-posting-seo-ux.mjs`, then restart the selected native forum. This adds role/permission data and zeros old reward configuration without a schema migration. See [Phase 2.3B implementation, diagnosis and verification](docs/audit/PHASE2.3B-POSTING-SEO-UX-RBAC.md).

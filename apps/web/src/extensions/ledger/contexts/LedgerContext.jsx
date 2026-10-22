@@ -16,9 +16,9 @@ export function LedgerProvider({ children, activeCurrencies = [] }) {
     );
 
     return {
-      isRewardsEnabled: !!defaultCurrency,
+      isRewardsEnabled: false,
       isWalletEnabled: !!defaultCurrency,
-      isShopEnabled: !!defaultCurrency,
+      isShopEnabled: false,
       currencies: activeCurrencies.map(c=>c.code===DEFAULT_CURRENCY_CODE?{...c,name:'Credit'}:c),
       defaultCurrency: defaultCurrency ? {...defaultCurrency,name:'Credit'} : null,
       loading: false,

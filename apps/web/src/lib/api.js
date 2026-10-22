@@ -34,6 +34,7 @@ class ApiClient {
       if (!response.ok) {
         const error = new Error(data.message || data.error || pbnT("m2195"));
         error.status = response.status;
+        error.code = data.code;
         error.resetTime = data.resetTime;
         throw error;
       }

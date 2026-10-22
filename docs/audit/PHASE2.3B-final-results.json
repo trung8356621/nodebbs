@@ -1,0 +1,75 @@
+{
+  "status": "PASS",
+  "health": [
+    {
+      "forum": "forum_a",
+      "webPort": 3100,
+      "apiPort": 7100,
+      "baselineVersion": 6,
+      "catalog": [
+        {
+          "productId": "seo-monthly",
+          "price": 0,
+          "version": 1,
+          "checksum": "31175909352df950bc4ac38fff173917cbc51468d501376f95fc94bf774d7051"
+        },
+        {
+          "productId": "seo-monthly-paid",
+          "price": 3,
+          "version": 1,
+          "checksum": "31175909352df950bc4ac38fff173917cbc51468d501376f95fc94bf774d7051"
+        }
+      ],
+      "wallet": "VI/EN final bundle; balance before bounded SEO history; no page errors",
+      "negativeBalances": 0
+    },
+    {
+      "forum": "forum_b",
+      "webPort": 3200,
+      "apiPort": 7200,
+      "baselineVersion": 6,
+      "catalog": [
+        {
+          "productId": "seo-monthly",
+          "price": 0,
+          "version": 1,
+          "checksum": "0db125e0cae73b72fb2c290328494362b98d8daa98240f4ed98211d66e2efeaa"
+        },
+        {
+          "productId": "seo-monthly-paid",
+          "price": 4,
+          "version": 1,
+          "checksum": "0db125e0cae73b72fb2c290328494362b98d8daa98240f4ed98211d66e2efeaa"
+        }
+      ],
+      "wallet": "VI/EN final bundle; balance before bounded SEO history; no page errors",
+      "negativeBalances": 0
+    }
+  ],
+  "evidence": [
+    "PHASE2.3B-api-results.json",
+    "PHASE2.3B-badge-regression-results.json",
+    "PHASE2.3B-browser-results.json",
+    "PHASE2.3B-browser-retry-results.json",
+    "PHASE2.3B-internal-browser-results.json",
+    "PHASE2.3B-preservation-results.json",
+    "PHASE2.3B-rbac-bootstrap-results.json",
+    "PHASE2.3B-restore-results.json",
+    "PHASE2.3B-SEO-bootstrap-results.json",
+    "PHASE2.3B-SEO-integration-results.json"
+  ],
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 11
+  },
+  "i18n": {
+    "errors": 0,
+    "webKeysPerLocale": 2715,
+    "backendTemplatesPerLocale": 743
+  },
+  "builds": {
+    "forum_a": "PASS",
+    "forum_b": "PASS"
+  },
+  "limits": "Targeted local acceptance, not full historical regressions or production deployment"
+}

@@ -12,7 +12,7 @@ import { EmojiProvider } from '@/components/common/Emoji/EmojiProvider';
 // 根布局直接引用 forum 模块的 AppLayout——这是有意的、与后端 modules/index.js 一致的组合根耦合；
 // 换业务系统时在复制阶段改这一行（及 modules 注册），而非运行时切换。
 import { AppLayout as AppLayoutComponent } from '@/modules/forum/ui';
-import AutoCheckIn from '@/extensions/rewards/components/AutoCheckIn';
+
 import ProgressBar from '@/components/common/ProgressBar';
 import { getLayoutData, generateThemeScript, getLayoutMetadata } from '@/lib/server/layout';
 import { Toaster } from '@/components/common/Toaster';
@@ -83,7 +83,7 @@ export default async function RootLayout({
                 <EmojiProvider>
                 <ProgressBar>
                   <AppLayout apiInfo={apiInfo}>{children}</AppLayout>
-                  <AutoCheckIn />
+
                   <Toaster />
                   <ConfirmPopoverPortal />
                   <ChineseNewYear />

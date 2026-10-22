@@ -1,3 +1,4 @@
+import {rejectEngagementCredit} from '../engagement.js';
 import db from '../../../db/index.js';
 import { sysCurrencies, sysAccounts, sysTransactions } from '../schema.js';
 import { eq, and, sql } from 'drizzle-orm';
@@ -38,6 +39,7 @@ export class LedgerService {
    * @param {object} [params.metadata]
    */
   async grant({ userId, amount, currencyCode, type, referenceType, referenceId, description, metadata }) {
+    rejectEngagementCredit({currencyCode,type,referenceType,metadata});
     if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Grant amount must be positive');
 
     return await db.transaction(async (tx) => {

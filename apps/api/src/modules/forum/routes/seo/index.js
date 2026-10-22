@@ -1,6 +1,10 @@
+import {CREDIT_VND} from '../../services/seo/constants.js';
+import {seoError} from '../../services/seo/errors.js';
 import {sql} from 'drizzle-orm';
 import {rows} from '../../services/pinService.js';
 export default async function seoRoutes(fastify){
+  fastify.setErrorHandler((error,request,reply)=>{const safe=seoError(error);if(safe.status===500)fastify.log.error({err:error,topicId:request.params?.topicId},'SEO checkout failed');reply.code(safe.status).send({code:safe.code,message:safe.message});});
+  fastify.get('/me',{preHandler:[fastify.authenticate],schema:{querystring:{type:'object',properties:{page:{type:'integer',minimum:1,maximum:10000,default:1}},additionalProperties:false}}},async request=>{const user=request.user.id,offset=(request.query.page-1)*20;const purchases=await rows(sql`SELECT p.*,t.title,e.starts_at,e.expires_at,e.status,EXISTS(SELECT 1 FROM seo_entitlements previous WHERE previous.topic_id=e.topic_id AND previous.expires_at=e.starts_at AND previous.id<>e.id) AS renewal FROM seo_purchases p JOIN seo_entitlements e ON e.purchase_id=p.id JOIN topics t ON t.id=p.topic_id WHERE p.user_id=${user} ORDER BY p.created_at DESC,p.id LIMIT 20 OFFSET ${offset}`);const [{total}]=await rows(sql`SELECT count(*)::int AS total FROM seo_purchases WHERE user_id=${user}`);const events=purchases.length?await rows(sql`SELECT ev.* FROM seo_events ev JOIN seo_purchases p ON p.id=ev.purchase_id WHERE p.user_id=${user} AND ev.purchase_id IN (${sql.join(purchases.map(p=>sql`${p.id}::uuid`),sql`,`)}) ORDER BY ev.created_at DESC LIMIT 100`):[];return {purchases,total,page:request.query.page,events,creditVnd:CREDIT_VND};});
   const auth={preHandler:[fastify.authenticate]};
   const admin={preHandler:[fastify.requirePermission('dashboard.shop')]};
   const object=(properties,required=[])=>({type:'object',properties,required,additionalProperties:false});

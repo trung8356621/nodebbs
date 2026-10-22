@@ -10,6 +10,7 @@ import { posts, users } from '../../../db/schema.js';
 import { eq, sql, inArray, and, count, sum } from 'drizzle-orm';
 
 export default async function rewardsRoutes(fastify, options) {
+  fastify.addHook('onRequest',async(request,reply)=>{if(request.method==='POST'&&request.url.split('?')[0].endsWith('/reward'))return reply.code(410).send({error:'Commercial Credit engagement rewards are retired'});});
   
   // ============ Feature Interfaces ============
 
