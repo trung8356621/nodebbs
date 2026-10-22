@@ -2,7 +2,7 @@
 
 Date: 2026-10-22. Native Windows/Laragon PostgreSQL 17.2 and Redis; no Docker or production deployment.
 
-**Implementation acceptance: PASS, subject to final Git release record below.** All listed behavior was exercised locally. Phase 2.4 was not started.
+**Overall acceptance: PASS.** All listed behavior was exercised locally. Phase 2.4 was not started.
 
 ## Scope and architecture
 
@@ -121,4 +121,4 @@ Screenshots: [owner VI](screenshots/phase23/forum_a-vi-VN-owner.png), [owner EN]
 
 This is local development verification, not production operations certification or a large-network load test. Only Chromium was exercised. Live fixtures, diagnostic databases, private dumps and secrets are retained locally and excluded from Git. Existing dynamic robots/sitemap build diagnostics and 11 lint warnings remain. Raw topic HTML is intentionally unsupported; executable ad/page formats remain restricted by Phase 2.2. No external money, withdrawal, deposit, ordinary refund, subscription, banner purchasing, Central Billing Server, SEO-OPS or production deployment was implemented.
 
-Source commit, personal-origin push and clean-tree verification are recorded after the final release checks. The final response supplies the exact resulting HEAD SHA. Staged source review is recorded in `PHASE2.3-source-review.json`; final runtime and charge/entitlement integrity are recorded in `PHASE2.3-final-runtime-results.json`.
+Verified implementation/test commit: `979f843b4a3ec87fc4401901a6e14393894c42f1`. It was pushed to personal `origin/chore/pbn-phase1-5-i18n`; `git ls-remote` matched the exact SHA, and the source working tree was clean. The committed application/script blob hash matches final build/verification evidence. This documentation finalization records that source release without changing application code. See `PHASE2.3-release-record.json`, `PHASE2.3-source-review.json`, `PHASE2.3-verification-results.json` and `PHASE2.3-final-runtime-results.json`. The final response records the resulting documentation HEAD, its verified push and final working-tree state.

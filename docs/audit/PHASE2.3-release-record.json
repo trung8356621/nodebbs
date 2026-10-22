@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "sourceCommit": "979f843b4a3ec87fc4401901a6e14393894c42f1",
+  "sourcePush": "verified",
+  "remoteSourceCommit": "979f843b4a3ec87fc4401901a6e14393894c42f1",
+  "branch": "chore/pbn-phase1-5-i18n",
+  "origin": "https://github.com/trung8356621/nodebbs.git",
+  "sourceWorktreeCleanBeforeDocumentation": true,
+  "verifiedApplicationAndScriptBlobsUnchanged": true,
+  "notes": [
+    "This documentation commit records the already-pushed verified source commit",
+    "The final response records the final documentation HEAD and confirms its push and clean worktree",
+    "No upstream push, force push, history rewrite, merge or production deployment performed"
+  ]
+}
