@@ -16,6 +16,8 @@ export function TransactionTypeBadge({
   let label = getTransactionTypeLabel(type, pbnT);
   let variant = getTransactionTypeColor(type);
 
+  if(type==='seo_purchase')label=pbnT('seoTitle');
+  if(type==='seo_correction')label=pbnT('pinCorrect');
   if(type==='pin_purchase')label=pbnT('pinTitle');
   if(type==='pin_correction')label=pbnT('pinCorrect');
   // 特殊处理：打赏帖子 (Reward Post)

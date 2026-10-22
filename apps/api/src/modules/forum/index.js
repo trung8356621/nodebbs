@@ -1,4 +1,7 @@
 import fp from 'fastify-plugin';
+import {SeoService} from './services/seo/service.js';
+import {synchronizeConfiguredPrices} from './services/seo/prices.js';
+import {pool} from '#core/db/index.js';
 import { PinService } from './services/pinService.js';
 import path from 'node:path';
 import AutoLoad from '@fastify/autoload';
@@ -29,11 +32,17 @@ const __dirname = dirname(import.meta.url);
  */
 async function forumModule(fastify, opts) {
   const pins=new PinService(fastify);fastify.decorate('pins',pins);
+  const seo=new SeoService(fastify);fastify.decorate('seo',seo);
+  fastify.cleanup.registerTask('monthly-seo-expiration',()=>seo.expire());
+  let priceSyncBusy=false;
+  const syncPrices=async()=>{if(priceSyncBusy||!process.env.OPS_PRICE_SNAPSHOT_FILE)return;priceSyncBusy=true;try{await synchronizeConfiguredPrices(pool);}catch(error){fastify.log.warn({reason:error.message},'OPS price sync failed; last authorized snapshot retained');}finally{priceSyncBusy=false;}};
+  const priceTimer=setInterval(syncPrices,Math.max(60000,Number(process.env.OPS_PRICE_SYNC_INTERVAL_MS)||300000));priceTimer.unref();
+  fastify.addHook('onReady',syncPrices);fastify.addHook('onClose',async()=>clearInterval(priceTimer));
   fastify.cleanup.registerTask('paid-pin-expiration',()=>pins.expire());
   let busy=false;
-  const timer=setInterval(async()=>{if(busy)return;busy=true;try{const expired=await pins.expire();if(expired)fastify.log.info({expired},'Paid pins reconciled');}catch(error){fastify.log.error(error,'Paid pin reconciliation failed');}finally{busy=false;}},Math.max(1000,Number(process.env.PBN_PIN_EXPIRE_INTERVAL_MS)||60000));timer.unref();
+  const timer=setInterval(async()=>{if(busy)return;busy=true;try{const expired=await pins.expire()+await seo.expire();if(expired)fastify.log.info({expired},'Paid pins reconciled');}catch(error){fastify.log.error(error,'Paid pin reconciliation failed');}finally{busy=false;}},Math.max(1000,Number(process.env.PBN_PIN_EXPIRE_INTERVAL_MS)||60000));timer.unref();
   fastify.addHook('onClose',async()=>clearInterval(timer));
-  fastify.addHook('onSend',async(request,reply,payload)=>{if(/^\/api\/(topics|posts|search|pins)(\/|$)/.test(request.url.split('?')[0]))reply.header('Cache-Control','private, no-store, max-age=0');return payload;});
+  fastify.addHook('onSend',async(request,reply,payload)=>{if(/^\/api\/(topics|posts|search|pins|seo)(\/|$)/.test(request.url.split('?')[0]))reply.header('Cache-Control','private, no-store, max-age=0');return payload;});
   // 论坛清理任务自注册到核心调度器
   if (fastify.cleanup) {
     fastify.cleanup.registerTask('expired-draft-polls', () => cleanupExpiredDraftPolls());

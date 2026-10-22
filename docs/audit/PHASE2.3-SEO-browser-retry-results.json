@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "checks": [
+    "Browser response lost after durable upstream purchase",
+    "Reload and reselect reused the persisted forum/user/topic operation key",
+    "Explicit retry returned the same purchase without debit or duration duplication"
+  ]
+}

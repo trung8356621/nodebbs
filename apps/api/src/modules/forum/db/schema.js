@@ -70,6 +70,7 @@ export const topics = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     viewCount: integer('view_count').notNull().default(0),
     postCount: integer('post_count').notNull().default(0),
+    seoPurchaseAllowed: boolean('seo_purchase_allowed').notNull().default(true),
     isPinned: boolean('is_pinned').notNull().default(false),
     isClosed: boolean('is_closed').notNull().default(false),
     isDeleted: boolean('is_deleted').notNull().default(false),
@@ -577,3 +578,5 @@ export const attachmentPurchasesRelations = relations(attachmentPurchases, ({ on
 }));
 
 export * from './pin-schema.js';
+
+export * from './seo-schema.js';

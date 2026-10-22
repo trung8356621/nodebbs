@@ -1,0 +1,41 @@
+{
+  "status": "PASS",
+  "configPath": ".local/seo-final/restore-mvizcjwx.json",
+  "database": "pbn_seo_final_restore_mvizcjwx",
+  "tableCount": 74,
+  "mediaCount": 13,
+  "versions": [
+    {
+      "version": 1,
+      "checksum": "9efcd5dbdc2427e0c8cb5512e93349a6921f31871d689df7af55a8959b665c97"
+    },
+    {
+      "version": 2,
+      "checksum": "6f5ca235df1aaa8e41c10c1854f1166f576d5b97538377d0288d8cfe91a67ba8"
+    },
+    {
+      "version": 3,
+      "checksum": "0fd3f8bf9e8df8b08f3524e088753655f52a3ebdd5f9421bddd0d3998e24f727"
+    },
+    {
+      "version": 4,
+      "checksum": "ef0cb0a4cc4740fd90a1e37d2bced1647254ea2331953d45f843411be62d83a1"
+    },
+    {
+      "version": 5,
+      "checksum": "60ed004f78fddb09337de6cf5d60004f25c001a59a44edaa420e8d2a2eae9ddc"
+    },
+    {
+      "version": 6,
+      "checksum": "a1f2df9550191b7b50daa951d53e5370ee8cdd0623884388c3f8a148ee7c4be9"
+    }
+  ],
+  "checks": [
+    "Source stopped during consistent export",
+    "Restore verified all row hashes/counts, schema, sequences, versions and media",
+    "Restored no-op migration passed",
+    "Real restored Admin login/dashboard/policy/me passed",
+    "Restored token rejected by source forum",
+    "Paid purchases/events and immutable history triggers restored and verified"
+  ]
+}

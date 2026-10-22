@@ -3,8 +3,11 @@ $ErrorActionPreference = 'Stop'
 $state = Get-Content -LiteralPath $StateFile -Raw | ConvertFrom-Json
 $root = [IO.Path]::GetFullPath($RepoRoot).Replace('\','/').TrimEnd('/')
 $all = @(Get-CimInstance Win32_Process)
+$visited = [System.Collections.Generic.HashSet[int]]::new()
 function Get-NodeDescendants([int]$parentId) {
-  foreach ($child in @($all | Where-Object ParentProcessId -eq $parentId)) {
+  if (-not $visited.Add($parentId)) { return }
+  $parentSnapshot = $all | Where-Object ProcessId -eq $parentId
+  foreach ($child in @($all | Where-Object { $_.ParentProcessId -eq $parentId -and $_.ProcessId -ne $parentId -and $_.CreationDate -ge $parentSnapshot.CreationDate })) {
     if ($child.Name -eq 'conhost.exe') { continue }
     if ($child.Name -ne 'node.exe' -or -not ([string]$child.CommandLine).Replace('\','/').Contains($root + '/')) { throw "Unexpected descendant $($child.ProcessId); refusing stop" }
     Get-NodeDescendants $child.ProcessId

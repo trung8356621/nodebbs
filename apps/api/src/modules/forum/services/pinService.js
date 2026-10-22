@@ -1,3 +1,4 @@
+import {seoActive,seoExpiresAt} from './seo/read-model.js';
 import crypto from 'node:crypto';
 import {sql,eq,and,asc} from 'drizzle-orm';
 import db,{atomicWrite} from '#core/db/index.js';
@@ -8,10 +9,11 @@ const fail=(message,statusCode=400)=>Object.assign(new Error(message),{statusCod
 // the pool waiting for a second policy-inspection connection.
 const policyClient={query:(text,values=[])=>db.execute(sql.join(text.split(/(\$\d+)/g).filter(Boolean).map(part=>/^\$\d+$/.test(part)?sql`${values[Number(part.slice(1))-1]}`:sql.raw(part)),sql``))};
 export const rows=async statement=>(await db.execute(statement)).rows;
-export const paidActive=sql`EXISTS(SELECT 1 FROM pin_entitlements pe WHERE pe.topic_id=${sql.raw('topics.id')} AND pe.status='active' AND pe.starts_at<=statement_timestamp() AND pe.ends_at>statement_timestamp())`;
-export const effectivePinned=sql`(${sql.raw('topics.is_pinned')} OR ${paidActive})`;
-export const pinExpiresAt=sql`(SELECT max(pe.ends_at) FROM pin_entitlements pe WHERE pe.topic_id=${sql.raw('topics.id')} AND pe.status='active' AND pe.ends_at>statement_timestamp())`;
-export const effectiveLinkPolicy=sql`CASE WHEN EXISTS(SELECT 1 FROM topic_link_classifications c WHERE c.topic_id=topics.id AND c.advertising) THEN 'sponsored' WHEN EXISTS(SELECT 1 FROM topic_link_classifications c WHERE c.topic_id=topics.id AND c.editorial) AND NOT EXISTS(SELECT 1 FROM pin_entitlements e WHERE e.topic_id=topics.id) THEN 'editorial' WHEN ${paidActive} THEN 'paid' ELSE 'ugc' END`;
+// Legacy purchase history is preserved; SEO never grants placement.
+export const paidActive=seoActive;
+export const effectivePinned=sql`topics.is_pinned`;
+export const pinExpiresAt=seoExpiresAt;
+export const effectiveLinkPolicy=sql`CASE WHEN EXISTS(SELECT 1 FROM topic_link_classifications c WHERE c.topic_id=topics.id AND c.advertising) THEN 'sponsored' WHEN EXISTS(SELECT 1 FROM topic_link_classifications c WHERE c.topic_id=topics.id AND c.editorial) AND NOT EXISTS(SELECT 1 FROM pin_entitlements e WHERE e.topic_id=topics.id) AND NOT EXISTS(SELECT 1 FROM seo_purchases s WHERE s.topic_id=topics.id) THEN 'editorial' WHEN ${seoActive} THEN 'paid' ELSE 'ugc' END`;
 export function validateProduct(body){
   if(typeof body.name!=='string'||!body.name.trim()||body.name.length>100||!Number.isSafeInteger(body.price)||body.price<1||body.price>1000000000||!Number.isInteger(body.durationSeconds)||body.durationSeconds<60||body.durationSeconds>31536000)throw fail('Invalid pin product');
   return {type:'topic_pin',consumeType:'consumable',name:body.name.trim(),price:body.price,currencyCode:DEFAULT_CURRENCY_CODE,isActive:body.enabled!==false,displayOrder:Number.isInteger(body.displayOrder)?body.displayOrder:0,metadata:JSON.stringify({durationSeconds:body.durationSeconds})};
@@ -25,10 +27,10 @@ export class PinService {
     const [topic]=await rows(sql`SELECT t.*,p.content,p.approval_status AS post_approval,p.is_deleted AS post_deleted,u.is_banned,u.is_deleted AS author_deleted FROM topics t JOIN posts p ON p.topic_id=t.id AND p.post_number=1 JOIN users u ON u.id=t.user_id WHERE t.id=${id} FOR UPDATE OF t,p`);
     if(!topic)throw fail('Topic not found',404);return topic;
   }
-  async eligible(topic,userId){
+  async eligible(topic,userId,contentType='pin_purchase'){
     if(topic.user_id!==userId)throw fail('Only the topic owner may purchase a pin',403);
     if(topic.is_deleted||topic.post_deleted||topic.approval_status!=='approved'||topic.post_approval!=='approved'||topic.is_banned||topic.author_deleted)throw fail('Topic is not eligible for paid placement',409);
-    const decision=await this.fastify.policy.inspect(topic.title+'\n'+topic.content,'pin_purchase',topic.id,userId,policyClient);
+    const decision=await this.fastify.policy.inspect(topic.title+'\n'+topic.content,contentType,topic.id,userId,policyClient);
     if(decision.action!=='ALLOW')throw fail('Topic is not eligible for paid placement',422);
   }
   async purchase({userId,topicId,productId,idempotencyKey,expectedPrice,expectedDuration}){
@@ -79,7 +81,7 @@ export class PinService {
       const t=await this.lockTopic(topicId);
       const [old]=await rows(sql`SELECT * FROM topic_link_classifications WHERE topic_id=${topicId}`);
       if(old?.advertising&&!advertising)throw fail('Advertising classification cannot be removed by editorial review',409);
-      if(editorial){if(advertising||t.is_deleted||t.post_deleted||t.is_banned||t.author_deleted||t.post_approval!=='approved'||t.approval_status!=='approved'||(await rows(sql`SELECT 1 FROM pin_entitlements WHERE topic_id=${topicId} LIMIT 1`)).length)throw fail('Commercial content cannot receive independent editorial links',409);const d=await this.fastify.policy.inspect(t.title+'\n'+t.content,'editorial_review',topicId,actorId,policyClient);if(d.action!=='ALLOW')throw fail('Content is not eligible for editorial classification',422);}
+      if(editorial){if(advertising||t.is_deleted||t.post_deleted||t.is_banned||t.author_deleted||t.post_approval!=='approved'||t.approval_status!=='approved'||(await rows(sql`SELECT 1 FROM pin_entitlements WHERE topic_id=${topicId} UNION ALL SELECT 1 FROM seo_purchases WHERE topic_id=${topicId} LIMIT 1`)).length)throw fail('Commercial content cannot receive independent editorial links',409);const d=await this.fastify.policy.inspect(t.title+'\n'+t.content,'editorial_review',topicId,actorId,policyClient);if(d.action!=='ALLOW')throw fail('Content is not eligible for editorial classification',422);}
       await db.execute(sql`INSERT INTO topic_link_classifications(topic_id,editorial,advertising,reviewer_id,reason) VALUES(${topicId},${editorial},${advertising},${actorId},${reason}) ON CONFLICT(topic_id) DO UPDATE SET editorial=excluded.editorial,advertising=excluded.advertising,reviewer_id=excluded.reviewer_id,reason=excluded.reason,updated_at=clock_timestamp()`);
       await db.execute(sql`INSERT INTO pin_events(id,topic_id,type,actor_id,reason,metadata) VALUES(${crypto.randomUUID()},${topicId},'classification',${actorId},${reason},${JSON.stringify({editorial,advertising})}::jsonb)`);return {editorial,advertising};
     });

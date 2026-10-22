@@ -3,6 +3,7 @@ import db from '#core/db/index.js';
 import {shopItems} from '#core/db/schema.js';
 import {rows,validateProduct} from '../../services/pinService.js';
 export default async function pinRoutes(fastify){
+  fastify.addHook('onRequest',async(request,reply)=>{if((request.method==='POST'&&/\/purchase(?:\?|$)/.test(request.url))||((request.method==='POST'||request.method==='PUT')&&request.url.includes('/admin/products')))return reply.code(410).send({error:'Legacy placement checkout is retired; use monthly SEO packages'});});
   const auth={preHandler:[fastify.authenticate]};
   const admin={preHandler:[fastify.requirePermission('dashboard.shop')]};
   const body=(properties,required=[])=>({type:'object',properties,required,additionalProperties:false});

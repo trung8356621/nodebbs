@@ -142,24 +142,23 @@ Verification-required redirects remain pending until explicit review; no live re
 
 Publishing/content/credit/queue writes share a transaction; domain events run after commit. Policy locking uses a bounded extra two-connection pool per forum beside the existing maximum-five application pool. See [Phase 2.2 implementation, configuration, tests and production limits](docs/audit/PHASE2.2-POLICY-ENGINE.md).
 
-## Credit and paid topic pins — Phase 2.3
+## Credit wallet and monthly SEO entitlements — Phase 2.3 FINAL
 
-Topic owners purchase or renew paid placement from their topic page. The payment dialog shows the price and duration and states that cancellation and calendar expiration do not refund Credit. Edits remain free. Plans reuse Shop products; balances and transaction history reuse `/profile/wallet`. Existing moderator pins remain separate.
+Topic owners explicitly confirm an authorized monthly SEO package on their topic page. **1 Credit = 10,000 VND** (`apps/api/src/modules/forum/services/seo/constants.js`); Credit is integer-only. Valid zero-price packages create purchase/entitlement history without a fake ledger debit. Paid packages reuse the existing Wallet/ledger. Calendar-month renewal is allowed only within the signed product's renewal window. Editing is free; deactivation, hiding and expiration do not refund or extend the term.
 
-Manage plans, purchases, expiration events, independent editorial review and privileged technical corrections at `/dashboard/pins`. Plan management requires `dashboard.shop`; compensating corrections require `dashboard.ledger`; editorial review requires `editorial.classify`, which is excluded from the default user role. Corrections require a reason and append a new linked ledger entry.
+SEO changes eligible topic outbound links to `ugc sponsored`. Ordinary links remain `ugc nofollow`; independently reviewed, noncommercial editorial links retain security tokens. Replies retain their own UGC policy. Raw topic HTML remains escaped. **SEO does not move, sort or pin topics.** Existing moderator pins remain independent. Reserved topics (`seo_purchase_allowed=false`) cannot buy; reservation immediately suspends an existing term's effect without rewriting its history or dates.
 
-After taking a backup, apply the additive migrations to each selected native forum and restart it:
+`/dashboard/seo` shows read-only products, schedules, source versions/sync diagnostics, purchases and entitlements. Pricing is controlled exclusively by signed, forum-targeted OPS-style snapshots. No local price editor, real OPS service, payment gateway, banner checkout or placement auction is implemented. `/dashboard/pins` redirects to this page; the superseded placement purchase and local plan-write API routes return 410. Historical purchases remain preserved, with explicit editorial-review and technical-correction APIs retained.
+
+After a protected backup, migrate each forum and restart its managed process:
 
 ```powershell
 node scripts/forum.mjs migrate forums/forum-a.json
 node scripts/forum.mjs migrate forums/forum-b.json
-node scripts/forum-pins.mjs reconcile forums/forum-a.json
+node scripts/forum-seo.mjs sync forums/forum-a.json
+node scripts/forum-seo.mjs reconcile forums/forum-a.json
 ```
 
-The reconciler processes at most 50 due purchases per run, every 60 seconds by default (`PBN_PIN_EXPIRE_INTERVAL_MS`, restart required). The Admin button and operator command use the same bounded, multi-worker-safe implementation. Database timestamps determine placement and link policy on fresh reads, independently of worker progress. API and SSR reads do not retain time-dependent content responses; open pages downgrade at the expiration deadline without polling.
+Configure owner-protected `opsPriceTrustKeyFile`, `opsPriceSnapshotFile`, and `opsPriceSourceId` in each forum's ignored secrets file. `node scripts/seo-price-fixture.mjs` creates independent **development-only** signed sources for A/B; it preserves existing fixture keys and snapshots. Restart after changing source references. The file provider checks every five minutes; checkout uses only verified local database snapshots. Effective intervals and snapshot expiry are evaluated with database time, without a midnight cron or external checkout call. No valid current price means no purchase. API/SSR reads use no-store; open topics have a single expiry deadline timer. Housekeeping processes at most 50 due SEO rows per run.
 
-External topic links are ordinary `ugc nofollow`, active-paid `ugc sponsored`, or explicitly reviewed independent editorial links with security tokens only. Paid history and advertising cannot obtain the editorial exception; replies keep their own UGC policy. Existing raw HTML remains escaped in topic Markdown. Existing image advertisement links always retain sponsored classification. No authored URLs or stored Markdown are rewritten.
-
-Both development forums have their existing `credits` currency enabled. Existing reward settings remain unchanged; enabling Credit also enables those configured existing rewards. Test funding and charges are confined to dedicated fixture accounts. Temporary test plans are disabled after verification. No external deposits, payment gateway, withdrawals, ordinary refund flow or production deployment is included.
-
-See [the Phase 2.3 report](docs/audit/PHASE2.3-WALLET-PAID-PIN.md) for database/concurrency tests, browser evidence, migration/restore results, tested URLs and limits. Do not run the live fixture scripts against a production forum.
+See [Phase 2.3 FINAL implementation, contract and verification](docs/audit/PHASE2.3-WALLET-SEO-ENTITLEMENTS.md). The earlier [paid-placement report](docs/audit/PHASE2.3-WALLET-PAID-PIN.md) is historical and superseded by FINAL. Test fixtures fund only dedicated accounts; do not run development acceptance helpers against production.

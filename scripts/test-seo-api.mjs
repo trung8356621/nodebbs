@@ -1,0 +1,50 @@
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {config,root,runtime,connect,privateDirectory,stop,start} from './forum.mjs';
+import {waitApis} from './policy-test-helper.mjs';
+const forums=['a','b'].map(n=>config('forums/forum-'+n+'.json'));await waitApis(forums);
+const prior=JSON.parse(fs.readFileSync('.local/phase23/live-fixtures.json'));
+const fixtures={},checks=[];
+const req=async(c,url,token,body,method)=>{const r=await fetch(`http://127.0.0.1:${c.apiPort}/api${url}`,{method:method||(body?'POST':'GET'),headers:{...(token?{authorization:'Bearer '+token}:{}),...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(30000)});return {status:r.status,data:await r.json(),cache:r.headers.get('cache-control')};};
+const ok=(r,status=200)=>{assert.equal(r.status,status,JSON.stringify(r.data).slice(0,400));return r.data;};
+for(const [i,c] of forums.entries()){
+ const d=await connect(c);try{
+ const admin=prior[c.id].adminToken;ok(await req(c,'/seo/admin',admin));ok(await req(c,'/seo/admin',null),401);ok(await req(c,'/seo/admin',prior[forums[1-i].id].adminToken),401);
+ const username='seo_final_'+Date.now().toString(36),password=crypto.randomBytes(24).toString('base64url');
+ const registration=await req(c,'/auth/register',null,{username,email:username+'@example.test',password});ok(registration);
+ const login=ok(await req(c,'/auth/login',null,{identifier:username,password})),token=login.token;
+ const user=(await d.query('SELECT id FROM users WHERE username=$1',[username])).rows[0];
+ execFileSync(process.execPath,['--input-type=module','-e',"const {LedgerService}=await import('./apps/api/src/extensions/ledger/services/ledgerService.js');const {pool}=await import('./apps/api/src/db/index.js');await new LedgerService({}).grant({userId:Number(process.env.SEO_FIXTURE_USER),amount:100,currencyCode:'credits',type:'test_fixture',referenceId:'seo-final',description:'Isolated SEO acceptance account'});await pool.end();"],{cwd:root,env:{...process.env,...runtime(c),SEO_FIXTURE_USER:String(user.id)},windowsHide:true,stdio:'pipe'});
+ const category=(await d.query('SELECT id FROM categories WHERE is_private=false ORDER BY id LIMIT 1')).rows[0].id;
+ const content='[External reference](https://example.org/research)\n\n[Internal relative](/topics)\n\n[Canonical internal]('+runtime(c).FORUM_WEB_ORIGIN+'/topics)\n\n<https://www.example.net/automatic>\n\n<a href="https://example.org/raw" rel="dofollow">escaped HTML</a>';
+ const make=async(label)=>ok(await req(c,'/topics/',token,{categoryId:category,title:'SEO acceptance '+label+' '+Date.now(),content})).topic;
+ const free=await make('free'),paid=await make('paid'),browserFree=await make('browser free'),browserPaid=await make('browser paid'),reserved=await make('reserved'),editorial=await make('editorial');
+ const quote=async(t,id)=>ok(await req(c,'/seo/topics/'+t.id+'/quotes',token,{productId:id}));
+ const buy=async(t,q,key=crypto.randomUUID())=>ok(await req(c,'/seo/topics/'+t.id+'/purchase',token,{quoteId:q.id,idempotencyKey:key}));
+ const catalog=ok(await req(c,'/seo/products'));assert.equal(catalog.creditVnd,10000);assert.equal(catalog.products.find(p=>p.productId==='seo-monthly-paid').salePriceCredit,i?4:3);
+ const initialBalance=Number((await d.query("SELECT balance FROM sys_accounts WHERE user_id=$1 AND currency_code='credits'",[user.id])).rows[0].balance);
+ const q=await quote(free,'seo-monthly'),key=crypto.randomUUID(),receipt=await buy(free,q,key);assert.equal(Number(receipt.paid_price),0);assert.equal(receipt.transaction_id,null);
+ assert.equal((await buy(free,q,key)).id,receipt.id);ok(await req(c,'/seo/topics/'+paid.id+'/purchase',token,{quoteId:q.id,idempotencyKey:key}),409);
+ const paidReceipt=await buy(paid,await quote(paid,'seo-monthly-paid'));const balance=Number((await d.query("SELECT balance FROM sys_accounts WHERE user_id=$1 AND currency_code='credits'",[user.id])).rows[0].balance);assert.equal(balance,initialBalance-(i?4:3));
+ const state=ok(await req(c,'/topics/'+free.id,token));assert.equal(state.linkPolicy,'paid');assert.equal(state.isPinned,false);assert.equal(state.adminPinned,false);assert.match((await req(c,'/topics/'+free.id)).cache,/no-store/);
+ ok(await req(c,'/topics/'+free.id,token,{content:content+'\n\nEdited without additional charge.'},'PATCH'));assert.equal((await d.query('SELECT expires_at FROM seo_entitlements WHERE purchase_id=$1',[receipt.id])).rows[0].expires_at.toISOString(),new Date(receipt.expires_at).toISOString());
+ ok(await req(c,'/topics/'+free.id,token,{content:'https://blocked.example.test'},'PATCH'),422);
+ ok(await req(c,'/seo/topics/'+free.id+'/quotes',token,{productId:'seo-monthly'}),409);
+ ok(await req(c,'/seo/topics/'+free.id+'/quotes',admin,{productId:'seo-monthly'}),403);
+ ok(await req(c,'/seo/admin/topics/'+reserved.id+'/eligibility',token,{allowed:false,reason:'Unauthorized reserved topic update'},'PUT'),403);
+ ok(await req(c,'/seo/admin/topics/'+reserved.id+'/eligibility',admin,{allowed:false,reason:'Reserved internal acceptance fixture'},'PUT'));
+ ok(await req(c,'/seo/topics/'+reserved.id+'/quotes',token,{productId:'seo-monthly'}),409);
+ ok(await req(c,'/pins/admin/topics/'+free.id+'/classification',admin,{editorial:true,advertising:false,reason:'Commercial history must remain advertising'},'PUT'),409);
+ ok(await req(c,'/pins/admin/topics/'+editorial.id+'/classification',admin,{editorial:true,advertising:false,reason:'Independent noncommercial factual reference reviewed'},'PUT'));assert.equal(ok(await req(c,'/topics/'+editorial.id)).linkPolicy,'editorial');
+ const reply=ok(await req(c,'/posts/',token,{topicId:browserFree.id,content:'[Reply reference](https://example.org/reply)'})).post;
+ ok(await req(c,'/pins/admin/products',admin,{name:'Forbidden local SEO price',price:0,durationSeconds:60,enabled:true}),410);
+ const count=(await d.query('SELECT count(*)::int AS n FROM seo_purchases WHERE user_id=$1',[user.id])).rows[0].n;
+ await stop(c);await start(c);await waitApis([c]);assert.equal((await buy(free,q,key)).id,receipt.id);assert.equal((await d.query('SELECT count(*)::int AS n FROM seo_purchases WHERE user_id=$1',[user.id])).rows[0].n,count);
+ fixtures[c.id]={username,password,token,adminToken:admin,user:user.id,topic:browserFree.id,paidTopic:browserPaid.id,freeTopic:free.id,reservedTopic:reserved.id,editorialTopic:editorial.id,reply:reply.id,paidPurchase:paidReceipt.id};
+ checks.push({forum:c.id,status:'PASS',checks:'Real registration/login, authorized price, free/no ledger debit, paid exact debit, durable retry across API process restart, conflict, own-only, reserved/operator permissions, editing/policy, read-only pricing, editorial distinction, no SEO ranking'});console.log('PASS '+c.id+' live SEO API and process restart');
+ }finally{await d.end();}
+}
+privateDirectory(path.join(root,'.local/seo-final'));fs.writeFileSync('.local/seo-final/live-fixtures.json',JSON.stringify(fixtures));fs.writeFileSync('docs/audit/PHASE2.3-SEO-api-results.json',JSON.stringify({status:'PASS',checks},null,2)+'\n');

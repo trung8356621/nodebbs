@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "database": "pbn_seo_final_restore_mvizcjwx",
+  "fixtureNote": "Dated monthly terms inserted at creation only in isolated restored test database; no live or legacy history synthesized or rewritten",
+  "checks": [
+    "Actual browser near-expiry renewal extends from immutable prior month end",
+    "Real database deadline downgrades open DOM and fresh no-JS SSR while persisted status remains active and worker is delayed",
+    "Actual browser expired renewal starts a new monthly period now; no zero ledger debit"
+  ]
+}

@@ -728,5 +728,15 @@
   "pin_19": "Giá trị Credit vượt phạm vi hỗ trợ",
   "pin_20": "Vui lòng mua ghim tại chủ đề của bạn",
   "pin_21": "Số dư không đủ. Hiện có: {arg0}, cần: {arg1}",
-  "pin_plan_changed": "Gói ghim đã thay đổi; vui lòng xem lại giá và thời hạn hiện tại"
+  "pin_plan_changed": "Gói ghim đã thay đổi; vui lòng xem lại giá và thời hạn hiện tại",
+  "seo_0": "Hiện không có giá SEO được cấp phép hợp lệ",
+  "seo_1": "Chủ đề dành riêng này không cho phép mua SEO",
+  "seo_2": "Chưa đến thời gian gia hạn được cho phép",
+  "seo_3": "Chỉ chủ chủ đề mới được xem lịch sử mua SEO",
+  "seo_4": "Báo giá SEO không hợp lệ hoặc thuộc người dùng khác",
+  "seo_5": "Báo giá SEO này đã được sử dụng",
+  "seo_6": "Giá SEO đã đổi hoặc báo giá hết hạn; vui lòng xác nhận báo giá mới",
+  "seo_7": "Chỉ chủ chủ đề mới được ngừng quyền SEO",
+  "seo_8": "Thay đổi điều kiện SEO cần có lý do cụ thể",
+  "seo_9": "Mua ghim vị trí đã ngừng; vui lòng dùng gói SEO theo tháng"
 }

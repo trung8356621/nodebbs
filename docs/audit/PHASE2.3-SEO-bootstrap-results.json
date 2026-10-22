@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "database": "pbn_seo_test_mvizbfhf_fresh",
+  "rehearsal": "pbn_seo_test_mvizbfhf",
+  "versions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "catalog": {
+    "columns": {
+      "count": 722,
+      "sha256": "0a572cc7b62ae9d9110fcfb8cf3d29ca5e215f526f5edea73845462bac6e6425"
+    },
+    "constraints": {
+      "count": 231,
+      "sha256": "1cc70ac0bf80f78126678fdbeaed3e101fed001aaf684b523e153375d19dbc9c"
+    },
+    "indexes": {
+      "count": 314,
+      "sha256": "e7c58a2a51e0f2f2ec50895876ddfb45b14320d97aa61482cbfbacec756d4f57"
+    }
+  }
+}

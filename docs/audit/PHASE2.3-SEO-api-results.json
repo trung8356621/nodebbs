@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "forum": "forum_a",
+      "status": "PASS",
+      "checks": "Real registration/login, authorized price, free/no ledger debit, paid exact debit, durable retry across API process restart, conflict, own-only, reserved/operator permissions, editing/policy, read-only pricing, editorial distinction, no SEO ranking"
+    },
+    {
+      "forum": "forum_b",
+      "status": "PASS",
+      "checks": "Real registration/login, authorized price, free/no ledger debit, paid exact debit, durable retry across API process restart, conflict, own-only, reserved/operator permissions, editing/policy, read-only pricing, editorial distinction, no SEO ranking"
+    }
+  ]
+}

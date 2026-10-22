@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "forum": "forum_a",
+      "locale": "vi-VN",
+      "status": "PASS",
+      "checks": "Actual form login; explicit free and paid confirmation; exact balance; valid discount/VND/months; history; no-refund cancellation; DOM and no-JS sponsored SSR; reply UGC; escaped HTML; independent editorial; reserved rejection; read-only Admin; no browser errors"
+    },
+    {
+      "forum": "forum_a",
+      "locale": "en-US",
+      "status": "PASS",
+      "checks": "Actual form login; explicit free and paid confirmation; exact balance; valid discount/VND/months; history; no-refund cancellation; DOM and no-JS sponsored SSR; reply UGC; escaped HTML; independent editorial; reserved rejection; read-only Admin; no browser errors"
+    },
+    {
+      "forum": "forum_b",
+      "locale": "vi-VN",
+      "status": "PASS",
+      "checks": "Actual form login; explicit free and paid confirmation; exact balance; valid discount/VND/months; history; no-refund cancellation; DOM and no-JS sponsored SSR; reply UGC; escaped HTML; independent editorial; reserved rejection; read-only Admin; no browser errors"
+    },
+    {
+      "forum": "forum_b",
+      "locale": "en-US",
+      "status": "PASS",
+      "checks": "Actual form login; explicit free and paid confirmation; exact balance; valid discount/VND/months; history; no-refund cancellation; DOM and no-JS sponsored SSR; reply UGC; escaped HTML; independent editorial; reserved rejection; read-only Admin; no browser errors"
+    }
+  ]
+}

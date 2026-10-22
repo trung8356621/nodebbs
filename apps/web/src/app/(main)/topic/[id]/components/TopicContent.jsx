@@ -1,6 +1,6 @@
 'use client';
 
-import PaidPinPanel from '@/modules/forum/components/topic/PaidPinPanel';
+import SeoEntitlementPanel from '@/modules/forum/components/topic/SeoEntitlementPanel';
 import TopicAlerts from '@/modules/forum/components/topic/TopicDetail/TopicAlerts';
 import TopicHeader from '@/modules/forum/components/topic/TopicDetail/TopicHeader';
 import TopicMetaLine from '@/modules/forum/components/topic/TopicDetail/TopicMetaLine';
@@ -29,7 +29,7 @@ export default function TopicContent() {
         <TopicMetaLine />
       </div>
 
-      <PaidPinPanel />
+      <SeoEntitlementPanel />
       {/* 话题内容 - 首帖 */}
       <div
         className='content-card mb-6'

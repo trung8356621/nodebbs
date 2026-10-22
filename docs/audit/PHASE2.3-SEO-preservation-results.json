@@ -1,0 +1,125 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "forum": "forum_a",
+      "clone": "pbn_seo_before_a_mvizis3w",
+      "checks": {
+        "users": {
+          "originalRows": 9,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "user_roles": {
+          "originalRows": 9,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "categories": {
+          "originalRows": 57,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "topics": {
+          "originalRows": 156,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "posts": {
+          "originalRows": 171,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "sys_accounts": {
+          "originalRows": 3,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "sys_transactions": {
+          "originalRows": 21,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "shop_items": {
+          "originalRows": 5,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "pin_entitlements": {
+          "originalRows": 14,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "pin_events": {
+          "originalRows": 29,
+          "migrationIdentical": true,
+          "livePreserved": true
+        }
+      }
+    },
+    {
+      "forum": "forum_b",
+      "clone": "pbn_seo_before_b_mviziyrn",
+      "checks": {
+        "users": {
+          "originalRows": 42,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "user_roles": {
+          "originalRows": 42,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "categories": {
+          "originalRows": 1,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "topics": {
+          "originalRows": 74,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "posts": {
+          "originalRows": 100,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "sys_accounts": {
+          "originalRows": 8,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "sys_transactions": {
+          "originalRows": 32,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "shop_items": {
+          "originalRows": 5,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "pin_entitlements": {
+          "originalRows": 19,
+          "migrationIdentical": true,
+          "livePreserved": true
+        },
+        "pin_events": {
+          "originalRows": 41,
+          "migrationIdentical": true,
+          "livePreserved": true
+        }
+      }
+    }
+  ],
+  "authenticationActivityExcluded": [
+    "last_seen_at",
+    "last_login_ip",
+    "updated_at"
+  ],
+  "readCountersExcluded": [
+    "topics.view_count"
+  ]
+}

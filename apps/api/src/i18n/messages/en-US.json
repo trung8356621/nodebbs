@@ -728,5 +728,15 @@
   "pin_19": "Credit arithmetic exceeds the supported range",
   "pin_20": "Use the topic paid-pin purchase action",
   "pin_21": "Insufficient funds. Balance: {arg0}, Required: {arg1}",
-  "pin_plan_changed": "Pin plan changed; review the current price and duration"
+  "pin_plan_changed": "Pin plan changed; review the current price and duration",
+  "seo_0": "No authorized current SEO price is available",
+  "seo_1": "SEO purchases are disabled for this reserved topic",
+  "seo_2": "Renewal is not yet eligible; wait for the authorized renewal window",
+  "seo_3": "Only the topic owner may inspect SEO purchases",
+  "seo_4": "SEO quote is invalid or belongs to another user",
+  "seo_5": "This SEO quote was already used",
+  "seo_6": "SEO price changed or quote expired; confirm a new quote",
+  "seo_7": "Only the topic owner may cancel SEO activation",
+  "seo_8": "SEO restriction requires an explicit reason",
+  "seo_9": "Legacy placement checkout is retired; use monthly SEO packages"
 }

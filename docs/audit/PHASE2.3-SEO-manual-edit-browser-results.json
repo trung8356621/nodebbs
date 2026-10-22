@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "checks": [
+    "Topic sidebar toggles manual pin independently of active SEO",
+    "Dashboard action label and row refresh reflect manual pin on/off without changing SEO",
+    "Manual pin never changes SEO link classification or purchased end",
+    "Owner browser edit/save preserves balance, purchase count and immutable monthly end"
+  ]
+}

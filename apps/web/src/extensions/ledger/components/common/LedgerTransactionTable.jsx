@@ -93,6 +93,8 @@ export function LedgerTransactionTable({
         const title=row.type==='post_topic'?String(value||'').replace(/^[^:：]*[:：]\s*/,''):'';
         return <span>{getTransactionTypeLabel(row.type,pbnT)}{title?' · '+title:''}</span>;
       }
+      if(row.type==='seo_purchase')return <a href={`/topic/${meta?.topicId}`} title={row.referenceId} className='underline'>{pbnT('seoTitle')} · #{meta?.topicId} · v{meta?.priceVersion}</a>;
+      if(row.type==='seo_correction')return <span>{pbnT('pinCorrect')}: {meta?.reason}</span>;
       if(row.type==='pin_purchase')return <a href={`/topic/${meta?.topicId}`} title={row.referenceId} className='underline'>{pbnT('pinTitle')} · #{meta?.topicId}</a>;
       if(row.type==='pin_correction')return <span>{pbnT('pinCorrect')}: {meta?.reason}</span>;
       const hasBonus = meta && meta.effectBonus > 0;

@@ -1,0 +1,71 @@
+{
+  "status": "PASS",
+  "forums": [
+    {
+      "forum": "forum_a",
+      "webPort": 3100,
+      "apiPort": 7100,
+      "database": "pbn_dev",
+      "webStatus": 200,
+      "apiStatus": 200,
+      "baselineVersion": 6,
+      "products": [
+        {
+          "id": "seo-monthly",
+          "list": 5,
+          "sale": 0,
+          "version": 1,
+          "checksum": "31175909352df950bc4ac38fff173917cbc51468d501376f95fc94bf774d7051"
+        },
+        {
+          "id": "seo-monthly-paid",
+          "list": 5,
+          "sale": 3,
+          "version": 1,
+          "checksum": "31175909352df950bc4ac38fff173917cbc51468d501376f95fc94bf774d7051"
+        }
+      ],
+      "negativeBalances": 0
+    },
+    {
+      "forum": "forum_b",
+      "webPort": 3200,
+      "apiPort": 7200,
+      "database": "pbn_forum_b",
+      "webStatus": 200,
+      "apiStatus": 200,
+      "baselineVersion": 6,
+      "products": [
+        {
+          "id": "seo-monthly",
+          "list": 5,
+          "sale": 0,
+          "version": 1,
+          "checksum": "0db125e0cae73b72fb2c290328494362b98d8daa98240f4ed98211d66e2efeaa"
+        },
+        {
+          "id": "seo-monthly-paid",
+          "list": 5,
+          "sale": 4,
+          "version": 1,
+          "checksum": "0db125e0cae73b72fb2c290328494362b98d8daa98240f4ed98211d66e2efeaa"
+        }
+      ],
+      "negativeBalances": 0
+    }
+  ],
+  "evidence": [
+    "PHASE2.3-SEO-api-results.json",
+    "PHASE2.3-SEO-bootstrap-results.json",
+    "PHASE2.3-SEO-browser-results.json",
+    "PHASE2.3-SEO-browser-retry-results.json",
+    "PHASE2.3-SEO-expiry-browser-results.json",
+    "PHASE2.3-SEO-integration-results.json",
+    "PHASE2.3-SEO-link-unit-results.json",
+    "PHASE2.3-SEO-manual-edit-browser-results.json",
+    "PHASE2.3-SEO-preservation-results.json",
+    "PHASE2.3-SEO-restore-results.json"
+  ],
+  "evidenceStatus": "All recorded acceptance results PASS",
+  "limits": "Local development acceptance only; no real OPS or production deployment"
+}

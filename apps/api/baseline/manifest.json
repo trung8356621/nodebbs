@@ -39,6 +39,24 @@
           "sha256": "00532a40d15ec5c22520579f77a982807af2aa8bd99726187c234c3f9c8b5b67"
         }
       ]
+    },
+    {
+      "version": 5,
+      "files": [
+        {
+          "file": "0003_big_emma_frost.sql",
+          "sha256": "e0ff373bd2b3d4d9b366e142d4d43afd017bad861f746ef5f75eeee9d7c27918"
+        }
+      ]
+    },
+    {
+      "version": 6,
+      "files": [
+        {
+          "file": "0004_zippy_randall_flagg.sql",
+          "sha256": "0d7adc5a0b98c1126711e77701aab79ee347bffadc4f0641f0ca4078cf39fc72"
+        }
+      ]
     }
   ]
 }

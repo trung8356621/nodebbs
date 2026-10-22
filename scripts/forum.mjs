@@ -61,6 +61,7 @@ export function runtime(c) {
   const uploads = c.legacyUploads ? path.join(api, 'uploads') : path.join(dir, 'uploads');
   fs.mkdirSync(uploads, { recursive: true });
   return {
+    OPS_PRICE_TRUST_KEY_FILE:s.opsPriceTrustKeyFile||'', OPS_PRICE_SNAPSHOT_FILE:s.opsPriceSnapshotFile||'', OPS_PRICE_SOURCE_ID:s.opsPriceSourceId||'',
     POLICY_TRUST_KEY_FILE: s.policyTrustKeyFile || '', POLICY_SNAPSHOT_FILE: s.policySnapshotFile || '',
     NODE_ENV: 'development', FORUM_ID: c.id, FORUM_DATABASE_NAME: c.database,
     DATABASE_URL: s.databaseUrl, REDIS_URL: s.redisUrl,
@@ -81,7 +82,7 @@ export function runtime(c) {
 export function processEnv(c) {
   const inherited = { ...process.env };
   for (const key of Object.keys(inherited)) {
-    if (/^(FORUM_|NEXT_PUBLIC_|DATABASE_|REDIS_|JWT_|COOKIE_|AUTH_|SERVER_API_|UPLOAD_|PORT$|HOST$|CORS_|NODE_OPTIONS$)/.test(key)) delete inherited[key];
+    if (/^(OPS_PRICE_|FORUM_|NEXT_PUBLIC_|DATABASE_|REDIS_|JWT_|COOKIE_|AUTH_|SERVER_API_|UPLOAD_|PORT$|HOST$|CORS_|NODE_OPTIONS$)/.test(key)) delete inherited[key];
   }
   return { ...inherited, ...runtime(c) };
 }

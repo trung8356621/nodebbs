@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "stagedFiles": 79,
+  "checks": [
+    "Changed paths reviewed; no private credentials, DB dumps, runtime caches or upload artifacts staged",
+    "No private-key/JWT/credential-bearing database URL found in staged text",
+    "Immutable historical baseline SQL/catalogs preserved",
+    "All staged migration SQL checksums match the manifest",
+    "Personal origin and existing branch verified"
+  ],
+  "branch": "chore/pbn-phase1-5-i18n",
+  "origin": "https://github.com/trung8356621/nodebbs.git"
+}
