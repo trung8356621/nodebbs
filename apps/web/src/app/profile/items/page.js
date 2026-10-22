@@ -1,1 +1,2 @@
-export { default } from '@/extensions/shop/pages/user/UserItemsPage';
+import {redirect} from 'next/navigation';
+export default function LegacyDecorationPage(){redirect('/profile/badges');}

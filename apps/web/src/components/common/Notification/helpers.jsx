@@ -90,7 +90,7 @@ export const getNotificationMessage = (notification, pbnT = pbnRuntimeT) => {
     case 'report_dismissed':
       return pbnT("m1449");
     case 'badge_earned':
-      return notification.message || pbnT("m1450");
+      return pbnT('badgeUnlockTitle');
     case 'gift_received':
       return notification.message;
     case 'reward':

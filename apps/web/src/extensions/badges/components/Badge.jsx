@@ -1,4 +1,5 @@
 'use client';
+import {localizeBadge} from '@/extensions/badges/presentation';
 
 import { usePbnTranslations } from "@/i18n/useTranslations";
 import React from 'react';
@@ -32,7 +33,7 @@ export default function Badge({
   // 处理传入的数据结构差异
   // 情况 1: 传入的是 userBadge 对象 (包含 badge 属性)
   // 情况 2: 传入的是 badge 对象本身
-  const badgeData = userBadge?.badge || badge || userBadge;
+  const badgeData = localizeBadge(userBadge?.badge || badge || userBadge,pbnT);
   const earnedAt = userBadge?.earnedAt;
   if (!badgeData) return null;
 

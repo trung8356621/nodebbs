@@ -13,9 +13,9 @@ import chalk from 'chalk';
 export const DEFAULT_BADGES = [
   // --- 注册时长 (Registration) ---
   {
-    name: '初来乍到',
+    name: 'Early Member',
     slug: 'reg-7days',
-    description: '注册满 7 天',
+    description: 'Member for 7 days',
     iconUrl: 'https://placehold.co/300x300/e0e0e0/333333?text=7Days',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'registration_days', threshold: 7 }),
@@ -23,9 +23,9 @@ export const DEFAULT_BADGES = [
     isActive: true,
   },
   {
-    name: '满月礼',
+    name: 'Regular Member',
     slug: 'reg-30days',
-    description: '注册满 30 天',
+    description: 'Member for 30 days',
     iconUrl: 'https://placehold.co/300x300/b0bec5/333333?text=30Days',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'registration_days', threshold: 30 }),
@@ -33,9 +33,9 @@ export const DEFAULT_BADGES = [
     isActive: true,
   },
   {
-    name: '老朋友',
+    name: 'Longtime Member',
     slug: 'reg-1year',
-    description: '注册满 1 年',
+    description: 'Member for one year',
     iconUrl: 'https://placehold.co/300x300/ffd700/333333?text=1Year',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'registration_days', threshold: 365 }),
@@ -46,9 +46,9 @@ export const DEFAULT_BADGES = [
 
   // --- 发帖数 (Posts) ---
   {
-    name: '初试啼声',
+    name: 'First Reply',
     slug: 'post-1',
-    description: '发布第 1 条回复',
+    description: 'Publish your first reply',
     iconUrl: 'https://placehold.co/300x300/81c784/ffffff?text=Post1',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'post_count', threshold: 1 }),
@@ -56,9 +56,9 @@ export const DEFAULT_BADGES = [
     isActive: true,
   },
   {
-    name: '活跃分子',
+    name: 'Active Member',
     slug: 'post-100',
-    description: '累计发布 100 条回复',
+    description: 'Publish 100 replies',
     iconUrl: 'https://placehold.co/300x300/4db6ac/ffffff?text=Post100',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'post_count', threshold: 100 }),
@@ -66,9 +66,9 @@ export const DEFAULT_BADGES = [
     isActive: true,
   },
   {
-    name: '妙语连珠',
+    name: 'Community Contributor',
     slug: 'post-1000',
-    description: '累计发布 1000 条回复',
+    description: 'Publish 1,000 replies',
     iconUrl: 'https://placehold.co/300x300/009688/ffffff?text=Post1000',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'post_count', threshold: 1000 }),
@@ -79,9 +79,9 @@ export const DEFAULT_BADGES = [
 
   // --- 话题数 (Topics) ---
   {
-    name: '抛砖引玉',
+    name: 'First Topic',
     slug: 'topic-1',
-    description: '发布第 1 个话题',
+    description: 'Publish your first topic',
     iconUrl: 'https://placehold.co/300x300/ffb74d/ffffff?text=Topic1',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'topic_count', threshold: 1 }),
@@ -89,9 +89,9 @@ export const DEFAULT_BADGES = [
     isActive: true,
   },
   {
-    name: '话题达人',
+    name: 'Topic Contributor',
     slug: 'topic-50',
-    description: '累计发布 50 个话题',
+    description: 'Publish 50 topics',
     iconUrl: 'https://placehold.co/300x300/ff9800/ffffff?text=Topic50',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'topic_count', threshold: 50 }),
@@ -101,9 +101,9 @@ export const DEFAULT_BADGES = [
 
   // --- 获赞数 (Likes Received) ---
   {
-    name: '小有名气',
+    name: 'Appreciated Member',
     slug: 'like-10',
-    description: '累计获得 10 个赞',
+    description: 'Receive 10 likes',
     iconUrl: 'https://placehold.co/300x300/f06292/ffffff?text=Like10',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'like_received_count', threshold: 10 }),
@@ -111,9 +111,9 @@ export const DEFAULT_BADGES = [
     isActive: true,
   },
   {
-    name: '众星捧月',
+    name: 'Community Favorite',
     slug: 'like-100',
-    description: '累计获得 100 个赞',
+    description: 'Receive 100 likes',
     iconUrl: 'https://placehold.co/300x300/e91e63/ffffff?text=Like100',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'like_received_count', threshold: 100 }),
@@ -122,9 +122,9 @@ export const DEFAULT_BADGES = [
     metadata: JSON.stringify({ effects: { checkInBonus: 2 } }), // 签到额外+2
   },
   {
-    name: '万众瞩目',
+    name: 'Community Star',
     slug: 'like-1000',
-    description: '累计获得 1000 个赞',
+    description: 'Receive 1,000 likes',
     iconUrl: 'https://placehold.co/300x300/c2185b/ffffff?text=Like1000',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'like_received_count', threshold: 1000 }),
@@ -135,9 +135,9 @@ export const DEFAULT_BADGES = [
 
   // --- 连续签到 (Check-in Streak) ---
   {
-    name: '坚持不懈',
+    name: 'Steady Member',
     slug: 'streak-7',
-    description: '连续签到 7 天',
+    description: 'Check in for 7 consecutive days',
     iconUrl: 'https://placehold.co/300x300/64b5f6/ffffff?text=Streak7',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'checkin_streak', threshold: 7 }),
@@ -145,9 +145,9 @@ export const DEFAULT_BADGES = [
     isActive: true,
   },
   {
-    name: '持之以恒',
+    name: 'Dedicated Member',
     slug: 'streak-30',
-    description: '连续签到 30 天',
+    description: 'Check in for 30 consecutive days',
     iconUrl: 'https://placehold.co/300x300/2196f3/ffffff?text=Streak30',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'checkin_streak', threshold: 30 }),
@@ -156,9 +156,9 @@ export const DEFAULT_BADGES = [
     metadata: JSON.stringify({ effects: { checkInBonusPercent: 10 } }), // 签到加成 10%
   },
   {
-    name: '意志如钢',
+    name: 'Committed Member',
     slug: 'streak-100',
-    description: '连续签到 100 天',
+    description: 'Check in for 100 consecutive days',
     iconUrl: 'https://placehold.co/300x300/1565c0/ffffff?text=Streak100',
     category: 'achievement',
     unlockCondition: JSON.stringify({ type: 'checkin_streak', threshold: 100 }),
@@ -169,9 +169,9 @@ export const DEFAULT_BADGES = [
 
   // --- 特殊 (Special) ---
   {
-    name: '管理员认证',
+    name: 'Verified Operator',
     slug: 'admin-verified',
-    description: '官方管理员特别认证',
+    description: 'Assigned by a forum operator',
     iconUrl: 'https://placehold.co/300x300/000000/ffd700?text=Admin',
     category: 'manual',
     unlockCondition: JSON.stringify({ type: 'manual' }),

@@ -162,3 +162,9 @@ node scripts/forum-seo.mjs reconcile forums/forum-a.json
 Configure owner-protected `opsPriceTrustKeyFile`, `opsPriceSnapshotFile`, and `opsPriceSourceId` in each forum's ignored secrets file. `node scripts/seo-price-fixture.mjs` creates independent **development-only** signed sources for A/B; it preserves existing fixture keys and snapshots. Restart after changing source references. The file provider checks every five minutes; checkout uses only verified local database snapshots. Effective intervals and snapshot expiry are evaluated with database time, without a midnight cron or external checkout call. No valid current price means no purchase. API/SSR reads use no-store; open topics have a single expiry deadline timer. Housekeeping processes at most 50 due SEO rows per run.
 
 See [Phase 2.3 FINAL implementation, contract and verification](docs/audit/PHASE2.3-WALLET-SEO-ENTITLEMENTS.md). The earlier [paid-placement report](docs/audit/PHASE2.3-WALLET-PAID-PIN.md) is historical and superseded by FINAL. Test fixtures fund only dedicated accounts; do not run development acceptance helpers against production.
+
+## Badges and profile decoration — Phase 2.3A
+
+Use `/profile/badges` to equip one earned badge and its associated lightweight avatar frame. Badges and frames are not Credit products. Decorative shop purchases, gifts and item equipment are disabled server-side; legacy shop/items pages redirect to badges. Existing inventory, financial history and SEO checkout are preserved.
+
+For existing demo data, run `node scripts/badge-cleanup.mjs` to normalize known seeded labels without changing ownership or commerce records. Fresh badge seeds already use neutral names. See [badge/profile cleanup and verification](docs/audit/PHASE2.3A-BADGE-CLEANUP.md) for frame themes, VI/EN behavior, tests and limits.

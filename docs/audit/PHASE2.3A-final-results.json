@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "health": [
+    {
+      "port": 3100,
+      "status": 200
+    },
+    {
+      "port": 7100,
+      "status": 200
+    },
+    {
+      "port": 3200,
+      "status": 200
+    },
+    {
+      "port": 7200,
+      "status": 200
+    }
+  ],
+  "acceptance": [
+    "api",
+    "browser",
+    "preservation"
+  ],
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 11
+  },
+  "i18n": {
+    "errors": 0,
+    "webKeysPerLocale": 2687,
+    "backendTemplatesPerLocale": 741
+  },
+  "builds": {
+    "forum_a": "PASS",
+    "forum_b": "PASS"
+  },
+  "scope": "Local native acceptance; no production deployment"
+}

@@ -145,11 +145,6 @@ export default function DashboardSidebar() {
       label: pbnT("m1504"),
       permission: 'dashboard.extensions'
     }, {
-      href: '/dashboard/shop',
-      icon: ShoppingCart,
-      label: pbnT("m1505"),
-      permission: 'dashboard.extensions'
-    }, {
       href: '/dashboard/badges',
       icon: Medal,
       label: pbnT("m1506"),

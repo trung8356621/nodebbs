@@ -13,6 +13,7 @@ import { users, badges } from '../../../db/schema.js';
 import { eq } from 'drizzle-orm';
 
 export default async function badgeRoutes(fastify, options) {
+  fastify.addHook('onSend',async(request,reply,payload)=>{reply.header('Cache-Control','private, no-store, max-age=0');return payload;});
   // 获取勋章列表 (RESTful: GET /badges)
   fastify.get('/', {
     preHandler: [fastify.optionalAuth],
@@ -45,12 +46,13 @@ export default async function badgeRoutes(fastify, options) {
         
         const ownershipInfo = new Map();
         
+        const equippedId=userOwned.find(ub=>ub.isDisplayed!==false)?.id;
         userOwned.forEach(ub => {
             const bid = ub.badge ? ub.badge.id : ub.badgeId;
             ownershipInfo.set(bid, {
                 isOwned: true,
                 earnedAt: ub.earnedAt,
-                isDisplayed: ub.isDisplayed,
+                isDisplayed: ub.id===equippedId,
                 userBadgeId: ub.id  // 用户勋章记录ID，用于更新展示设置
             });
         });
@@ -217,13 +219,14 @@ export default async function badgeRoutes(fastify, options) {
     if (!badgeExists) return reply.code(404).send({ error: '徽章不存在' });
 
     const result = await grantBadge(userId, badgeId, 'admin_manual');
+    await fastify.clearUserCache(userId);
 
     // 发送通知
     await fastify.notification.send({
       userId: userId,
       type: 'badge_earned',
       triggeredByUserId: request.user.id,
-      message: `恭喜！你获得了 "${badgeExists.name}" 勋章`,
+      message: 'You unlocked a new badge!',
       metadata: {
         badgeId: badgeExists.id,
         badgeName: badgeExists.name,
@@ -255,6 +258,7 @@ export default async function badgeRoutes(fastify, options) {
     const { userId, badgeId } = request.body;
     
     const success = await revokeUserBadge(userId, badgeId);
+    await fastify.clearUserCache(userId);
     if (!success) {
          return reply.code(404).send({ error: '未找到该用户持有的此徽章，或者撤销失败' });
     }

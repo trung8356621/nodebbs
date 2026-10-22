@@ -1,4 +1,5 @@
-import db from '../../../db/index.js';
+import db,{atomicWrite} from '../../../db/index.js';
+import {presentBadge} from '../presentation.js';
 import { badges, userBadges } from '../schema.js';
 import { userCheckIns } from '../../rewards/schema.js';
 import { users, topics, posts, shopItems } from '../../../db/schema.js';
@@ -29,6 +30,7 @@ export async function grantBadge(userId, badgeId, source = 'system') {
       userId,
       badgeId,
       source,
+      isDisplayed: false,
       earnedAt: new Date(),
     })
     .returning();
@@ -90,7 +92,7 @@ export async function getBadges(options = {}) {
   const [{ count: total }] = await countQuery;
   
   return {
-    items,
+    items: items.map(presentBadge),
     page,
     limit,
     total,
@@ -101,7 +103,7 @@ export async function getBadges(options = {}) {
  * 获取用户拥有的徽章
  */
 export async function getUserBadges(userId) {
-  return await db
+  const result = await db
     .select({
       id: userBadges.id,
       earnedAt: userBadges.earnedAt,
@@ -111,7 +113,8 @@ export async function getUserBadges(userId) {
     .from(userBadges)
     .innerJoin(badges, eq(userBadges.badgeId, badges.id))
     .where(and(eq(userBadges.userId, userId), eq(badges.isActive, true)))
-    .orderBy(userBadges.displayOrder);
+    .orderBy(userBadges.displayOrder, userBadges.id);
+  return result.map(row => ({...row,badge:presentBadge(row.badge)}));
 }
 
 /**
@@ -133,7 +136,7 @@ export async function getUsersBadges(userIds) {
     .from(userBadges)
     .innerJoin(badges, eq(userBadges.badgeId, badges.id))
     .where(and(inArray(userBadges.userId, userIds), eq(badges.isActive, true)))
-    .orderBy(userBadges.displayOrder);
+    .orderBy(userBadges.displayOrder, userBadges.id);
 
   // Group by userId
   const map = {};
@@ -145,7 +148,7 @@ export async function getUsersBadges(userIds) {
         id: item.id,
         earnedAt: item.earnedAt,
         isDisplayed: item.isDisplayed,
-        badge: item.badge
+        badge: presentBadge(item.badge)
       });
     }
   });
@@ -384,24 +387,17 @@ export async function getPassiveEffects(userId) {
  * @returns {Promise<object|null>} 更新后的记录，或 null 表示未找到/无权限
  */
 export async function updateUserBadgeDisplay(userBadgeId, userId, data) {
-  const updateData = {};
-  
-  if (data.isDisplayed !== undefined) {
-    updateData.isDisplayed = data.isDisplayed;
-  }
-  if (data.displayOrder !== undefined) {
-    updateData.displayOrder = data.displayOrder;
-  }
-  
-  if (Object.keys(updateData).length === 0) {
-    return null;
-  }
-  
-  const [result] = await db
-    .update(userBadges)
-    .set(updateData)
-    .where(and(eq(userBadges.id, userBadgeId), eq(userBadges.userId, userId)))
-    .returning();
-  
-  return result || null;
+  return atomicWrite(async () => {
+    await db.select({id:users.id}).from(users).where(eq(users.id,userId)).for('update');
+    const [owned] = await db.select({id:userBadges.id}).from(userBadges)
+      .innerJoin(badges,eq(userBadges.badgeId,badges.id))
+      .where(and(eq(userBadges.id,userBadgeId),eq(userBadges.userId,userId),eq(badges.isActive,true)));
+    if (!owned || (data.isDisplayed===undefined && data.displayOrder===undefined)) return null;
+    if (data.isDisplayed===true) await db.update(userBadges).set({isDisplayed:false}).where(eq(userBadges.userId,userId));
+    const [result] = await db.update(userBadges).set({
+      ...(data.isDisplayed!==undefined?{isDisplayed:data.isDisplayed}:{}),
+      ...(data.displayOrder!==undefined?{displayOrder:data.displayOrder}:{}),
+    }).where(and(eq(userBadges.id,userBadgeId),eq(userBadges.userId,userId))).returning();
+    return result || null;
+  });
 }

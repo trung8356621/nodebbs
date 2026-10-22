@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "forum": "forum_a",
+      "locale": "vi-VN",
+      "status": "PASS",
+      "checks": "VI/EN page and neutral seed text; no visible Han text; owned/locked badges; actual equip/unequip; four distinct computed frame styles; public profile frame; translated unlock ignores legacy URL name/image; retired navigation and route redirects; Wallet and active SEO render; no browser errors"
+    },
+    {
+      "forum": "forum_a",
+      "locale": "en-US",
+      "status": "PASS",
+      "checks": "VI/EN page and neutral seed text; no visible Han text; owned/locked badges; actual equip/unequip; four distinct computed frame styles; public profile frame; translated unlock ignores legacy URL name/image; retired navigation and route redirects; Wallet and active SEO render; no browser errors"
+    },
+    {
+      "forum": "forum_b",
+      "locale": "vi-VN",
+      "status": "PASS",
+      "checks": "VI/EN page and neutral seed text; no visible Han text; owned/locked badges; actual equip/unequip; four distinct computed frame styles; public profile frame; translated unlock ignores legacy URL name/image; retired navigation and route redirects; Wallet and active SEO render; no browser errors"
+    },
+    {
+      "forum": "forum_b",
+      "locale": "en-US",
+      "status": "PASS",
+      "checks": "VI/EN page and neutral seed text; no visible Han text; owned/locked badges; actual equip/unequip; four distinct computed frame styles; public profile frame; translated unlock ignores legacy URL name/image; retired navigation and route redirects; Wallet and active SEO render; no browser errors"
+    }
+  ]
+}

@@ -4,8 +4,8 @@ import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from '@/components/common/Link';
-import { Settings, MessageSquare, Star, MessageCircle, Bell, Mail, ShieldOff, Gift, Coins, ShoppingCart, Package, ChevronDown, ChevronRight, Store, Medal, Wallet } from 'lucide-react';
-import { useLedger, useDefaultCurrencyName } from '@/extensions/ledger/contexts/LedgerContext';
+import { Settings, MessageSquare, MessageCircle, Bell, Mail, ShieldOff, Gift, ChevronDown, ChevronRight, Store, Medal, Wallet } from 'lucide-react';
+import { useLedger } from '@/extensions/ledger/contexts/LedgerContext';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 export default function ProfileSidebar() {
@@ -14,11 +14,11 @@ export default function ProfileSidebar() {
   const {
     isWalletEnabled
   } = useLedger();
-  const currencyName = useDefaultCurrencyName();
+
   const [openMenus, setOpenMenus] = useState({
     'content': true,
     'messages': true,
-    'rewards-shop': true,
+    'wallet-badges': true,
     'account': true
   });
   const toggleMenu = key => {
@@ -53,30 +53,20 @@ export default function ProfileSidebar() {
       icon: Bell,
       label: pbnT("m986")
     }]
-  }, ...(isWalletEnabled ? [{
-    key: 'rewards-shop',
-    label: pbnT("m1510"),
-    icon: Store,
-    children: [{
+  }, {
+    key: 'wallet-badges',
+    label: pbnT('badgeProfileSection'),
+    icon: Medal,
+    children: [...(isWalletEnabled?[{
       href: '/profile/wallet',
       icon: Wallet,
       label: pbnT("m1511")
-    }, {
-      href: '/profile/shop',
-      icon: ShoppingCart,
-      label: pbnT("m1512", {
-        arg0: currencyName
-      })
-    }, {
-      href: '/profile/items',
-      icon: Package,
-      label: pbnT("m1513")
-    }, {
+    }]:[]), {
       href: '/profile/badges',
       icon: Medal,
       label: pbnT("m918")
     }]
-  }] : []), {
+  }, {
     key: 'account',
     label: pbnT("m1514"),
     icon: Settings,

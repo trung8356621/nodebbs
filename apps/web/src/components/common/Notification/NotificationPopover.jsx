@@ -142,7 +142,7 @@ export default function NotificationPopover() {
               linkUrl = `/profile/messages/${notification.triggeredByUserId}`;
             } else if (notification.type === 'gift_received') {
               // 礼物类型：跳转到我的物品页面
-              linkUrl = '/profile/items';
+              linkUrl = '/profile/badges';
             } else if (notification.type === 'report_resolved' || notification.type === 'report_dismissed') {
               // 举报处理结果：跳转到被举报的内容
               try {
@@ -173,13 +173,11 @@ export default function NotificationPopover() {
               linkUrl = `/topic/${notification.topicId}${notification.postId ? `#post-${notification.postId}` : ''}`;
             } else if (notification.type === 'badge_earned') {
               // 勋章类型：跳转到我的勋章页面，并带上参数以触发弹窗
-              let badgeId, badgeName, iconUrl;
+              let badgeId;
               try {
                 const meta = typeof notification.metadata === 'string' ? JSON.parse(notification.metadata) : notification.metadata;
                 if (meta) {
                   badgeId = meta.badgeId;
-                  badgeName = meta.badgeName;
-                  iconUrl = meta.iconUrl;
                 }
               } catch (e) {
                 console.error('Error parsing badge metadata', e);
@@ -187,8 +185,6 @@ export default function NotificationPopover() {
               if (badgeId && !notification.isRead) {
                 const params = new URLSearchParams();
                 params.set('unlockBadgeId', badgeId);
-                if (badgeName) params.set('unlockBadgeName', badgeName);
-                if (iconUrl) params.set('unlockBadgeIcon', iconUrl);
                 linkUrl = `/profile/badges?${params.toString()}`;
               } else {
                 linkUrl = '/profile/badges';

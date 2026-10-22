@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "forum": "forum_a",
+      "status": "PASS",
+      "checks": "Registration/auth; 15 neutral seeded labels; operator grant/foreign-token rejection; four frame themes; concurrent equip selects exactly one; unequip default; ownership enforced; legacy commerce 410/no debit; signed SEO exact debit/idempotency/sponsored effect; policy BLOCK"
+    },
+    {
+      "forum": "forum_b",
+      "status": "PASS",
+      "checks": "Registration/auth; 15 neutral seeded labels; operator grant/foreign-token rejection; four frame themes; concurrent equip selects exactly one; unequip default; ownership enforced; legacy commerce 410/no debit; signed SEO exact debit/idempotency/sponsored effect; policy BLOCK"
+    }
+  ]
+}

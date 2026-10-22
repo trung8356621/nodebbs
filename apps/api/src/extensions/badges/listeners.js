@@ -1,5 +1,4 @@
 import { checkBadgeConditions } from './services/badgeService.js';
-import { DEFAULT_CURRENCY_CODE } from '../ledger/constants.js';
 import { EVENTS } from '../../constants/events.js';
 
 /**
@@ -14,12 +13,6 @@ export function registerBadgeListeners(fastify) {
 
   const handleActivity = async (payload) => {
     try {
-      // 检查积分货币是否启用 (Assuming badges rely on credits system)
-      if (fastify.ledger) {
-        const isCreditsActive = await fastify.ledger.isCurrencyActive(DEFAULT_CURRENCY_CODE);
-        if (!isCreditsActive) return;
-      }
-
       const userId = payload.userId || payload.user?.id;
       if (userId) {
         fastify.log.debug(`[勋章] 正在检查用户 ${userId} 的解锁条件`);
@@ -33,7 +26,7 @@ export function registerBadgeListeners(fastify) {
             await fastify.notification.send({
               userId,
               type: 'badge_earned',
-              message: `恭喜！你获得了一枚新勋章：${badge.name}`,
+              message: 'You unlocked a new badge!',
               metadata: {
                  badgeId: badge.id,
                  badgeName: badge.name,

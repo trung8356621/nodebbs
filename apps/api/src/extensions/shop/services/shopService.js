@@ -1,3 +1,4 @@
+import {rejectDecorationCommerce} from '../commerce.js';
 import db from '../../../db/index.js';
 import { users } from '../../../db/schema.js';
 import { shopItems, userItems, userItemLogs } from '../schema.js';
@@ -130,6 +131,7 @@ export async function getShopItemById(itemId) {
  * @returns {Promise<Object>}
  */
 export async function buyItem(userId, itemId, quantity = 1) {
+  rejectDecorationCommerce();
   // 数量安全校验
   quantity = Math.max(1, Math.floor(Number(quantity) || 1));
   try {
@@ -429,6 +431,7 @@ export async function getUserEquippedItems(userId) {
  * @returns {Promise<Object>}
  */
 export async function equipItem(userId, userItemId) {
+  rejectDecorationCommerce();
   try {
     return await db.transaction(async (tx) => {
       // 1. 验证物品归属
@@ -499,6 +502,7 @@ export async function equipItem(userId, userItemId) {
  * @returns {Promise<Object>}
  */
 export async function unequipItem(userId, userItemId) {
+  rejectDecorationCommerce();
   try {
     const result = await db
       .update(userItems)
@@ -635,6 +639,7 @@ export async function deleteShopItem(id) {
  * @returns {Promise<Object>}
  */
 export async function giftItem(senderId, receiverId, itemId, message, quantity = 1) {
+  rejectDecorationCommerce();
   quantity = Math.max(1, Math.floor(Number(quantity) || 1));
   try {
     const result = await db.transaction(async (tx) => {
@@ -863,6 +868,7 @@ export async function giftItem(senderId, receiverId, itemId, message, quantity =
  * @returns {Promise<Object>}
  */
 export async function useItem(userId, userItemId, useData = {}) {
+  rejectDecorationCommerce();
   try {
     return await db.transaction(async (tx) => {
       // 1. 验证物品归属和状态，同时获取商品 metadata

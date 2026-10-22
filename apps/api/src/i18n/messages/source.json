@@ -738,5 +738,6 @@
   "seo_6": "SEO price changed or quote expired; confirm a new quote",
   "seo_7": "Only the topic owner may cancel SEO activation",
   "seo_8": "SEO restriction requires an explicit reason",
-  "seo_9": "Legacy placement checkout is retired; use monthly SEO packages"
+  "seo_9": "Legacy placement checkout is retired; use monthly SEO packages",
+  "badge_commerce_unavailable": "Profile decoration commerce is unavailable; use badges for decoration and SEO packages for Credit purchases"
 }

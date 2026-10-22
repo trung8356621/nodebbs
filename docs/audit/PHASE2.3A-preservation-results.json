@@ -1,0 +1,41 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "forum": "forum_a",
+      "status": "PASS",
+      "protectedTables": [
+        "users",
+        "user_roles",
+        "sys_accounts",
+        "sys_transactions",
+        "seo_purchases",
+        "seo_entitlements",
+        "seo_events",
+        "shop_items",
+        "user_items"
+      ],
+      "baselineVersion": 6,
+      "checks": "Original users/roles, wallets/ledger, SEO purchases/terms/events, shop definitions and inventory preserved; only authentication/update timestamps excluded; no schema change; public decoration catalog explicitly unavailable"
+    },
+    {
+      "forum": "forum_b",
+      "status": "PASS",
+      "protectedTables": [
+        "users",
+        "user_roles",
+        "sys_accounts",
+        "sys_transactions",
+        "seo_purchases",
+        "seo_entitlements",
+        "seo_events",
+        "shop_items",
+        "user_items"
+      ],
+      "baselineVersion": 6,
+      "checks": "Original users/roles, wallets/ledger, SEO purchases/terms/events, shop definitions and inventory preserved; only authentication/update timestamps excluded; no schema change; public decoration catalog explicitly unavailable"
+    }
+  ],
+  "serviceGuards": "Direct buy/gift/equip/unequip/use entry points reject before database writes",
+  "frameMetadata": "Invalid metadata safe; custom metadata enum and rarity mapping verified"
+}

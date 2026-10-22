@@ -18,6 +18,10 @@ import { users } from '../../../db/schema.js';
 import { eq } from 'drizzle-orm';
 
 export default async function shopRoutes(fastify, options) {
+  fastify.addHook('onRequest',async(request,reply)=>{
+    if(request.method==='GET'&&request.url.split('?')[0].endsWith('/shop/items'))return reply.send({items:[],total:0,page:1,limit:20,commerceEnabled:false});
+    if(!['GET','HEAD','OPTIONS'].includes(request.method))return reply.code(410).send({error:'Profile decoration commerce is unavailable; use badges for decoration and SEO packages for Credit purchases'});
+  });
   // ============ 公开/用户接口 ============
 
   // 获取商店商品列表 (RESTful: GET /shop/items)

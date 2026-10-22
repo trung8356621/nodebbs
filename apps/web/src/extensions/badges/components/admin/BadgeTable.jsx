@@ -1,3 +1,4 @@
+import {localizeBadge} from '@/extensions/badges/presentation';
 import { usePbnTranslations } from "@/i18n/useTranslations";
 import React from 'react';
 import { DataTable } from '@/components/common/DataTable';
@@ -18,7 +19,7 @@ export function BadgeTable({
   }, {
     key: 'name',
     label: pbnT("m230"),
-    render: value => <span className="font-medium">{value}</span>
+    render: (value,item) => <span className="font-medium">{localizeBadge(item,pbnT).name}</span>
   }, {
     key: 'slug',
     label: 'Slug',

@@ -18,16 +18,11 @@ export default function MyBadgesPage() {
   const [unlockBadgeItem, setUnlockBadgeItem] = useState(null);
   useEffect(() => {
     const unlockBadgeId = searchParams.get('unlockBadgeId');
-    const unlockBadgeName = searchParams.get('unlockBadgeName');
-    const unlockBadgeIcon = searchParams.get('unlockBadgeIcon');
-    if (unlockBadgeId && unlockBadgeName && unlockBadgeIcon) {
-      setUnlockBadgeItem({
-        id: unlockBadgeId,
-        name: unlockBadgeName,
-        imageUrl: unlockBadgeIcon,
-        description: pbnT("m917")
-      });
-      setUnlockDialogOpen(true);
+    if (unlockBadgeId) {
+      import('@/extensions/badges/api').then(({badgesApi})=>badgesApi.getAll({limit:100})).then(result=>{
+        const badge=result.items.find(b=>String(b.id)===unlockBadgeId&&b.isOwned);
+        if(badge){setUnlockBadgeItem(badge);setUnlockDialogOpen(true);}
+      }).catch(()=>{});
 
       // 清除 URL 参数，避免刷新再次触发
       // 使用 replace 而不是 push 以免污染历史记录

@@ -1,1 +1,2 @@
-export { default } from '@/extensions/shop/pages/admin/AdminShopPage';
+import {redirect} from 'next/navigation';
+export default function LegacyDecorationPage(){redirect('/dashboard/badges');}

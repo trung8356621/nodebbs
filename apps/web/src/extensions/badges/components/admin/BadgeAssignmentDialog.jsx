@@ -1,4 +1,5 @@
 'use client';
+import {localizeBadge} from '@/extensions/badges/presentation';
 
 import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState } from 'react';
@@ -93,7 +94,7 @@ export function BadgeAssignmentDialog({
                 {badgeList.map(badge => <SelectItem key={badge.id} value={String(badge.id)}>
                     <div className="flex items-center gap-2">
                        {badge.iconUrl && <img src={badge.iconUrl} className="w-4 h-4 object-contain" alt="" />}
-                       <span>{badge.name} (ID: {badge.id})</span>
+                       <span>{localizeBadge(badge,pbnT).name} (ID: {badge.id})</span>
                     </div>
                   </SelectItem>)}
               </SelectContent>
