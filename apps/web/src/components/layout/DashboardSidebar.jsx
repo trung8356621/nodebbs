@@ -4,7 +4,7 @@ import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useMemo } from 'react';
 import Link from '@/components/common/Link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FolderTree, Users, Tag, Smile, Flag, Settings, Shield, MessageSquare, MessagesSquare, ShoppingCart, Coins, Store, ChevronDown, ChevronRight, FileText, UserCog, ShieldAlert, Gift, Medal, Megaphone, Files, FileCode, History } from 'lucide-react';
+import { LayoutDashboard, FolderTree, Users, Tag, Smile, Flag, Settings, Shield, MessageSquare, MessagesSquare, ShoppingCart, Coins, Store, ChevronDown, ChevronRight, FileText, UserCog, ShieldAlert, Gift, Medal, Megaphone, Files, FileCode, History, Cable } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePermission } from '@/hooks/usePermission';
 export default function DashboardSidebar() {
@@ -28,6 +28,7 @@ export default function DashboardSidebar() {
   };
   const navItems = [
   {href: '/dashboard/seo', icon: ShoppingCart, label: pbnT('seoAdmin'), permission: 'dashboard.shop'},
+  {href: '/dashboard/ops-connection', icon: Cable, label: pbnT('opsConnection'), permission: 'dashboard.extensions'},
   // 概览 - 独立项
   {
     href: '/dashboard',

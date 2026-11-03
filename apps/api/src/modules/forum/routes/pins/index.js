@@ -2,13 +2,22 @@ import {eq,sql} from 'drizzle-orm';
 import db from '#core/db/index.js';
 import {shopItems} from '#core/db/schema.js';
 import {rows,validateProduct} from '../../services/pinService.js';
+import {PAID_PIN_MIGRATION_STATUS} from '../../services/seo/constants.js';
 export default async function pinRoutes(fastify){
   fastify.addHook('onRequest',async(request,reply)=>{if((request.method==='POST'&&/\/purchase(?:\?|$)/.test(request.url))||((request.method==='POST'||request.method==='PUT')&&request.url.includes('/admin/products')))return reply.code(410).send({error:'Legacy placement checkout is retired; use monthly SEO packages'});});
   const auth={preHandler:[fastify.authenticate]};
   const admin={preHandler:[fastify.requirePermission('dashboard.shop')]};
   const body=(properties,required=[])=>({type:'object',properties,required,additionalProperties:false});
   const topicParams={type:'object',properties:{topicId:{type:'integer',minimum:1}},required:['topicId']};
-  fastify.get('/products',async()=>fastify.pins.plans());
+  fastify.get('/products',async()=>{
+    const plans=await fastify.pins.plans();
+    return {
+      migrationStatus:PAID_PIN_MIGRATION_STATUS,
+      pricingAuthority:'forum_admin',
+      note:'paid_pin remains MIGRATION_PENDING; Forum-admin prices are not OPS authority',
+      plans,
+    };
+  });
   fastify.get('/me',auth,async request=>({balance:(await fastify.ledger.getAccount(request.user.id,'credits')).balance,purchases:await rows(sql`SELECT * FROM pin_entitlements WHERE user_id=${request.user.id} ORDER BY created_at DESC LIMIT 100`)}));
   fastify.get('/topics/:topicId',{...auth,schema:{params:topicParams}},async(request,reply)=>{
     const [t]=await rows(sql`SELECT id,user_id FROM topics WHERE id=${request.params.topicId}`);if(!t)return reply.code(404).send({error:'Topic not found'});

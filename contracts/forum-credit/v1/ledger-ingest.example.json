@@ -1,0 +1,15 @@
+{
+  "events": [
+    {
+      "eventId": "led_evt_1",
+      "transactionId": "tx_1",
+      "localUserId": "42",
+      "transactionType": "grant",
+      "creditDelta": 100,
+      "sequenceNumber": 1,
+      "eventTimestamp": "2026-11-03T00:00:00.000Z",
+      "relatedOrderReference": "pbn_ord_1001",
+      "correlationId": "corr_1"
+    }
+  ]
+}

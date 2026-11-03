@@ -30,7 +30,28 @@ class ApiClient {
           window.dispatchEvent(new Event('unauthorized'));
         }
       }
-      const data = await response.json();
+
+      const raw = await response.text();
+      let data = null;
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          // Proxy/gateway often returns plain text like "Internal Server Error"
+          // when the API process is down — do not surface JSON.parse noise.
+          const error = new Error(
+            response.ok
+              ? pbnT('m2195')
+              : (raw.trim().slice(0, 200) || pbnT('m2195')),
+          );
+          error.status = response.status || 502;
+          error.code = 'invalid_json_response';
+          throw error;
+        }
+      } else {
+        data = {};
+      }
+
       if (!response.ok) {
         const error = new Error(data.message || data.error || pbnT("m2195"));
         error.status = response.status;

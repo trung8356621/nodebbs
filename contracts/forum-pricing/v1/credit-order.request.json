@@ -1,0 +1,8 @@
+{
+  "localUserId": "42",
+  "orderReference": "pbn_ord_1001",
+  "packageCode": "pack_100",
+  "pricingVersion": 1,
+  "quoteId": null,
+  "idempotencyKey": "idem_1001"
+}

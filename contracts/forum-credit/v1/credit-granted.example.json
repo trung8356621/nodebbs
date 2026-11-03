@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "forum-credit/1",
+  "eventId": "fc_evt_example001",
+  "eventType": "forum.credit.granted",
+  "forumId": "forum-alpha",
+  "installationId": "finst_example001",
+  "localUserId": "42",
+  "orderReference": "pbn_ord_1001",
+  "orderId": "fcord_example001",
+  "orderKind": "paid_topup",
+  "amountVnd": 100000,
+  "currency": "VND",
+  "creditsToGrant": 100,
+  "isFreeLaunch": false,
+  "confirmedAt": "2026-11-03T00:00:00.000Z"
+}

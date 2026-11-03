@@ -4,6 +4,7 @@ import {sql,eq,and,asc} from 'drizzle-orm';
 import db,{atomicWrite} from '#core/db/index.js';
 import {shopItems} from '#core/db/schema.js';
 import {DEFAULT_CURRENCY_CODE} from '#core/extensions/ledger/constants.js';
+import {PAID_PIN_MIGRATION_STATUS} from './seo/constants.js';
 const fail=(message,statusCode=400)=>Object.assign(new Error(message),{statusCode});
 // Use the ambient transaction connection; concurrent purchases must not exhaust
 // the pool waiting for a second policy-inspection connection.
@@ -20,7 +21,14 @@ export function validateProduct(body){
 }
 export class PinService {
   constructor(fastify){this.fastify=fastify;}
-  async plans(){return (await db.select().from(shopItems).where(and(eq(shopItems.type,'topic_pin'),eq(shopItems.isActive,true))).orderBy(asc(shopItems.displayOrder),asc(shopItems.id))).map(p=>({...p,durationSeconds:JSON.parse(p.metadata||'{}').durationSeconds}));}
+  async plans(){
+    return (await db.select().from(shopItems).where(and(eq(shopItems.type,'topic_pin'),eq(shopItems.isActive,true))).orderBy(asc(shopItems.displayOrder),asc(shopItems.id))).map(p=>({
+      ...p,
+      durationSeconds:JSON.parse(p.metadata||'{}').durationSeconds,
+      pricingAuthority:'forum_admin',
+      pricingMigrationStatus:PAID_PIN_MIGRATION_STATUS,
+    }));
+  }
   async lockTopic(id){
     await db.execute(sql`SELECT pg_advisory_xact_lock_shared(hashtext('pbn-policy'))`);
     await db.execute(sql`SELECT pg_advisory_xact_lock(hashtext('pbn-content'),hashtext(${`topic:${id}`}))`);

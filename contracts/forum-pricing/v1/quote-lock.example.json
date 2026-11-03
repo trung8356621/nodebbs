@@ -1,0 +1,28 @@
+{
+  "quoteId": "11111111-1111-4111-8111-111111111111",
+  "productId": "seo-monthly-paid",
+  "priceVersion": 1,
+  "snapshotVersion": 1,
+  "unitPrice": 10,
+  "quantity": 1,
+  "totalCredits": 10,
+  "creditVnd": 10000,
+  "quotedAt": "2026-11-03T10:00:00.000Z",
+  "quoteExpiresAt": "2026-11-03T10:15:00.000Z",
+  "status": "open",
+  "lockedPrice": {
+    "productId": "seo-monthly-paid",
+    "priceVersion": 1,
+    "snapshotVersion": 1,
+    "listPriceCredit": 10,
+    "salePriceCredit": 10,
+    "unitPriceCredit": 10,
+    "durationMonths": 1,
+    "sourceId": "ops-global",
+    "checksum": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "notes": [
+    "If OPS publishes priceVersion 2 at 10:05 with unitPriceCredit 15, this open quote remains executable at 10 Credits until 10:15.",
+    "REQUOTE only when expired, canceled, consumed, invalid, or explicitly revoked under documented emergency policy."
+  ]
+}

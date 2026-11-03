@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "forum-pricing/1",
+  "productKey": "pbn",
+  "version": 1,
+  "pricingVersionId": "fpv_example_v1",
+  "issuedAt": "2026-11-03T00:00:00.000Z",
+  "effectiveAt": "2026-11-03T00:00:00.000Z",
+  "validUntil": null,
+  "currency": "VND",
+  "vndPerCredit": 1000,
+  "creditPackages": [
+    {
+      "code": "pack_100",
+      "label": "100 Credits",
+      "credits": 100,
+      "priceVnd": 100000,
+      "enabled": true
+    },
+    {
+      "code": "pack_500",
+      "label": "500 Credits",
+      "credits": 500,
+      "priceVnd": 450000,
+      "enabled": true
+    }
+  ],
+  "seoServices": [
+    {
+      "code": "seo_audit_basic",
+      "label": "Basic SEO Audit",
+      "creditPrice": 50,
+      "enabled": true
+    }
+  ],
+  "paidPins": [
+    {
+      "code": "pin_24h",
+      "label": "Pin 24 hours",
+      "creditPrice": 20,
+      "durationHours": 24,
+      "enabled": true
+    }
+  ],
+  "freeLaunch": {
+    "enabled": true,
+    "creditsToGrant": 10,
+    "maxPerLocalUser": 1
+  },
+  "signature": {
+    "alg": "Ed25519",
+    "keyId": "fpk_v1",
+    "value": "REPLACE_WITH_REAL_SIGNATURE"
+  }
+}

@@ -22,7 +22,8 @@
     "seed": "dotenvx run -- node src/scripts/init/index.js",
     "seed:reset": "dotenvx run -- node src/scripts/init/index.js --reset",
     "seed:list": "dotenvx run -- node src/scripts/init/index.js --list",
-    "seed:clean": "dotenvx run -- node src/scripts/init/index.js --clean"
+    "seed:clean": "dotenvx run -- node src/scripts/init/index.js --clean",
+    "test:forum-credit": "node --test src/extensions/forum-credit/tests/forum-credit.test.js"
   },
   "keywords": [],
   "dependencies": {

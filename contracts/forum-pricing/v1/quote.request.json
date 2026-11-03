@@ -1,0 +1,8 @@
+{
+  "localUserId": "42",
+  "quoteKind": "credit_package",
+  "skuCode": "pack_100",
+  "quantity": 1,
+  "pricingVersion": 1,
+  "idempotencyKey": "q_idem_1"
+}

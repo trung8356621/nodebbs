@@ -714,6 +714,12 @@ export * from '../extensions/badges/schema.js';
 // ============ Ledger System (账本系统) ============
 export * from '../extensions/ledger/schema.js';
 
+// ============ Forum Credit OPS Integration (forum-credit/1) ============
+export * from '../extensions/forum-credit/schema.js';
+
+// ============ Forum Pricing OPS Integration (forum-pricing/1) ============
+export * from '../extensions/forum-pricing/schema.js';
+
 // ============ Ads System (广告系统) ============
 export * from '../extensions/ads/schema.js';
 

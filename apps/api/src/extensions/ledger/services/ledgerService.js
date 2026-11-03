@@ -38,11 +38,11 @@ export class LedgerService {
    * @param {string} [params.description]
    * @param {object} [params.metadata]
    */
-  async grant({ userId, amount, currencyCode, type, referenceType, referenceId, description, metadata }) {
+  async grant({ userId, amount, currencyCode, type, referenceType, referenceId, description, metadata, tx: outerTx }) {
     rejectEngagementCredit({currencyCode,type,referenceType,metadata});
     if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Grant amount must be positive');
 
-    return await db.transaction(async (tx) => {
+    const run = async (tx) => {
       const account = await this.getAccount(userId, currencyCode, tx);
 
       const newBalance = Number(account.balance) + amount;
@@ -72,7 +72,10 @@ export class LedgerService {
       }).returning();
 
       return transaction;
-    });
+    };
+
+    if (outerTx) return run(outerTx);
+    return db.transaction(run);
   }
 
   /**
@@ -87,10 +90,10 @@ export class LedgerService {
    * @param {string} [params.description]
    * @param {object} [params.metadata]
    */
-  async deduct({ userId, amount, currencyCode, type, referenceType, referenceId, description, metadata }) {
+  async deduct({ userId, amount, currencyCode, type, referenceType, referenceId, description, metadata, tx: outerTx }) {
     if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Deduct amount must be positive');
 
-    return await db.transaction(async (tx) => {
+    const run = async (tx) => {
       const account = await this.getAccount(userId, currencyCode, tx);
 
       if (Number(account.balance) < amount) {
@@ -122,7 +125,10 @@ export class LedgerService {
       }).returning();
 
       return transaction;
-    });
+    };
+
+    if (outerTx) return run(outerTx);
+    return db.transaction(run);
   }
 
   /**

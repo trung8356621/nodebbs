@@ -1,0 +1,7 @@
+{
+  "localUserId": "42",
+  "orderReference": "pbn_free_1",
+  "freeLaunch": true,
+  "pricingVersion": 1,
+  "idempotencyKey": "idem_free_1"
+}

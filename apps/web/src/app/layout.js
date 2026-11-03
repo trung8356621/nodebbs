@@ -66,7 +66,7 @@ export default async function RootLayout({
         __html: initScript
       }} />
       </head>
-      <body className={`antialiased`}>
+      <body className={`antialiased`} suppressHydrationWarning>
         {/* 自定义统计脚本注入 */}
         {analyticsScript && <div style={{
         display: 'none'

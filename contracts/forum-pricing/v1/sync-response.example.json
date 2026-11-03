@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "forum-pricing/1",
+  "afterVersion": 0,
+  "currentVersion": 2,
+  "versions": [
+    {
+      "version": 1,
+      "pricingVersionId": "fpv_example_v1",
+      "issuedAt": "2026-11-03T00:00:00.000Z",
+      "effectiveAt": "2026-11-03T00:00:00.000Z",
+      "validUntil": null,
+      "snapshot": { "$ref": "snapshot.example.json" }
+    }
+  ],
+  "verification": {
+    "alg": "Ed25519",
+    "keyId": "fpk_v1",
+    "publicKey": "REPLACE_WITH_SPKI_BASE64URL"
+  }
+}
