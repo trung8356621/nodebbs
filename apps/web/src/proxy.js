@@ -12,11 +12,13 @@ export function proxy(request) {
   // 在 Docker 环境中，这会读取 docker-compose 传入的 SERVER_API_URL (e.g., http://api:7100)
   const apiUrl = process.env.SERVER_API_URL || 'http://localhost:7100';
 
-  // 处理 API 代理
+  // Proxy API + OPS inbound callbacks (/ops/v1/forum/*) to Fastify.
+  // OPS uses the forum public origin + /ops/... — without this rewrite, Next returns 404 HTML.
   if (
-    pathname.startsWith('/api') || 
-    pathname.startsWith('/uploads') || 
-    pathname.startsWith('/docs/json')
+    pathname.startsWith('/api')
+    || pathname.startsWith('/ops')
+    || pathname.startsWith('/uploads')
+    || pathname.startsWith('/docs/json')
   ) {
     // 构建目标 URL
     const destinationUrl = new URL(pathname, apiUrl);
@@ -36,6 +38,7 @@ export const config = {
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico).*)',
     '/api/:path*',
+    '/ops/:path*',
     '/uploads/:path*',
     '/docs/json',
   ],

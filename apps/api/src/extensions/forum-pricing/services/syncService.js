@@ -3,9 +3,10 @@ import { desc, eq, sql } from 'drizzle-orm';
 import db from '../../../db/index.js';
 import { FORUM_PRICING_CONTRACT } from '../constants.js';
 import { verifyForumPricingSnapshot } from '../crypto.js';
+import { resolveTrustedVerification } from '../trust.js';
 import { validateForumPricingSnapshot } from '../validate.js';
 import { opsForumPricingSnapshots, opsForumPricingSyncs } from '../schema.js';
-import { viewFromSnapshot, findPackage, findSeoService } from './catalogView.js';
+import { viewFromSnapshot, findPackage, findSeoService, findPaidPin } from './catalogView.js';
 
 function digestSnapshot(snapshot) {
   return crypto.createHash('sha256').update(JSON.stringify(snapshot)).digest('hex');
@@ -106,12 +107,39 @@ export class ForumPricingSyncService {
     return view.products.find((p) => p.productId === code) || null;
   }
 
+  async getPaidPin(code, now = new Date()) {
+    const row = await this.getEffectiveVerified(now);
+    if (!row) {
+      const err = new Error('No authorized current paid_pin price is available');
+      err.code = 'PRICE_UNAVAILABLE';
+      err.statusCode = 409;
+      throw err;
+    }
+    const pin = findPaidPin(row.snapshot, code);
+    if (!pin) {
+      const err = new Error('unknown_sku');
+      err.code = 'unknown_sku';
+      err.statusCode = 400;
+      throw err;
+    }
+    const view = viewFromSnapshot(row.snapshot, { checksum: row.checksum, now });
+    return view.paidPins.find((p) => p.code === code) || null;
+  }
+
   /**
    * Ingest one signed snapshot. Fail closed on verify/tamper. Never invent prices.
+   * Trust comes only from the local OPS key registry — not sync-response publicKey alone.
    */
-  async ingestSnapshot(snapshot, verification) {
+  async ingestSnapshot(snapshot, syncVerification = null) {
     validateForumPricingSnapshot(snapshot);
-    const verified = verifyForumPricingSnapshot(snapshot, verification);
+    const trust = resolveTrustedVerification(snapshot.signature?.keyId, syncVerification);
+    if (!trust.ok) {
+      const err = new Error(`OPS price authentication failed: ${trust.reason}`);
+      err.code = trust.reason;
+      err.statusCode = 400;
+      throw err;
+    }
+    const verified = verifyForumPricingSnapshot(snapshot, trust.verification);
     if (!verified.ok) {
       const err = new Error(`OPS price authentication failed: ${verified.reason}`);
       err.code = verified.reason;
@@ -150,13 +178,13 @@ export class ForumPricingSyncService {
       effectiveAt: new Date(snapshot.effectiveAt),
       validUntil: snapshot.validUntil ? new Date(snapshot.validUntil) : null,
       vndPerCredit: snapshot.vndPerCredit,
-      keyId: verification.keyId,
-      publicKey: verification.publicKey,
+      keyId: trust.verification.keyId,
+      publicKey: trust.verification.publicKey,
       checksum: digestSnapshot(snapshot),
       snapshot,
       verifiedAt: new Date(),
     });
-    return { version: snapshot.version, unchanged: false };
+    return { version: snapshot.version, unchanged: false, keyId: trust.verification.keyId };
   }
 
   async syncFromOps({ afterVersion } = {}) {

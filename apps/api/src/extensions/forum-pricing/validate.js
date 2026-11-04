@@ -44,6 +44,13 @@ export function validateForumPricingSnapshot(snapshot) {
     if (!s?.code || !integer(s.creditPrice, 0) || typeof s.enabled !== 'boolean') {
       throw Object.assign(new Error('invalid_seo_service'), { code: 'invalid_seo_service' });
     }
+    // Duration authority belongs to OPS — required for PBN SEO entitlement consumption.
+    if (!integer(s.durationMonths, 1, 12)) {
+      throw Object.assign(new Error('seo_duration_missing'), { code: 'seo_duration_missing' });
+    }
+    if (!integer(s.renewalWindowDays, 0, 14)) {
+      throw Object.assign(new Error('seo_renewal_missing'), { code: 'seo_renewal_missing' });
+    }
   }
   for (const pin of snapshot.paidPins) {
     if (!pin?.code || !integer(pin.creditPrice, 0) || !integer(pin.durationHours, 1) || typeof pin.enabled !== 'boolean') {

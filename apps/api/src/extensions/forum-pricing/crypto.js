@@ -35,8 +35,11 @@ export function snapshotWithoutSignature(snapshot) {
 
 /**
  * Verify OPS forum-pricing/1 Ed25519 signature.
+ * `verification` MUST come from the local trusted key registry (see trust.js).
+ * Never pass sync-response publicKey here without resolveTrustedVerification().
+ *
  * @param {object} snapshot — full snapshot including signature
- * @param {{ keyId: string, publicKeySpkiBase64Url: string }} verification
+ * @param {{ keyId: string, publicKey: string, source?: string }} verification
  */
 export function verifyForumPricingSnapshot(snapshot, verification) {
   if (!snapshot?.signature || snapshot.signature.alg !== FORUM_PRICING_ALG) {
@@ -44,6 +47,9 @@ export function verifyForumPricingSnapshot(snapshot, verification) {
   }
   if (!verification?.keyId || !verification?.publicKey) {
     return { ok: false, reason: 'missing_verification_key' };
+  }
+  if (verification.source && verification.source !== 'trusted_registry') {
+    return { ok: false, reason: 'untrusted_verification_source' };
   }
   if (snapshot.signature.keyId !== verification.keyId) {
     return { ok: false, reason: 'unknown_key_id' };
@@ -74,7 +80,9 @@ export function verifyForumPricingSnapshot(snapshot, verification) {
   if (sig.length !== 64) return { ok: false, reason: 'invalid_signature_length' };
 
   const ok = crypto.verify(null, bytes, publicKey, sig);
-  return ok ? { ok: true } : { ok: false, reason: 'signature_mismatch' };
+  return ok
+    ? { ok: true, keyId: verification.keyId, fingerprint: verification.fingerprint || null }
+    : { ok: false, reason: 'signature_mismatch' };
 }
 
 /** Test helper: sign unsigned body with PKCS8 PEM or DER private key. */

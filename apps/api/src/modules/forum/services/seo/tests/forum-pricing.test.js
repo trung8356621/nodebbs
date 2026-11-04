@@ -94,7 +94,7 @@ test('forum-pricing/1 shared catalog validates conversion, packages, and paid_pi
   assert.equal(catalog.contract, FORUM_PRICING_CONTRACT);
   assert.equal(productsFromPayload(catalog, 'credit_package').length, 1);
   assert.equal(productsFromPayload(catalog, 'paid_pin').length, 1);
-  assert.equal(PAID_PIN_MIGRATION_STATUS, 'MIGRATION_PENDING');
+  assert.equal(PAID_PIN_MIGRATION_STATUS, 'OPS_CATALOG');
 });
 
 test('legacy schemaVersion 1 still validates for existing SEO fixtures', () => {

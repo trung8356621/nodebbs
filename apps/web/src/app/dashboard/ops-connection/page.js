@@ -31,6 +31,8 @@ export default function OpsConnectionPage() {
   const [enrollmentToken, setEnrollmentToken] = useState('');
   const [opsBaseUrl, setOpsBaseUrl] = useState('https://ops.seo-ops.duckdns.org');
   const [connectionUrl, setConnectionUrl] = useState('');
+  const [callbackTouched, setCallbackTouched] = useState(false);
+  const [confirmMigration, setConfirmMigration] = useState(false);
   const [freeUserId, setFreeUserId] = useState('');
   const [freeCredits, setFreeCredits] = useState('10');
   const [rotationId, setRotationId] = useState('');
@@ -45,12 +47,20 @@ export default function OpsConnectionPage() {
       api.get('/ops/forum/deliveries'),
       api.get('/ops/forum/ledger-sync'),
     ]);
-    setStatus(st.data || st);
+    const view = st.data || st;
+    setStatus(view);
     setOrders(ord.data || []);
     setDeliveries(del.data || []);
     setLedger(led.data || null);
-    if ((st.data || st)?.opsBaseUrl) setOpsBaseUrl((st.data || st).opsBaseUrl);
-    if ((st.data || st)?.connectionUrl) setConnectionUrl((st.data || st).connectionUrl || '');
+    if (view?.opsBaseUrl) setOpsBaseUrl(view.opsBaseUrl);
+
+    const persisted = view?.connectionUrl || view?.callback?.persistedCallbackUrl || '';
+    const suggested = view?.callback?.suggestedCallbackUrl || '';
+    if (!callbackTouched) {
+      if (persisted) setConnectionUrl(persisted);
+      else if (suggested) setConnectionUrl(suggested);
+      else setConnectionUrl('');
+    }
   };
 
   useEffect(() => {
@@ -76,6 +86,7 @@ export default function OpsConnectionPage() {
   }
 
   const s = status || {};
+  const cb = s.callback || {};
   const statusLabel = s.connectionStatus === 'connected'
     ? t('opsConnected')
     : s.connectionStatus === 'error'
@@ -83,6 +94,12 @@ export default function OpsConnectionPage() {
       : s.hasCredential
         ? t('opsPending')
         : t('opsNotConnected');
+
+  const callbackHint = cb.tunnelRequired
+    ? t('opsCallbackTunnelHint')
+    : cb.usableAsCallback
+      ? t('opsCallbackPrefillHint')
+      : t('opsCallbackMissingHint');
 
   return (
     <div className="p-4 md:p-6 max-w-5xl space-y-8">
@@ -122,10 +139,17 @@ export default function OpsConnectionPage() {
       {!s.hasCredential && (
         <section className="space-y-3 border rounded-lg p-4">
           <h2 className="font-semibold">{t('opsConnect')}</h2>
+          <p className="text-sm text-muted-foreground">{callbackHint}</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="enroll-token">{t('opsEnrollmentToken')}</Label>
-              <Input id="enroll-token" type="password" autoComplete="off" value={enrollmentToken} onChange={(e) => setEnrollmentToken(e.target.value)} />
+              <Input
+                id="enroll-token"
+                type="password"
+                autoComplete="off"
+                value={enrollmentToken}
+                onChange={(e) => setEnrollmentToken(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ops-url">{t('opsBaseUrl')}</Label>
@@ -133,18 +157,27 @@ export default function OpsConnectionPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cb-url">{t('opsConnectionUrl')}</Label>
-              <Input id="cb-url" placeholder="https://forum.example.com" value={connectionUrl} onChange={(e) => setConnectionUrl(e.target.value)} />
+              <Input
+                id="cb-url"
+                placeholder={cb.tunnelRequired ? 'https://your-tunnel.example' : 'https://forum.example.com'}
+                value={connectionUrl}
+                onChange={(e) => {
+                  setCallbackTouched(true);
+                  setConnectionUrl(e.target.value);
+                }}
+              />
             </div>
           </div>
           <Button
-            disabled={busy || !enrollmentToken.trim()}
+            disabled={busy || !enrollmentToken.trim() || !connectionUrl.trim()}
             onClick={() => run(async () => {
               await api.post('/ops/forum/enroll', {
                 enrollmentToken: enrollmentToken.trim(),
                 opsBaseUrl: opsBaseUrl.trim(),
-                connectionUrl: connectionUrl.trim() || null,
+                connectionUrl: connectionUrl.trim(),
               });
               setEnrollmentToken('');
+              setCallbackTouched(false);
             })}
           >
             {t('opsEnroll')}
@@ -155,13 +188,38 @@ export default function OpsConnectionPage() {
       {s.hasCredential && (
         <section className="space-y-3 border rounded-lg p-4">
           <h2 className="font-semibold">{t('opsConnectionUrl')}</h2>
+          <p className="text-sm text-muted-foreground">{callbackHint}</p>
+          <p className="text-sm text-muted-foreground">{t('opsCallbackMigrationHint')}</p>
           <div className="flex flex-col sm:flex-row gap-2">
-            <Input value={connectionUrl} onChange={(e) => setConnectionUrl(e.target.value)} placeholder="https://…" />
+            <Input
+              value={connectionUrl}
+              onChange={(e) => {
+                setCallbackTouched(true);
+                setConnectionUrl(e.target.value);
+                setConfirmMigration(false);
+              }}
+              placeholder="https://…"
+            />
             <Button
-              disabled={busy}
-              onClick={() => run(() => api.post('/ops/forum/connection-url', { connectionUrl: connectionUrl.trim() || null }))}
+              disabled={busy || !connectionUrl.trim()}
+              onClick={() => run(async () => {
+                try {
+                  await api.post('/ops/forum/connection-url', {
+                    connectionUrl: connectionUrl.trim(),
+                    confirmMigration,
+                  });
+                  setConfirmMigration(false);
+                  setCallbackTouched(false);
+                } catch (err) {
+                  if (err?.code === 'callback_migration_confirm_required') {
+                    setConfirmMigration(true);
+                    toast.message(t('opsCallbackConfirmMigration'));
+                  }
+                  throw err;
+                }
+              })}
             >
-              {t('opsSaveUrl')}
+              {confirmMigration ? t('opsConfirmSaveUrl') : t('opsSaveUrl')}
             </Button>
           </div>
         </section>

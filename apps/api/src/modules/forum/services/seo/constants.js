@@ -7,8 +7,8 @@ export const CREDIT_VND = 10000;
 export const BUSINESS_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 export const QUOTE_SECONDS = 300;
 
-/** paid_pin catalog type exists; Forum-admin pin prices are not yet cut over. */
-export const PAID_PIN_MIGRATION_STATUS = 'MIGRATION_PENDING';
+/** paid_pin prices consumed from verified OPS catalog (Forum-admin monetary edits disabled). */
+export const PAID_PIN_MIGRATION_STATUS = 'OPS_CATALOG';
 
 export const QUOTE_STATUS = {
   OPEN: 'open',

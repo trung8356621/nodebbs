@@ -1104,6 +1104,11 @@
     "opsRetrySync": "Retry ledger sync",
     "opsEnrollmentToken": "Enrollment key",
     "opsConnectionUrl": "Public callback URL (HTTPS)",
+    "opsCallbackPrefillHint": "Prefills from this forum’s configured public HTTPS origin (site URL / FORUM_PUBLIC_ORIGIN). Localhost is never used as an OPS callback.",
+    "opsCallbackTunnelHint": "Local or missing public HTTPS origin detected. Paste an explicit public HTTPS tunnel URL (e.g. Cloudflare Tunnel / ngrok). Localhost is never accepted.",
+    "opsCallbackMissingHint": "Set Site URL to a public HTTPS origin, or enter a public HTTPS callback / tunnel URL. Localhost is never accepted.",
+    "opsCallbackMigrationHint": "After a hosting move, save the new public HTTPS origin here, then Verify. Changing an existing callback requires an explicit confirmation.",
+    "opsCallbackConfirmMigration": "Confirm again to replace the verified callback after hosting migration.",
     "opsEnroll": "Enroll",
     "opsDeliveries": "Credit delivery history",
     "opsOrders": "Credit orders",
@@ -1120,7 +1125,8 @@
     "opsRotationId": "Rotation ID",
     "opsRotationCredential": "New credential (once)",
     "opsApplyRotation": "Confirm rotation",
-    "opsSaveUrl": "Save callback URL"
+    "opsSaveUrl": "Save callback URL",
+    "opsConfirmSaveUrl": "Confirm callback change"
   },
   "admin": {
     "m205": "Create category",

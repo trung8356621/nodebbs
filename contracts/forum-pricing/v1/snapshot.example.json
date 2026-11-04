@@ -26,9 +26,30 @@
   ],
   "seoServices": [
     {
+      "code": "seo-monthly",
+      "label": "Monthly SEO (free launch)",
+      "creditPrice": 0,
+      "listPriceCredit": 5,
+      "durationMonths": 1,
+      "renewalWindowDays": 7,
+      "enabled": true
+    },
+    {
+      "code": "seo-monthly-paid",
+      "label": "Monthly SEO",
+      "creditPrice": 3,
+      "listPriceCredit": 5,
+      "durationMonths": 1,
+      "renewalWindowDays": 7,
+      "enabled": true
+    },
+    {
       "code": "seo_audit_basic",
-      "label": "Basic SEO Audit",
+      "label": "Basic SEO Audit (alias → seo-monthly-paid)",
       "creditPrice": 50,
+      "listPriceCredit": 50,
+      "durationMonths": 1,
+      "renewalWindowDays": 7,
       "enabled": true
     }
   ],
@@ -38,6 +59,13 @@
       "label": "Pin 24 hours",
       "creditPrice": 20,
       "durationHours": 24,
+      "enabled": true
+    },
+    {
+      "code": "pin_7d",
+      "label": "Pin 7 days",
+      "creditPrice": 50,
+      "durationHours": 168,
       "enabled": true
     }
   ],

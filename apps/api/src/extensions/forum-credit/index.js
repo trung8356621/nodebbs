@@ -46,5 +46,5 @@ async function forumCreditPlugin(fastify) {
 
 export default fp(forumCreditPlugin, {
   name: 'forum-credit',
-  dependencies: ['db', 'ledger', 'auth'],
+  dependencies: ['db', 'ledger', 'auth', 'settings'],
 });

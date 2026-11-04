@@ -14,6 +14,7 @@ import {
 import { validateForumPricingSnapshot } from '../validate.js';
 import { viewFromSnapshot } from '../services/catalogView.js';
 import { FORUM_PRICING_CONTRACT, PAID_PIN_MIGRATION_STATUS } from '../constants.js';
+import { clearTrustedKeyRegistryCache, resolveTrustedVerification } from '../trust.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../../../');
 const contractDir = path.join(root, 'contracts/forum-pricing/v1');
@@ -43,6 +44,15 @@ function unsignedBody(overrides = {}) {
     validUntil: null,
     ...overrides,
   };
+}
+
+function pinTrust(keys) {
+  clearTrustedKeyRegistryCache();
+  process.env.FORUM_PRICING_TRUSTED_KEYS_JSON = JSON.stringify([{
+    keyId: keys.keyId,
+    publicKey: keys.publicKeySpkiBase64Url,
+    status: 'active',
+  }]);
 }
 
 test('OPS contract fixtures are present (forum-pricing/1)', () => {
@@ -75,49 +85,50 @@ test('canonical JSON sorts nested keys like OPS', () => {
   assert.equal(a, '{"a":{"c":3,"d":2},"b":1}');
 });
 
-test('OPS publisher → PBN verifier accepts valid V1 snapshot', () => {
+test('OPS publisher → PBN verifier accepts valid V1 snapshot via trust registry', () => {
   const keys = makeKeys();
+  pinTrust(keys);
   const body = unsignedBody({ version: 1, pricingVersionId: 'fpv_test_1' });
   const signed = signForumPricingBody(body, keys.privateKeyPem, keys.keyId);
   validateForumPricingSnapshot(signed);
-  const result = verifyForumPricingSnapshot(signed, {
-    alg: 'Ed25519',
+  const trust = resolveTrustedVerification(signed.signature.keyId, {
     keyId: keys.keyId,
     publicKey: keys.publicKeySpkiBase64Url,
   });
+  assert.equal(trust.ok, true);
+  const result = verifyForumPricingSnapshot(signed, trust.verification);
   assert.equal(result.ok, true);
 });
 
 test('tampered catalog is rejected', () => {
   const keys = makeKeys();
+  pinTrust(keys);
   const signed = signForumPricingBody(unsignedBody(), keys.privateKeyPem, keys.keyId);
   signed.vndPerCredit = 999999;
-  const result = verifyForumPricingSnapshot(signed, {
-    alg: 'Ed25519',
-    keyId: keys.keyId,
-    publicKey: keys.publicKeySpkiBase64Url,
-  });
+  const trust = resolveTrustedVerification(signed.signature.keyId);
+  const result = verifyForumPricingSnapshot(signed, trust.verification);
   assert.equal(result.ok, false);
   assert.equal(result.reason, 'signature_mismatch');
 });
 
-test('wrong key is rejected', () => {
+test('wrong key is rejected by trust registry', () => {
   const a = makeKeys('fpk_a');
   const b = makeKeys('fpk_b');
+  pinTrust(a);
   const signed = signForumPricingBody(unsignedBody(), a.privateKeyPem, a.keyId);
-  const wrongKey = verifyForumPricingSnapshot(signed, {
-    alg: 'Ed25519',
+  const wrongSyncKey = resolveTrustedVerification(signed.signature.keyId, {
     keyId: a.keyId,
     publicKey: b.publicKeySpkiBase64Url,
   });
-  assert.equal(wrongKey.ok, false);
-  const wrongId = verifyForumPricingSnapshot(signed, {
-    alg: 'Ed25519',
-    keyId: 'fpk_other',
-    publicKey: a.publicKeySpkiBase64Url,
+  assert.equal(wrongSyncKey.ok, false);
+  assert.equal(wrongSyncKey.reason, 'untrusted_sync_public_key');
+  const signedOther = signForumPricingBody(unsignedBody({ pricingVersionId: 'fpv_x' }), b.privateKeyPem, b.keyId);
+  const unknown = resolveTrustedVerification(signedOther.signature.keyId, {
+    keyId: b.keyId,
+    publicKey: b.publicKeySpkiBase64Url,
   });
-  assert.equal(wrongId.ok, false);
-  assert.equal(wrongId.reason, 'unknown_key_id');
+  assert.equal(unknown.ok, false);
+  assert.equal(unknown.reason, 'unknown_key_id');
 });
 
 test('expired snapshot is not used for new catalog view', () => {
@@ -131,20 +142,23 @@ test('expired snapshot is not used for new catalog view', () => {
 });
 
 test('V2 publish does not reprice a locked V1 quote economics', () => {
-  const v1 = unsignedBody({
-    version: 1,
-    seoServices: [{ code: 'seo_audit_basic', label: 'Basic', creditPrice: 10, enabled: true }],
+  const svc = (creditPrice) => ({
+    code: 'seo-monthly-paid',
+    label: 'Monthly',
+    creditPrice,
+    listPriceCredit: creditPrice,
+    durationMonths: 1,
+    renewalWindowDays: 7,
+    enabled: true,
   });
-  const v2 = unsignedBody({
+  const locked = viewFromSnapshot(unsignedBody({ version: 1, seoServices: [svc(10)] })).products[0];
+  const next = viewFromSnapshot(unsignedBody({
     version: 2,
     pricingVersionId: 'fpv_v2',
-    seoServices: [{ code: 'seo_audit_basic', label: 'Basic', creditPrice: 15, enabled: true }],
-  });
-  const locked = viewFromSnapshot(v1).products[0];
-  const next = viewFromSnapshot(v2).products[0];
+    seoServices: [svc(15)],
+  })).products[0];
   assert.equal(locked.unitPriceCredit, 10);
   assert.equal(next.unitPriceCredit, 15);
-  // Purchase path must charge locked total — simulated lock:
   const quote = { unitPrice: locked.unitPriceCredit, quantity: 1, totalCredits: 10, priceVersion: 1 };
   assert.notEqual(next.unitPriceCredit, quote.unitPrice);
   assert.equal(quote.totalCredits, 10);
@@ -159,10 +173,11 @@ test('credit package mapping uses OPS-owned priceVnd/credits', () => {
   assert.equal(view.freeLaunch.creditsToGrant, 10);
 });
 
-test('paid_pin remains MIGRATION_PENDING on PBN runtime bridge', () => {
+test('paid_pin is OPS_CATALOG on PBN runtime bridge', () => {
   const view = viewFromSnapshot(unsignedBody());
   assert.equal(view.paidPinMigrationStatus, PAID_PIN_MIGRATION_STATUS);
-  assert.equal(view.paidPins[0].pricingMigrationStatus, PAID_PIN_MIGRATION_STATUS);
+  assert.equal(PAID_PIN_MIGRATION_STATUS, 'OPS_CATALOG');
+  assert.equal(view.paidPins[0].pricingAuthority, 'ops-forum-pricing/1');
 });
 
 test('credit-order request fixture uses packageCode not local invention', () => {
@@ -180,4 +195,9 @@ test('stripping signature is required before verify canonicalize', () => {
   const body = snapshotWithoutSignature(signed);
   assert.equal(body.signature, undefined);
   assert.equal(signed.signature.alg, 'Ed25519');
+});
+
+test.after(() => {
+  clearTrustedKeyRegistryCache();
+  delete process.env.FORUM_PRICING_TRUSTED_KEYS_JSON;
 });

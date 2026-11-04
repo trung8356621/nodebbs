@@ -1,14 +1,17 @@
 import {
   PAID_PIN_MIGRATION_STATUS,
-  SEO_DEFAULT_DURATION_MONTHS,
-  SEO_DEFAULT_RENEWAL_WINDOW_DAYS,
   DEFAULT_QUOTE_TTL_SECONDS,
   FORUM_PRICING_CONTRACT,
+  SEO_SKU_ALIASES,
 } from '../constants.js';
+
+function canonicalSeoCode(code) {
+  return SEO_SKU_ALIASES[code] || code;
+}
 
 /**
  * Map verified OPS snapshot into PBN-facing catalog views.
- * Does not invent monetary values — only maps OPS fields + documented entitlement defaults.
+ * Duration/renewal for SEO must come from OPS fields — never invent local prices/durations.
  */
 export function viewFromSnapshot(snapshot, meta = {}) {
   const now = meta.now ? new Date(meta.now).getTime() : Date.now();
@@ -18,26 +21,42 @@ export function viewFromSnapshot(snapshot, meta = {}) {
 
   const seoProducts = (snapshot.seoServices || [])
     .filter((s) => s.enabled)
-    .map((s) => ({
-      productId: s.code,
-      name: s.label || s.code,
-      type: 'seo_entitlement',
-      snapshotVersion: snapshot.version,
-      priceVersion: snapshot.version,
-      pricingVersionId: snapshot.pricingVersionId,
-      sourceId: 'ops-forum-pricing',
-      checksum: meta.checksum || null,
-      durationMonths: SEO_DEFAULT_DURATION_MONTHS,
-      listPriceCredit: s.creditPrice,
-      salePriceCredit: s.creditPrice,
-      unitPriceCredit: s.creditPrice,
-      effectiveAt: snapshot.effectiveAt,
-      endsAt: snapshot.validUntil,
-      snapshotValidUntil: snapshot.validUntil,
-      renewalWindowDays: SEO_DEFAULT_RENEWAL_WINDOW_DAYS,
-      discount: undefined,
-      opsSku: s,
-    }));
+    .map((s) => {
+      if (!Number.isSafeInteger(s.durationMonths) || s.durationMonths < 1 || s.durationMonths > 12) {
+        throw Object.assign(new Error('SEO durationMonths missing from OPS catalog'), {
+          code: 'seo_duration_missing',
+          statusCode: 409,
+        });
+      }
+      if (!Number.isSafeInteger(s.renewalWindowDays) || s.renewalWindowDays < 0 || s.renewalWindowDays > 14) {
+        throw Object.assign(new Error('SEO renewalWindowDays missing from OPS catalog'), {
+          code: 'seo_renewal_missing',
+          statusCode: 409,
+        });
+      }
+      const productId = canonicalSeoCode(s.code);
+      return {
+        productId,
+        opsCode: s.code,
+        name: s.label || s.code,
+        type: 'seo_entitlement',
+        snapshotVersion: snapshot.version,
+        priceVersion: snapshot.version,
+        pricingVersionId: snapshot.pricingVersionId,
+        sourceId: 'ops-forum-pricing',
+        checksum: meta.checksum || null,
+        durationMonths: s.durationMonths,
+        listPriceCredit: Number.isSafeInteger(s.listPriceCredit) ? s.listPriceCredit : s.creditPrice,
+        salePriceCredit: s.creditPrice,
+        unitPriceCredit: s.creditPrice,
+        effectiveAt: snapshot.effectiveAt,
+        endsAt: snapshot.validUntil,
+        snapshotValidUntil: snapshot.validUntil,
+        renewalWindowDays: s.renewalWindowDays,
+        discount: s.discount,
+        opsSku: s,
+      };
+    });
 
   const creditPackages = (snapshot.creditPackages || [])
     .filter((p) => p.enabled)
@@ -64,13 +83,17 @@ export function viewFromSnapshot(snapshot, meta = {}) {
       name: p.label || p.code,
       type: 'paid_pin',
       priceVersion: snapshot.version,
+      snapshotVersion: snapshot.version,
+      pricingVersionId: snapshot.pricingVersionId,
       creditPrice: p.creditPrice,
       durationHours: p.durationHours,
       durationSeconds: p.durationHours * 3600,
       listPriceCredit: p.creditPrice,
       salePriceCredit: p.creditPrice,
       unitPriceCredit: p.creditPrice,
+      price: p.creditPrice,
       enabled: true,
+      pricingAuthority: 'ops-forum-pricing/1',
       pricingMigrationStatus: PAID_PIN_MIGRATION_STATUS,
     }));
 
@@ -102,5 +125,13 @@ export function findPackage(snapshot, packageCode) {
 }
 
 export function findSeoService(snapshot, code) {
-  return (snapshot.seoServices || []).find((s) => s.code === code && s.enabled) || null;
+  const want = canonicalSeoCode(code);
+  return (snapshot.seoServices || []).find((s) => {
+    if (!s.enabled) return false;
+    return s.code === code || canonicalSeoCode(s.code) === want;
+  }) || null;
+}
+
+export function findPaidPin(snapshot, code) {
+  return (snapshot.paidPins || []).find((p) => p.code === code && p.enabled) || null;
 }

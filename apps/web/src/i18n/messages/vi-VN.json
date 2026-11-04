@@ -1104,6 +1104,11 @@
     "opsRetrySync": "Thử đồng bộ ledger lại",
     "opsEnrollmentToken": "Enrollment key",
     "opsConnectionUrl": "URL callback công khai (HTTPS)",
+    "opsCallbackPrefillHint": "Tự điền từ origin HTTPS công khai đã cấu hình (Site URL / FORUM_PUBLIC_ORIGIN). Không bao giờ dùng localhost làm callback OPS.",
+    "opsCallbackTunnelHint": "Phát hiện môi trường local hoặc thiếu HTTPS công khai. Hãy dán URL tunnel HTTPS công khai (Cloudflare Tunnel / ngrok). Localhost không được chấp nhận.",
+    "opsCallbackMissingHint": "Đặt Site URL thành origin HTTPS công khai, hoặc nhập URL callback/tunnel HTTPS. Localhost không được chấp nhận.",
+    "opsCallbackMigrationHint": "Sau khi đổi hosting, lưu origin HTTPS công khai mới rồi Verify. Đổi callback đã lưu cần xác nhận tường minh.",
+    "opsCallbackConfirmMigration": "Xác nhận lần nữa để thay callback đã xác minh sau khi migration hosting.",
     "opsEnroll": "Đăng ký",
     "opsDeliveries": "Lịch sử giao Credit",
     "opsOrders": "Credit orders",
@@ -1120,7 +1125,8 @@
     "opsRotationId": "Rotation ID",
     "opsRotationCredential": "Credential mới (một lần)",
     "opsApplyRotation": "Xác nhận rotation",
-    "opsSaveUrl": "Lưu URL callback"
+    "opsSaveUrl": "Lưu URL callback",
+    "opsConfirmSaveUrl": "Xác nhận đổi callback"
   },
   "admin": {
     "m205": "Tạo chuyên mục",

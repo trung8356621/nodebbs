@@ -78,8 +78,8 @@ Tables created: `ops_forum_connections`, `ops_forum_credit_deliveries`, `ops_for
 ## D. Enrollment and credential
 
 1. OPS Admin creates Forum Installation + issues one-time `fenr_…` key.  
-2. PBN Admin → OPS Connection → paste key (+ optional public HTTPS callback URL).  
-3. PBN calls `POST /api/v1/forum/enrollments/consume`, encrypts credential, returns **public view only**.  
+2. PBN Admin → OPS Connection → paste key + **required public HTTPS callback** (auto-prefilled from `FORUM_PUBLIC_ORIGIN` / `site_url` when usable; localhost never accepted — local dev needs an explicit HTTPS tunnel).  
+3. PBN validates the callback reaches Fastify (`POST …/ops/v1/forum/ping` → 401), then calls OPS `enrollments/consume`, encrypts credential, returns **public view only**.  
 4. Verify triggers OPS → `POST /ops/v1/forum/ping`.  
 5. Rotation: paste `rotationId` + new credential once → PBN confirms with **new** Bearer → old revoked.
 

@@ -1,11 +1,27 @@
 import { CONNECTION_STATUS, FORUM_CREDIT_CONTRACT, OPS_DEFAULT_BASE_URL } from '../constants.js';
 import { redactSecrets } from '../crypto.js';
+import {
+  resolveConfiguredPublicOrigin,
+  verifyOpsCallbackUrl,
+} from './callbackUrl.js';
 
 export class EnrollmentService {
   constructor(fastify, connectionStore, opsClient) {
     this.fastify = fastify;
     this.connectionStore = connectionStore;
     this.opsClient = opsClient;
+  }
+
+  /** Public origin hint for Admin UI (never from request Host headers). */
+  async getCallbackHints() {
+    const originInfo = await resolveConfiguredPublicOrigin(this.fastify.settings);
+    const row = await this.connectionStore.getRow();
+    return {
+      ...originInfo,
+      suggestedCallbackUrl: originInfo.usableAsCallback ? originInfo.configuredOrigin : null,
+      persistedCallbackUrl: row?.connectionUrl || null,
+      tunnelRequired: Boolean(originInfo.requiresTunnel),
+    };
   }
 
   /**
@@ -29,12 +45,14 @@ export class EnrollmentService {
       throw err;
     }
 
+    const verifiedCallback = await verifyOpsCallbackUrl(connectionUrl);
+
     const base = (opsBaseUrl || process.env.OPS_FORUM_BASE_URL || OPS_DEFAULT_BASE_URL).replace(/\/$/, '');
     let response;
     try {
       response = await this.opsClient.consumeEnrollment({
         enrollmentToken: token,
-        connectionUrl: connectionUrl || null,
+        connectionUrl: verifiedCallback,
         clientVersion,
         opsBaseUrl: base,
       });
@@ -61,13 +79,48 @@ export class EnrollmentService {
       apiContractVersion: data.apiContractVersion || FORUM_CREDIT_CONTRACT,
       credential: data.credential,
       credentialVersion: data.credentialVersion || 1,
-      connectionUrl: connectionUrl || null,
+      connectionUrl: verifiedCallback,
     });
 
     // Clear plaintext from memory reference (best-effort).
     data.credential = undefined;
 
     return this.connectionStore.toPublicView(row);
+  }
+
+  /**
+   * Controlled callback update after hosting migration.
+   * Validates HTTPS public origin + Fastify probe, then persists per installation.
+   * Does not change OPS production APIs; admin should re-Verify so OPS can re-ping.
+   */
+  async updateCallbackUrl({ connectionUrl, confirmMigration }) {
+    const existing = await this.connectionStore.getRow();
+    if (!existing?.credentialCiphertext) {
+      const err = new Error('Not enrolled');
+      err.code = 'not_enrolled';
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const verifiedCallback = await verifyOpsCallbackUrl(connectionUrl);
+    const previous = existing.connectionUrl || null;
+    if (previous && previous !== verifiedCallback && !confirmMigration) {
+      const err = new Error(
+        'Callback URL change requires confirmMigration=true after hosting migration',
+      );
+      err.code = 'callback_migration_confirm_required';
+      err.statusCode = 409;
+      err.previousCallbackUrl = previous;
+      err.nextCallbackUrl = verifiedCallback;
+      throw err;
+    }
+
+    await this.connectionStore.updateConnectionUrl(verifiedCallback);
+    return {
+      ...this.connectionStore.toPublicView(await this.connectionStore.getRow()),
+      callbackUpdated: previous !== verifiedCallback,
+      previousCallbackUrl: previous,
+    };
   }
 
   /** Re-verify with OPS (machine → OPS → Forum ping round-trip initiated by OPS). */

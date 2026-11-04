@@ -2684,6 +2684,11 @@
   "opsRetrySync": "common",
   "opsEnrollmentToken": "common",
   "opsConnectionUrl": "common",
+  "opsCallbackPrefillHint": "common",
+  "opsCallbackTunnelHint": "common",
+  "opsCallbackMissingHint": "common",
+  "opsCallbackMigrationHint": "common",
+  "opsCallbackConfirmMigration": "common",
   "opsEnroll": "common",
   "opsDeliveries": "common",
   "opsOrders": "common",
@@ -2700,5 +2705,6 @@
   "opsRotationId": "common",
   "opsRotationCredential": "common",
   "opsApplyRotation": "common",
-  "opsSaveUrl": "common"
+  "opsSaveUrl": "common",
+  "opsConfirmSaveUrl": "common"
 }

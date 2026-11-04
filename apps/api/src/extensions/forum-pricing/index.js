@@ -17,7 +17,8 @@ async function forumPricingPlugin(fastify) {
     requireCatalogView: (now) => sync.requireCatalogView(now),
     getPackage: (code, now) => sync.getPackage(code, now),
     getSeoProduct: (code, now) => sync.getSeoProduct(code, now),
-    ingestSnapshot: (snapshot, verification) => sync.ingestSnapshot(snapshot, verification),
+    getPaidPin: (code, now) => sync.getPaidPin(code, now),
+    ingestSnapshot: (snapshot, syncVerification) => sync.ingestSnapshot(snapshot, syncVerification),
     syncFromOps: (opts) => sync.syncFromOps(opts),
     createOpsQuote: (opts) => sync.createOpsQuote(opts),
   });

@@ -10,16 +10,22 @@ export default async function adminRoutes(fastify) {
 
   const mapError = (err, reply) => {
     const status = err.statusCode || 400;
-    return reply.code(status).send({
-      error: err.code || 'request_failed',
+    const code = err.code || 'request_failed';
+    const body = {
+      error: code,
+      code,
       message: err.message,
-    });
+    };
+    if (err.previousCallbackUrl != null) body.previousCallbackUrl = err.previousCallbackUrl;
+    if (err.nextCallbackUrl != null) body.nextCallbackUrl = err.nextCallbackUrl;
+    return reply.code(status).send(body);
   };
 
   fastify.get('/status', { preHandler: requireAdmin }, async () => {
     const status = await fastify.forumCredit.enrollment.refreshStatus();
     const sync = await fastify.forumCredit.ledgerSync.getSyncStats();
-    return { data: { ...status, ledgerSync: sync } };
+    const callback = await fastify.forumCredit.enrollment.getCallbackHints();
+    return { data: { ...status, ledgerSync: sync, callback } };
   });
 
   fastify.post('/enroll', { preHandler: requireAdmin }, async (request, reply) => {
@@ -30,6 +36,7 @@ export default async function adminRoutes(fastify) {
         opsBaseUrl,
         clientVersion,
       } = request.body || {};
+      // Never log or echo enrollmentToken / credentials.
       const view = await fastify.forumCredit.enrollment.enroll({
         enrollmentToken,
         connectionUrl,
@@ -54,9 +61,12 @@ export default async function adminRoutes(fastify) {
 
   fastify.post('/connection-url', { preHandler: requireAdmin }, async (request, reply) => {
     try {
-      const { connectionUrl } = request.body || {};
-      await fastify.forumCredit.connectionStore.updateConnectionUrl(connectionUrl || null);
-      return { data: await fastify.forumCredit.connectionStore.getPublicStatus() };
+      const { connectionUrl, confirmMigration } = request.body || {};
+      const view = await fastify.forumCredit.enrollment.updateCallbackUrl({
+        connectionUrl,
+        confirmMigration: Boolean(confirmMigration),
+      });
+      return { data: view };
     } catch (err) {
       return mapError(err, reply);
     }

@@ -1,8 +1,7 @@
 import {seoActive,seoExpiresAt} from './seo/read-model.js';
 import crypto from 'node:crypto';
-import {sql,eq,and,asc} from 'drizzle-orm';
+import {sql} from 'drizzle-orm';
 import db,{atomicWrite} from '#core/db/index.js';
-import {shopItems} from '#core/db/schema.js';
 import {DEFAULT_CURRENCY_CODE} from '#core/extensions/ledger/constants.js';
 import {PAID_PIN_MIGRATION_STATUS} from './seo/constants.js';
 const fail=(message,statusCode=400)=>Object.assign(new Error(message),{statusCode});
@@ -22,12 +21,29 @@ export function validateProduct(body){
 export class PinService {
   constructor(fastify){this.fastify=fastify;}
   async plans(){
-    return (await db.select().from(shopItems).where(and(eq(shopItems.type,'topic_pin'),eq(shopItems.isActive,true))).orderBy(asc(shopItems.displayOrder),asc(shopItems.id))).map(p=>({
-      ...p,
-      durationSeconds:JSON.parse(p.metadata||'{}').durationSeconds,
-      pricingAuthority:'forum_admin',
-      pricingMigrationStatus:PAID_PIN_MIGRATION_STATUS,
-    }));
+    if(this.fastify.forumPricing?.getCatalogView){
+      const catalog=await this.fastify.forumPricing.getCatalogView();
+      if(catalog&&!catalog.expired&&catalog.paidPins?.length){
+        return catalog.paidPins.map(p=>({
+          id:p.code,
+          code:p.code,
+          name:p.name,
+          price:p.unitPriceCredit,
+          durationSeconds:p.durationSeconds,
+          durationHours:p.durationHours,
+          currencyCode:DEFAULT_CURRENCY_CODE,
+          isActive:true,
+          pricingAuthority:'ops-forum-pricing/1',
+          pricingMigrationStatus:PAID_PIN_MIGRATION_STATUS,
+          snapshotVersion:p.snapshotVersion,
+          priceVersion:p.priceVersion,
+        }));
+      }
+    }
+    // Fail closed for monetary listing when OPS catalog unavailable — do not expose Forum-admin prices.
+    const err=fail('No authorized current paid_pin price is available from OPS catalog',409);
+    err.code='PRICE_UNAVAILABLE';
+    throw err;
   }
   async lockTopic(id){
     await db.execute(sql`SELECT pg_advisory_xact_lock_shared(hashtext('pbn-policy'))`);
@@ -41,26 +57,31 @@ export class PinService {
     const decision=await this.fastify.policy.inspect(topic.title+'\n'+topic.content,contentType,topic.id,userId,policyClient);
     if(decision.action!=='ALLOW')throw fail('Topic is not eligible for paid placement',422);
   }
-  async purchase({userId,topicId,productId,idempotencyKey,expectedPrice,expectedDuration}){
+  async purchase({userId,topicId,productId,skuCode,idempotencyKey,expectedPrice,expectedDuration}){
     if(typeof idempotencyKey!=='string'||!/^[a-zA-Z0-9_-]{16,100}$/.test(idempotencyKey))throw fail('Invalid idempotency key');
-    const hash=crypto.createHash('sha256').update(JSON.stringify({topicId,productId,expectedPrice,expectedDuration})).digest('hex');
+    const code=typeof skuCode==='string'&&skuCode.trim()?skuCode.trim():(typeof productId==='string'?productId:null);
+    if(!code||!/^[-a-z0-9_]{1,80}$/i.test(code))throw fail('skuCode from OPS paid_pin catalog is required',400);
+    const hash=crypto.createHash('sha256').update(JSON.stringify({topicId,skuCode:code,expectedPrice,expectedDuration})).digest('hex');
     return atomicWrite(async()=>{
       await db.execute(sql`SET LOCAL lock_timeout='10s'`);
       await db.execute(sql`SELECT pg_advisory_xact_lock(hashtext('pin-purchase'),hashtext(${userId+':'+idempotencyKey}))`);
       const [prior]=await rows(sql`SELECT * FROM pin_entitlements WHERE user_id=${userId} AND idempotency_key=${idempotencyKey}`);
       if(prior){if(prior.payload_hash!==hash)throw fail('Idempotency key conflicts with an earlier purchase',409);return prior;}
       const topic=await this.lockTopic(topicId);await this.eligible(topic,userId);
-      const [product]=await db.select().from(shopItems).where(eq(shopItems.id,productId)).for('update');
-      if(!product||product.type!=='topic_pin'||!product.isActive||product.currencyCode!==DEFAULT_CURRENCY_CODE)throw fail('Pin product is unavailable',409);
-      const duration=JSON.parse(product.metadata||'{}').durationSeconds;validateProduct({name:product.name,price:product.price,durationSeconds:duration});
-      if((expectedPrice!==undefined&&expectedPrice!==product.price)||(expectedDuration!==undefined&&expectedDuration!==duration))throw fail('Pin plan changed; review the current price and duration',409);
+      if(!this.fastify.forumPricing?.getPaidPin)throw fail('No authorized current paid_pin price is available from OPS catalog',409);
+      const pin=await this.fastify.forumPricing.getPaidPin(code);
+      const price=Number(pin.unitPriceCredit);
+      const duration=Number(pin.durationSeconds);
+      if(!Number.isSafeInteger(price)||price<1||!Number.isInteger(duration)||duration<60)throw fail('Pin product is unavailable',409);
+      if((expectedPrice!==undefined&&expectedPrice!==price)||(expectedDuration!==undefined&&expectedDuration!==duration))throw fail('Pin plan changed; review the current price and duration',409);
       if(!await this.fastify.ledger.isCurrencyActive(DEFAULT_CURRENCY_CODE))throw fail('Credit is unavailable',409);
       const id=crypto.randomUUID();
-      const transaction=await this.fastify.ledger.deduct({userId,amount:product.price,currencyCode:DEFAULT_CURRENCY_CODE,type:'pin_purchase',referenceType:'pin_entitlement',referenceId:id,description:'Paid topic pin: '+product.name,metadata:{entitlementId:id,topicId,productId,durationSeconds:duration,idempotencyKey,source:'topic-owner'}});
+      const metadata={entitlementId:id,topicId,skuCode:code,durationSeconds:duration,idempotencyKey,source:'ops-forum-pricing/1',pricingVersion:pin.priceVersion,snapshotVersion:pin.snapshotVersion};
+      const transaction=await this.fastify.ledger.deduct({userId,amount:price,currencyCode:DEFAULT_CURRENCY_CODE,type:'pin_purchase',referenceType:'pin_entitlement',referenceId:id,description:'Paid topic pin: '+pin.name,metadata});
       const [clock]=await rows(sql`SELECT clock_timestamp() AS now,coalesce(max(ends_at),clock_timestamp()) AS previous_end FROM pin_entitlements WHERE topic_id=${topicId} AND status='active' AND ends_at>clock_timestamp()`);
-      const [entitlement]=await rows(sql`INSERT INTO pin_entitlements(id,topic_id,user_id,product_id,transaction_id,idempotency_key,payload_hash,price,duration_seconds,balance_before,balance_after,starts_at,ends_at)
-        VALUES(${id},${topicId},${userId},${productId},${transaction.id},${idempotencyKey},${hash},${product.price},${duration},${Number(transaction.balanceAfter)+product.price},${transaction.balanceAfter},greatest(${clock.now}::timestamptz,${clock.previous_end}::timestamptz),greatest(${clock.now}::timestamptz,${clock.previous_end}::timestamptz)+${duration}*interval '1 second') RETURNING *`);
-      await db.execute(sql`INSERT INTO pin_events(id,entitlement_id,topic_id,type,actor_id,reason,metadata) VALUES(${crypto.randomUUID()},${id},${topicId},'purchase',${userId},'Owner confirmed non-refundable paid pin',${JSON.stringify({transactionId:transaction.id,price:product.price,productId})}::jsonb)`);
+      const [entitlement]=await rows(sql`INSERT INTO pin_entitlements(id,topic_id,user_id,product_id,transaction_id,idempotency_key,payload_hash,price,duration_seconds,balance_before,balance_after,starts_at,ends_at,ops_sku_code,pricing_version,pricing_authority)
+        VALUES(${id},${topicId},${userId},NULL,${transaction.id},${idempotencyKey},${hash},${price},${duration},${Number(transaction.balanceAfter)+price},${transaction.balanceAfter},greatest(${clock.now}::timestamptz,${clock.previous_end}::timestamptz),greatest(${clock.now}::timestamptz,${clock.previous_end}::timestamptz)+${duration}*interval '1 second',${code},${pin.priceVersion},'ops-forum-pricing/1') RETURNING *`);
+      await db.execute(sql`INSERT INTO pin_events(id,entitlement_id,topic_id,type,actor_id,reason,metadata) VALUES(${crypto.randomUUID()},${id},${topicId},'purchase',${userId},'Owner confirmed non-refundable paid pin',${JSON.stringify({transactionId:transaction.id,price,skuCode:code,pricingVersion:pin.priceVersion})}::jsonb)`);
       return entitlement;
     });
   }
