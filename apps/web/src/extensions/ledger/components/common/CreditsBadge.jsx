@@ -2,18 +2,21 @@ import { Coins } from 'lucide-react';
 import { formatCredits } from '../../utils/formatters';
 import { DEFAULT_CURRENCY_CODE } from '../../constants';
 import { useLedger } from '../../contexts/LedgerContext';
+import { usePbnTranslations } from '@/i18n/useTranslations';
+import { currencyDisplayName } from '../../utils/currencyLabels';
 
 /**
- * 显示货币金额
- * 优先用 symbol 作为前缀图标，symbol 为空时 fallback 到 Coins 图标 + name 后缀
+ * Display a currency amount.
+ * Prefer symbol; otherwise Coins icon + localized/technical name (never Chinese seed leftovers).
  */
 export function CreditsBadge({ amount, currencyCode = DEFAULT_CURRENCY_CODE, variant = 'default', className = '' }) {
   const isLarge = variant === 'large';
   const { currencies } = useLedger();
+  const pbnT = usePbnTranslations();
 
-  const currency = currencies.find(c => c.code === currencyCode);
+  const currency = currencies.find((c) => c.code === currencyCode) || { code: currencyCode };
   const symbol = currency?.symbol;
-  const name = currency?.name || currencyCode;
+  const name = currencyDisplayName(currency, pbnT);
 
   return (
     <div className={`flex items-center gap-1 ${className}`}>

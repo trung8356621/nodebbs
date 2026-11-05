@@ -1056,6 +1056,23 @@ export default async function topicRoutes(fastify, options) {
         ? '您的话题已提交，等待审核后将公开显示'
         : '话题创建成功';
 
+      // Activity reward: grant only when topic is immediately approved (idempotent by topic id).
+      if (!requiresApproval && fastify.activityRewards) {
+        try {
+          await fastify.activityRewards.grantForRule({
+            userId: request.user.id,
+            ruleKey: 'post_topic_amount',
+            type: 'post_topic',
+            referenceType: 'topic',
+            referenceId: String(newTopic.id),
+            description: `Topic create reward #${newTopic.id}`,
+            metadata: { topicId: newTopic.id },
+          });
+        } catch (err) {
+          fastify.log.error(err, '[activity] topic reward failed');
+        }
+      }
+
       return {
         topic: newTopic,
         firstPost,

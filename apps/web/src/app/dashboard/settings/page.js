@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'sonner';
-import { Settings, KeyRound, Shield, ShieldCheck, Bot, Fingerprint, Users, ShieldAlert, Gauge, Unplug, Send, HardDrive, Webhook } from 'lucide-react';
+import { Settings, KeyRound, Shield, ShieldCheck, Bot, Fingerprint, Users, ShieldAlert, Gauge, Unplug, Send, HardDrive, Webhook, Wallet } from 'lucide-react';
 import { Loading } from '@/components/common/Loading';
 
 // 导入所有重构后或原有的配置子组件
@@ -25,6 +25,7 @@ import { OAuthSettings } from './components/OAuthProviderCard';
 import { MessageSettings } from './components/MessageSettings';
 import { StorageSettings } from './components/StorageProviderCard';
 import { WebhookSettings } from './components/WebhookSettings';
+import { CreditAbuseSettings } from './components/CreditAbuseSettings';
 
 // 扁平化的全局导航菜单
 const navigationGroups = (pbnT = pbnRuntimeT) => [{
@@ -70,6 +71,11 @@ const navigationGroups = (pbnT = pbnRuntimeT) => [{
     label: pbnT("m802"),
     icon: Gauge,
     description: pbnT("m803")
+  }, {
+    id: 'credit-abuse',
+    label: pbnT("creditAbuseNavLabel"),
+    icon: Wallet,
+    description: pbnT("creditAbuseNavDesc")
   }, {
     id: 'captcha',
     label: pbnT("m186"),
@@ -194,6 +200,8 @@ function SystemSettingsContent() {
         return <SpamProtectionSettings settings={settings} handleChange={handleChange} handleInputBlur={handleInputBlur} saving={saving} />;
       case 'rate-limit':
         return <RateLimitSettings settings={settings} handleChange={handleChange} handleInputBlur={handleInputBlur} saving={saving} />;
+      case 'credit-abuse':
+        return <CreditAbuseSettings />;
       case 'captcha':
         return <CaptchaSettings />;
       case 'authentication':

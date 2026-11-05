@@ -59,7 +59,7 @@ export const MESSAGE_PROVIDERS = [
     channel: 'email',
     provider: 'aliyun',
     isEnabled: false,
-    displayName: '阿里云邮件推送',
+    displayName: 'Aliyun DirectMail',
     displayOrder: 4,
     config: JSON.stringify({
       smtpHost: 'smtpdm.aliyun.com',
@@ -77,7 +77,7 @@ export const MESSAGE_PROVIDERS = [
     channel: 'sms',
     provider: 'aliyun',
     isEnabled: false,
-    displayName: '阿里云短信',
+    displayName: 'Aliyun SMS',
     displayOrder: 1,
     config: JSON.stringify({
       accessKeyId: null,
@@ -98,7 +98,7 @@ export const MESSAGE_PROVIDERS = [
     channel: 'sms',
     provider: 'tencent',
     isEnabled: false,
-    displayName: '腾讯云短信',
+    displayName: 'Tencent Cloud SMS',
     displayOrder: 2,
     config: JSON.stringify({
       secretId: null,

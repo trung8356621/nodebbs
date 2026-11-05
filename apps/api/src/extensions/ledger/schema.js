@@ -7,7 +7,7 @@ import {
   boolean,
   index,
   unique,
-  bigint,
+  numeric,
   check,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
@@ -16,19 +16,22 @@ import { users } from '../../db/schema.js';
 import { $defaults } from '../../db/columns.js';
 
 // ============ Ledger Tables ============
+// Credit balances/amounts are NUMERIC (decimal string in JS) so VND÷creditVnd
+// fractions like 0.5 Credit are exact. Existing integer rows cast in-place (no ×/÷).
 
-// 1. Currencies (货币定义)
+// 1. Currencies
 export const sysCurrencies = pgTable(
   'sys_currencies',
   {
     ...$defaults,
-    code: varchar('code', { length: 20 }).notNull().unique(), // e.g., 'credits', 'gold'
-    name: varchar('name', { length: 50 }).notNull(), // e.g., '积分', '金币'
-    symbol: varchar('symbol', { length: 10 }), // e.g., 'pts', '￥'
-    precision: integer('precision').notNull().default(0), // 小数位，0表示整数
+    code: varchar('code', { length: 20 }).notNull().unique(),
+    name: varchar('name', { length: 50 }).notNull(),
+    symbol: varchar('symbol', { length: 10 }),
+    /** Decimal places for Credit display/storage (10 supports VND÷rate fractions). */
+    precision: integer('precision').notNull().default(10),
     isActive: boolean('is_active').notNull().default(true),
-    metadata: text('metadata'), // JSON 配置，如汇率、图标等
-    config: text('config'), // JSON 业务规则配置 (如奖励规则)
+    metadata: text('metadata'),
+    config: text('config'),
   },
   (table) => [
     index('sys_currencies_code_idx').on(table.code),
@@ -39,7 +42,7 @@ export const sysCurrenciesRelations = relations(sysCurrencies, ({ many }) => ({
   accounts: many(sysAccounts),
 }));
 
-// 2. Accounts (用户账户/钱包)
+// 2. Accounts
 export const sysAccounts = pgTable(
   'sys_accounts',
   {
@@ -50,14 +53,14 @@ export const sysAccounts = pgTable(
     currencyCode: varchar('currency_code', { length: 20 })
       .notNull()
       .references(() => sysCurrencies.code, { onDelete: 'cascade' }),
-    balance: bigint('balance', { mode: 'number' }).notNull().default(0), // 使用bigint防止溢出，但在JS中如果是大数需注意
-    totalEarned: bigint('total_earned', { mode: 'number' }).notNull().default(0),
-    totalSpent: bigint('total_spent', { mode: 'number' }).notNull().default(0),
+    balance: numeric('balance', { precision: 30, scale: 10, mode: 'string' }).notNull().default('0'),
+    totalEarned: numeric('total_earned', { precision: 30, scale: 10, mode: 'string' }).notNull().default('0'),
+    totalSpent: numeric('total_spent', { precision: 30, scale: 10, mode: 'string' }).notNull().default('0'),
     isFrozen: boolean('is_frozen').notNull().default(false),
   },
   (table) => [
     unique().on(table.userId, table.currencyCode),
-    check('sys_accounts_balance_safe',sql`${table.balance} >= 0 AND ${table.balance} <= 9007199254740991`),
+    check('sys_accounts_balance_safe', sql`${table.balance} >= 0`),
     index('sys_accounts_user_idx').on(table.userId),
     index('sys_accounts_currency_idx').on(table.currencyCode),
   ]
@@ -88,11 +91,10 @@ export const sysTransactions = pgTable(
     currencyCode: varchar('currency_code', { length: 20 })
       .notNull()
       .references(() => sysCurrencies.code, { onDelete: 'cascade' }),
-    amount: bigint('amount', { mode: 'number' }).notNull(), // 正数=收入，负数=支出
-    balanceAfter: bigint('balance_after', { mode: 'number' }).notNull(), // 交易后余额
-    
-    // 交易类型与关联
-    type: varchar('type', { length: 50 }).notNull(), // e.g., 'transfer', 'grant', 'check_in', 'post_reward'
+    amount: numeric('amount', { precision: 30, scale: 10, mode: 'string' }).notNull(),
+    balanceAfter: numeric('balance_after', { precision: 30, scale: 10, mode: 'string' }).notNull(),
+
+    type: varchar('type', { length: 50 }).notNull(),
     referenceType: varchar('reference_type', { length: 50 }), // e.g., 'post', 'user', 'system'
     referenceId: varchar('reference_id', { length: 100 }), // 关联ID (可以是 string 或 int 转 string)
     

@@ -7,6 +7,7 @@ import { validateUsername, parseReservedUsernames } from '../../utils/validateUs
 import { normalizeEmail, normalizeUsername } from '../../utils/normalization.js';
 import { checkSpammer, formatSpamCheckMessage } from '../../services/spamService.js';
 import { DEFAULT_CURRENCY_CODE } from '../../extensions/ledger/constants.js';
+import { afterCommit } from '../../db/write-context.js';
 
 export default async function registerRoute(fastify, options) {
   fastify.post(
@@ -256,30 +257,26 @@ export default async function registerRoute(fastify, options) {
         try {
           const usedInvitation = await markInvitationCodeAsUsed(invitationCode.trim(), newUser.id);
 
-          if (usedInvitation && usedInvitation.createdBy) {
-            const isRewardsActive = false; // Commercial Credit invitation rewards are retired.
-
-            if (isRewardsActive) {
-              const inviteAmount = await fastify.ledger.getCurrencyConfig(DEFAULT_CURRENCY_CODE, 'invite_reward_amount', 50);
-
-              if (inviteAmount > 0) {
-                await fastify.ledger.grant({
-                  userId: usedInvitation.createdBy,
-                  amount: inviteAmount,
-                  currencyCode: DEFAULT_CURRENCY_CODE,
-                  type: 'invite_user',
-                  referenceType: 'invite_user',
-                  referenceId: `${usedInvitation.createdBy}_invite_${newUser.id}`,
-                  description: `邀请新用户注册：${newUser.username}`,
-                  metadata: {
-                    invitedUserId: newUser.id,
-                    invitedUsername: newUser.username,
-                    source: 'rewards-extension'
-                  }
-                });
-                fastify.log.info(`[奖励系统] 已给邀请人 ${usedInvitation.createdBy} 发放邀请奖励`);
-              }
-            }
+          if (usedInvitation && usedInvitation.createdBy && fastify.activityRewards) {
+            // Run outside policy atomicWrite — ambient tx may already be poisoned by
+            // optional reads (e.g. missing local-pricing tables) and must not block grants.
+            const grantArgs = {
+              userId: usedInvitation.createdBy,
+              ruleKey: 'invite_reward_amount',
+              type: 'invite_user',
+              referenceType: 'invite_user',
+              referenceId: `invite_${newUser.id}`,
+              description: `Invite reward for user ${newUser.username}`,
+              metadata: {
+                invitedUserId: newUser.id,
+                invitedUsername: newUser.username,
+              },
+            };
+            afterCommit(() => {
+              fastify.activityRewards.grantForRule(grantArgs).catch((err) => {
+                fastify.log.error(err, '[activity] invite reward failed');
+              });
+            });
           }
         } catch (error) {
           fastify.log.error(error, `[注册] 邀请码后处理失败: code=${invitationCode}, userId=${newUser.id}`);

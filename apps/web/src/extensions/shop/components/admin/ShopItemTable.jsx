@@ -6,6 +6,7 @@ import { Edit, Trash2 } from 'lucide-react';
 import { ItemTypeIcon } from '../shared/ItemTypeIcon';
 import { getItemTypeLabel } from '../../utils/itemTypes';
 import { useLedger } from '../../../ledger/contexts/LedgerContext';
+import { currencyDisplayName } from '../../../ledger/utils/currencyLabels';
 
 /**
  * 管理后台商品列表表格
@@ -28,8 +29,8 @@ export function ShopItemTable({
     currencies
   } = useLedger();
   const getCurrencyName = code => {
-    const c = currencies.find(c => c.code === code);
-    return c?.name || code;
+    const c = currencies.find(c => c.code === code) || { code };
+    return currencyDisplayName(c, pbnT);
   };
   const columns = [{
     label: 'ID',

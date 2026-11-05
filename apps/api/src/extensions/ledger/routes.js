@@ -6,6 +6,7 @@ import {
   mergeRewardRuleUpdates,
   parseCurrencyConfig,
 } from './rewardRules.js';
+import { enrichTransactionForDisplay } from './utils/transactionDisplay.js';
 import db from '../../db/index.js';
 import { eq, and, desc, sql, gte, lt, count } from 'drizzle-orm';
 import { users } from '../../db/schema.js';
@@ -88,78 +89,105 @@ export default async function ledgerRoutes(fastify, options) {
       };
   }
 
-  // 2. 获取交易记录 (统一接口)
+  // Transaction history — VND enrichment is display-only from snapshots (never revalues legacy).
   fastify.get('/transactions', {
     preHandler: [fastify.authenticate],
     schema: {
-        tags: ['ledger'],
-        description: '获取交易记录（管理员可查看所有用户）',
-        querystring: {
-            type: 'object',
-            properties: {
-                page: { type: 'integer', default: 1 },
-                limit: { type: 'integer', default: 20 },
-                currency: { type: 'string' },
-                userId: { type: 'integer' }
-            }
-        }
-    }
-  }, async (req, reply) => {
-       const { page, limit, currency, userId } = req.query;
-       const offset = (page - 1) * limit;
-       
-       let filterUserId = req.user.id;
-       const canManage = await fastify.permission.can(req, 'dashboard.extensions');
+      tags: ['ledger'],
+      description: 'List ledger transactions with display-only VND enrichment from snapshots',
+      querystring: {
+        type: 'object',
+        properties: {
+          page: { type: 'integer', default: 1 },
+          limit: { type: 'integer', default: 20, maximum: 100 },
+          currency: { type: 'string' },
+          userId: { type: 'integer' },
+          type: { type: 'string' },
+          direction: { type: 'string', enum: ['credit', 'debit', 'zero'] },
+          from: { type: 'string' },
+          to: { type: 'string' },
+        },
+      },
+    },
+  }, async (req) => {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+    const offset = (page - 1) * limit;
+    const { currency, userId, type, direction, from, to } = req.query;
 
-       if (canManage) {
-           if (userId) {
-               filterUserId = userId; // 管理员查看特定用户
-           } else {
-               filterUserId = undefined; // 管理员查看全局流
-           }
-       } else {
-           // 普通用户查看自己的交易
-           filterUserId = req.user.id;
-       }
-       
-       const whereClause = and(
-           filterUserId ? eq(sysTransactions.userId, filterUserId) : undefined,
-           currency ? eq(sysTransactions.currencyCode, currency) : undefined
-       );
-       
-       const items = await db.select({
-           id: sysTransactions.id,
-           userId: sysTransactions.userId,
-           username: users.username,
-           currencyCode: sysTransactions.currencyCode,
-           currencyName: sysCurrencies.name,
-           amount: sysTransactions.amount,
-           balance: sysTransactions.balanceAfter, // 前端使用的别名
-           type: sysTransactions.type,
-           referenceType: sysTransactions.referenceType,
-           referenceId: sysTransactions.referenceId,
-           description: sysTransactions.description,
-           createdAt: sysTransactions.createdAt,
-           metadata: sysTransactions.metadata
-       })
-         .from(sysTransactions)
-         .leftJoin(users, eq(sysTransactions.userId, users.id))
-         .leftJoin(sysCurrencies, eq(sysTransactions.currencyCode, sysCurrencies.code))
-         .where(whereClause)
-         .orderBy(desc(sysTransactions.createdAt))
-         .limit(limit)
-         .offset(offset);
-         
-       const [{count: total}] = await db.select({ count: count() })
-         .from(sysTransactions)
-         .where(whereClause);
-         
-       return {
-           items,
-           total,
-           page,
-           limit
-       };
+    let filterUserId = req.user.id;
+    const canManage = await fastify.permission.can(req, 'dashboard.extensions');
+    if (canManage) {
+      filterUserId = userId || undefined;
+    } else {
+      filterUserId = req.user.id;
+    }
+
+    const directionClause = direction === 'credit'
+      ? sql`${sysTransactions.amount} > 0`
+      : direction === 'debit'
+        ? sql`${sysTransactions.amount} < 0`
+        : direction === 'zero'
+          ? sql`${sysTransactions.amount} = 0`
+          : undefined;
+
+    let fromDate;
+    let toDate;
+    if (from) {
+      const d = new Date(from);
+      if (!Number.isNaN(d.getTime())) fromDate = d;
+    }
+    if (to) {
+      const d = new Date(to);
+      if (!Number.isNaN(d.getTime())) toDate = d;
+    }
+
+    const whereClause = and(
+      filterUserId ? eq(sysTransactions.userId, filterUserId) : undefined,
+      currency ? eq(sysTransactions.currencyCode, currency) : undefined,
+      type ? eq(sysTransactions.type, type) : undefined,
+      directionClause,
+      fromDate ? gte(sysTransactions.createdAt, fromDate) : undefined,
+      toDate ? lt(sysTransactions.createdAt, toDate) : undefined,
+    );
+
+    const items = await db.select({
+      id: sysTransactions.id,
+      userId: sysTransactions.userId,
+      username: users.username,
+      currencyCode: sysTransactions.currencyCode,
+      currencyName: sysCurrencies.name,
+      amount: sysTransactions.amount,
+      balance: sysTransactions.balanceAfter,
+      balanceAfter: sysTransactions.balanceAfter,
+      type: sysTransactions.type,
+      referenceType: sysTransactions.referenceType,
+      referenceId: sysTransactions.referenceId,
+      description: sysTransactions.description,
+      createdAt: sysTransactions.createdAt,
+      metadata: sysTransactions.metadata,
+    })
+      .from(sysTransactions)
+      .leftJoin(users, eq(sysTransactions.userId, users.id))
+      .leftJoin(sysCurrencies, eq(sysTransactions.currencyCode, sysCurrencies.code))
+      .where(whereClause)
+      .orderBy(desc(sysTransactions.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const [{ count: total }] = await db.select({ count: count() })
+      .from(sysTransactions)
+      .where(whereClause);
+
+    return {
+      items: items.map(enrichTransactionForDisplay),
+      total,
+      page,
+      limit,
+      storageUnit: 'credit',
+      displayUnit: 'vnd',
+      note: 'VND fields are display-only from snapshots; legacy rows without rate/value snapshot leave amountVnd null',
+    };
   });
 
   // 3. 获取余额 (指定货币) - 替代 /rewards/balance
@@ -333,22 +361,31 @@ export default async function ledgerRoutes(fastify, options) {
       return { success: true, configPreserved: config === undefined && Boolean(existing) };
   });
 
+  async function resolveCreditVnd() {
+    try {
+      const n = await fastify.localPricing?.getVndPerCredit?.();
+      if (Number.isSafeInteger(n) && n >= 1) return n;
+    } catch { /* default */ }
+    return 10000;
+  }
+
   // Local activity reward/spend rules stored in credits.config (not OPS pricing).
   fastify.get('/reward-rules', {
     preHandler: [fastify.requirePermission('dashboard.extensions')],
     schema: {
       tags: ['ledger', 'admin'],
-      description: 'List local Credit activity reward/spend rules from credits.config',
+      description: 'List local activity reward/spend rules (Admin amounts in VND)',
     },
   }, async () => {
+    const creditVnd = await resolveCreditVnd();
     const [row] = await db.select().from(sysCurrencies)
       .where(eq(sysCurrencies.code, REWARD_RULE_CURRENCY)).limit(1);
     if (!row) {
-      return { data: buildRewardRulesView({}), currencyActive: false, missingCurrency: true };
+      return { data: buildRewardRulesView({}, { creditVnd }), currencyActive: false, missingCurrency: true };
     }
     const config = parseCurrencyConfig(row.config);
     return {
-      data: buildRewardRulesView(config),
+      data: buildRewardRulesView(config, { creditVnd }),
       currencyActive: Boolean(row.isActive),
       missingCurrency: false,
     };
@@ -358,14 +395,29 @@ export default async function ledgerRoutes(fastify, options) {
     preHandler: [fastify.requirePermission('dashboard.extensions')],
     schema: {
       tags: ['ledger', 'admin'],
-      description: 'Update permitted credits.config reward rule values (merge; no unknown keys)',
+      description: 'Update reward rule VND values and/or enabled flags (merge; no unknown keys)',
       body: {
         type: 'object',
         required: ['updates'],
         additionalProperties: false,
         properties: {
           currency: { type: 'string', enum: [REWARD_RULE_CURRENCY] },
-          updates: { type: 'object', additionalProperties: { type: 'number' } },
+          updates: {
+            type: 'object',
+            additionalProperties: {
+              anyOf: [
+                { type: 'number' },
+                {
+                  type: 'object',
+                  additionalProperties: false,
+                  properties: {
+                    value: { type: 'integer', minimum: 0 },
+                    enabled: { type: 'boolean' },
+                  },
+                },
+              ],
+            },
+          },
         },
       },
     },
@@ -375,13 +427,14 @@ export default async function ledgerRoutes(fastify, options) {
       return reply.code(400).send({ error: 'only_credits', message: 'Only credits reward rules are editable' });
     }
     try {
+      const creditVnd = await resolveCreditVnd();
       const [row] = await db.select().from(sysCurrencies)
         .where(eq(sysCurrencies.code, REWARD_RULE_CURRENCY)).limit(1);
       if (!row) {
         return reply.code(404).send({ error: 'currency_missing', message: 'credits currency not found' });
       }
       const existing = parseCurrencyConfig(row.config);
-      const { nextConfig, applied } = mergeRewardRuleUpdates(existing, req.body.updates);
+      const { nextConfig, applied } = mergeRewardRuleUpdates(existing, req.body.updates, { creditVnd });
       await db.update(sysCurrencies)
         .set({ config: JSON.stringify(nextConfig) })
         .where(eq(sysCurrencies.code, REWARD_RULE_CURRENCY));
@@ -389,7 +442,7 @@ export default async function ledgerRoutes(fastify, options) {
         await fastify.cache.invalidate(`currency:name:${REWARD_RULE_CURRENCY}`);
       }
       return {
-        data: buildRewardRulesView(nextConfig),
+        data: buildRewardRulesView(nextConfig, { creditVnd }),
         applied,
       };
     } catch (err) {
@@ -398,7 +451,72 @@ export default async function ledgerRoutes(fastify, options) {
         error: err.code || 'request_failed',
         message: err.message,
         unknown: err.unknown,
+        creditVnd: err.creditVnd,
       });
+    }
+  });
+
+  // Activity check-in (new safe path — legacy /api/check-in remains HTTP 410).
+  fastify.get('/activity/check-in', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      tags: ['ledger', 'activity'],
+      description: 'Get daily check-in status (Forum timezone)',
+    },
+  }, async (request) => {
+    return fastify.activityRewards.getCheckInStatus(request.user.id);
+  });
+
+  fastify.post('/activity/check-in', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      tags: ['ledger', 'activity'],
+      description: 'Perform daily check-in and apply configured VND→Credit rewards',
+    },
+  }, async (request, reply) => {
+    try {
+      return await fastify.activityRewards.checkIn(request.user.id);
+    } catch (err) {
+      const status = err.statusCode || 500;
+      return reply.code(status).send({ error: err.code || 'check_in_failed', message: err.message });
+    }
+  });
+
+  // Forum B / local E2E only: in-process activity clock (no OS or shared-DB clock changes).
+  fastify.post('/admin/activity-clock', {
+    preHandler: [fastify.requirePermission('dashboard.extensions')],
+    schema: {
+      tags: ['ledger', 'admin', 'activity'],
+      description: 'Set in-process activity clock override for streak E2E (requires PBN_ALLOW_ACTIVITY_CLOCK=1)',
+      body: {
+        type: 'object',
+        properties: {
+          now: { type: ['string', 'null'], description: 'ISO timestamp or null to clear' },
+        },
+      },
+    },
+  }, async (req, reply) => {
+    if (process.env.PBN_ALLOW_ACTIVITY_CLOCK !== '1') {
+      return reply.code(403).send({
+        error: 'activity_clock_disabled',
+        message: 'Activity clock override is disabled (set PBN_ALLOW_ACTIVITY_CLOCK=1 on Forum B only)',
+      });
+    }
+    try {
+      const { setActivityNowOverride, getActivityNowOverride, forumDateKey } = await import(
+        './services/activityRewardService.js'
+      );
+      const next = setActivityNowOverride(req.body?.now ?? null);
+      return {
+        data: {
+          now: next ? next.toISOString() : null,
+          forumDate: forumDateKey(),
+          override: Boolean(getActivityNowOverride()),
+        },
+      };
+    } catch (err) {
+      const status = err.statusCode || 500;
+      return reply.code(status).send({ error: err.code || 'clock_failed', message: err.message });
     }
   });
 
@@ -432,7 +550,7 @@ export default async function ledgerRoutes(fastify, options) {
               type: 'admin_grant',
               referenceType: 'admin_operation',
               referenceId: req.user.id, // 管理员ID作为参考
-              description: description || '管理员后台发放'
+              description: description || 'Admin grant'
           });
       } else {
           await service.deduct({
@@ -442,7 +560,7 @@ export default async function ledgerRoutes(fastify, options) {
               type: 'admin_deduct',
               referenceType: 'admin_operation',
               referenceId: req.user.id,
-              description: description || '管理员后台扣除',
+              description: description || 'Admin deduct',
               allowNegative: true // 允许扣成负数? 暂时允许，符合管理员强制操作
           });
       }

@@ -10,6 +10,7 @@ import { Wallet, Trophy, TrendingUp } from 'lucide-react';
 import Link from '@/components/common/Link';
 import { ledgerApi } from '../../api';
 import { DEFAULT_CURRENCY_CODE } from '../../constants';
+import { currencyDisplayName } from '../../utils/currencyLabels';
 
 import SeoActivity from '../../components/user/SeoActivity';
 import { LedgerTransactionTable } from '../../components/common/LedgerTransactionTable';
@@ -103,7 +104,7 @@ export default function UserWalletPage() {
                </div>
                <CardHeader className="pb-2">
                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                   {account.currency.code===DEFAULT_CURRENCY_CODE?'Credit':account.currency.name}
+                   {currencyDisplayName(account.currency, pbnT)}
                  </CardTitle>
                </CardHeader>
                <CardContent>

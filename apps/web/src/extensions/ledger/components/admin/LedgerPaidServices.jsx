@@ -5,6 +5,7 @@ import {usePbnTranslations} from '@/i18n/useTranslations';
 import {Badge} from '@/components/ui/badge';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
+import {Textarea} from '@/components/ui/textarea';
 import {Switch} from '@/components/ui/switch';
 import {
   Dialog,
@@ -16,25 +17,11 @@ import {
 import api from '@/lib/api';
 import Link from '@/components/common/Link';
 import {toast} from 'sonner';
-import {LedgerRewardRules} from './LedgerRewardRules';
+import {formatCredit,formatVnd,parseVndInput} from '../../utils/money';
 
 function StatusBadge({tone='default',children}){
   const variant=tone==='ok'?'default':tone==='warn'?'secondary':'outline';
   return <Badge variant={variant}>{children}</Badge>;
-}
-
-function formatCredit(value,locale){
-  if(value==null||value==='')return '—';
-  const n=Number(value);
-  if(!Number.isFinite(n))return '—';
-  return `${n.toLocaleString(locale)} Credit`;
-}
-
-function formatVnd(value,locale){
-  if(value==null||value==='')return '—';
-  const n=Number(value);
-  if(!Number.isFinite(n))return '—';
-  return `${n.toLocaleString(locale)} ₫`;
 }
 
 function sourceLabel(t,source){
@@ -45,15 +32,17 @@ function sourceLabel(t,source){
   return source||'—';
 }
 
-function serviceTitle(t,code){
-  if(code==='paid_pin')return t('ledgerServicePinTitle');
-  if(code==='seo_entitlement')return t('ledgerServiceSeoTitle');
-  return code;
+function serviceTitle(t,svc){
+  if(svc?.name)return svc.name;
+  if(svc?.serviceCode==='paid_pin')return t('ledgerServicePinTitle');
+  if(svc?.serviceCode==='seo_entitlement')return t('ledgerServiceSeoTitle');
+  return svc?.serviceCode||'';
 }
 
-function serviceDesc(t,code){
-  if(code==='paid_pin')return t('ledgerServicePinDescShort');
-  if(code==='seo_entitlement')return t('ledgerServiceSeoDescShort');
+function serviceDesc(t,svc){
+  if(svc?.description)return svc.description;
+  if(svc?.serviceCode==='paid_pin')return t('ledgerServicePinDescShort');
+  if(svc?.serviceCode==='seo_entitlement')return t('ledgerServiceSeoDescShort');
   return '';
 }
 
@@ -69,6 +58,9 @@ export function LedgerPaidServices(){
   const [history,setHistory]=useState(null);
   const [saving,setSaving]=useState(false);
   const [draft,setDraft]=useState({});
+  const [rateEditing,setRateEditing]=useState(false);
+  const [rateDraft,setRateDraft]=useState('');
+  const [rateHistory,setRateHistory]=useState(null);
 
   const load=useCallback(async()=>{
     setLoading(true);setLoadError('');
@@ -88,29 +80,45 @@ export function LedgerPaidServices(){
 
   const openEdit=(svc)=>{
     setDetail(svc.serviceCode);
+    const days=svc.durationDays
+      ?? Math.max(1,Math.round(Number(svc.options?.durationSeconds||86400)/86400));
     setDraft({
+      name:svc.name||svc.options?.name||'',
+      description:svc.description||svc.options?.description||'',
       basePriceVnd:String(svc.basePriceVnd??''),
       enabled:Boolean(svc.enabled),
-      durationSeconds:String(svc.options?.durationSeconds??86400),
-      durationMonths:String(svc.options?.durationMonths??1),
+      durationDays:String(days),
+      durationMonths:String(svc.options?.durationMonths??svc.durationMonths??1),
     });
   };
 
   const saveService=async()=>{
     if(!detail)return;
-    const basePriceVnd=Number(draft.basePriceVnd);
-    if(!Number.isSafeInteger(basePriceVnd)||basePriceVnd<0){
+    const basePriceVnd=parseVndInput(draft.basePriceVnd);
+    if(basePriceVnd==null){
       toast.error(t('ledgerLocalPriceInvalid'));
       return;
     }
-    const body={basePriceVnd,enabled:Boolean(draft.enabled),options:{}};
+    const name=(draft.name||'').trim();
+    if(!name){
+      toast.error(t('ledgerLocalNameRequired'));
+      return;
+    }
+    const body={
+      basePriceVnd,
+      enabled:Boolean(draft.enabled),
+      options:{
+        name,
+        description:(draft.description||'').trim(),
+      },
+    };
     if(detail==='paid_pin'){
-      const durationSeconds=Number(draft.durationSeconds);
-      if(!Number.isInteger(durationSeconds)||durationSeconds<60){
-        toast.error(t('ledgerLocalDurationInvalid'));
+      const durationDays=Number(draft.durationDays);
+      if(!Number.isInteger(durationDays)||durationDays<1||durationDays>365){
+        toast.error(t('ledgerLocalDurationDaysInvalid'));
         return;
       }
-      body.options.durationSeconds=durationSeconds;
+      body.options.durationDays=durationDays;
     }
     if(detail==='seo_entitlement'){
       const durationMonths=Number(draft.durationMonths);
@@ -146,6 +154,19 @@ export function LedgerPaidServices(){
     }
   };
 
+  const toggleServiceEnabled=async(svc,enabled)=>{
+    setSaving(true);
+    try{
+      await api.patch(`/forum/local-pricing/services/${svc.serviceCode}`,{enabled});
+      toast.success(t('ledgerLocalPriceSaved'));
+      await load();
+    }catch(err){
+      toast.error(err?.message||t('seoError'));
+    }finally{
+      setSaving(false);
+    }
+  };
+
   const openHistory=async(serviceCode)=>{
     try{
       const res=await api.get(`/forum/local-pricing/services/${serviceCode}/history`);
@@ -161,8 +182,41 @@ export function LedgerPaidServices(){
       await api.post('/forum/local-pricing/sync-to-ops',{});
       toast.error(t('ledgerOpsSyncUnsupported'));
     }catch(err){
-      // Expected 501 until OPS adds the contract.
       toast.message(t('ledgerOpsSyncUnsupported'),{description:err?.message});
+    }
+  };
+
+  const openRateEdit=()=>{
+    setRateDraft(String(payload?.vndPerCredit||10000));
+    setRateEditing(true);
+  };
+
+  const saveRate=async()=>{
+    const value=parseVndInput(rateDraft);
+    if(value==null||value<1){
+      toast.error(t('ledgerCreditRateInvalid'));
+      return;
+    }
+    setSaving(true);
+    try{
+      await api.patch('/forum/local-pricing/settings/vnd-per-credit',{value});
+      toast.success(t('ledgerCreditRateSaved'));
+      setRateEditing(false);
+      await load();
+    }catch(err){
+      toast.error(err?.message||t('seoError'));
+    }finally{
+      setSaving(false);
+    }
+  };
+
+  const openRateHistory=async()=>{
+    try{
+      const res=await api.get('/forum/local-pricing/settings/vnd-per-credit');
+      const data=res?.data||res;
+      setRateHistory(data);
+    }catch(err){
+      toast.error(err?.message||t('seoError'));
     }
   };
 
@@ -177,6 +231,7 @@ export function LedgerPaidServices(){
 
   const services=payload?.services||[];
   const freeMode=Boolean(payload?.freeMode);
+  const vndPerCredit=Number(payload?.vndPerCredit)||10000;
   const opsSync=payload?.opsSync||{};
   const enrolled=Boolean(opsSync.enrolled);
   const editing=services.find(s=>s.serviceCode===detail);
@@ -210,6 +265,23 @@ export function LedgerPaidServices(){
         <p className="text-sm text-amber-700 dark:text-amber-400">{t('ledgerFreeModeHint')}</p>
       ):null}
 
+      <div className="rounded-md border p-3 text-sm space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className="font-medium">{t('ledgerCreditRateTitle')}</div>
+            <p className="text-xs text-muted-foreground">{t('ledgerCreditRateIntro')}</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={openRateEdit}>{t('m235')}</Button>
+            <Button variant="ghost" size="sm" onClick={openRateHistory}>{t('ledgerSvcActionHistory')}</Button>
+          </div>
+        </div>
+        <dl className="grid gap-1 sm:grid-cols-2">
+          <div className="flex justify-between gap-3"><dt className="text-muted-foreground">{t('ledgerCreditRateUnit')}</dt><dd>VND</dd></div>
+          <div className="flex justify-between gap-3"><dt className="text-muted-foreground">{t('ledgerCreditRateRatio')}</dt><dd>1 Credit = {formatVnd(vndPerCredit,t.locale)}</dd></div>
+        </dl>
+      </div>
+
       <div className="overflow-x-auto rounded-md border">
         <table className="w-full text-sm">
           <thead>
@@ -230,26 +302,40 @@ export function LedgerPaidServices(){
                 :!svc.enabled
                   ?{tone:'warn',label:t('ledgerSvcStatusDisabled')}
                   :{tone:'ok',label:t('ledgerSvcStatusAvailable')};
-              const forumPrice=`${formatVnd(svc.basePriceVnd,t.locale)} · ${formatCredit(
-                svc.vndPerCredit?Math.ceil(Number(svc.basePriceVnd)/Number(svc.vndPerCredit)):null,
-                t.locale,
-              )}`;
+              const forumPrice=`${formatVnd(svc.basePriceVnd,t.locale)} · ${formatCredit(svc.basePriceVnd,vndPerCredit,t.locale)}`;
               const opsPrice=svc.overridePriceVnd==null?'—'
-                :`${formatVnd(svc.overridePriceVnd,t.locale)} · ${formatCredit(
-                  svc.vndPerCredit?Math.ceil(Number(svc.overridePriceVnd)/Number(svc.vndPerCredit)):null,
-                  t.locale,
-                )}`;
+                :`${formatVnd(svc.overridePriceVnd,t.locale)} · ${formatCredit(svc.overridePriceVnd,vndPerCredit,t.locale)}`;
               const effective=banned?'—'
-                :`${formatCredit(svc.effectivePriceCredit,t.locale)} (${sourceLabel(t,svc.effectiveSource)})`;
+                :`${formatCredit(svc.effectivePriceVnd??0,vndPerCredit,t.locale)} (${sourceLabel(t,svc.effectiveSource)})`;
+              const durationHint=svc.serviceCode==='paid_pin'
+                ?t('ledgerLocalDurationDaysValue',{days:svc.durationDays||1})
+                :svc.serviceCode==='seo_entitlement'
+                  ?t('ledgerLocalDurationMonthsValue',{months:svc.durationMonths||1})
+                  :'';
               return <tr key={svc.serviceCode} className="border-b last:border-0 align-top">
                 <td className="p-3">
-                  <div className="font-medium">{serviceTitle(t,svc.serviceCode)}</div>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-md">{serviceDesc(t,svc.serviceCode)}</p>
+                  <div className="font-medium">{serviceTitle(t,svc)}</div>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-md">{serviceDesc(t,svc)}</p>
+                  {durationHint?(
+                    <p className="text-xs text-muted-foreground mt-1">{durationHint}</p>
+                  ):null}
                 </td>
                 <td className="p-3 whitespace-pre-wrap max-w-48">{forumPrice}</td>
                 <td className="p-3 whitespace-pre-wrap max-w-48">{opsPrice}</td>
                 <td className="p-3 whitespace-pre-wrap max-w-52 font-medium">{effective}</td>
-                <td className="p-3"><StatusBadge tone={status.tone}>{status.label}</StatusBadge></td>
+                <td className="p-3">
+                  <div className="flex flex-col gap-2">
+                    <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={Boolean(svc.enabled)}
+                        disabled={saving||banned}
+                        onCheckedChange={v=>toggleServiceEnabled(svc,v)}
+                      />
+                      <span className="text-xs text-muted-foreground">{t('ledgerLocalEnabled')}</span>
+                    </div>
+                  </div>
+                </td>
                 <td className="p-3 text-right space-x-2 whitespace-nowrap">
                   <Button variant="outline" size="sm" onClick={()=>openEdit(svc)}>{t('ledgerSvcActionConfig')}</Button>
                   <Button variant="ghost" size="sm" onClick={()=>openHistory(svc.serviceCode)}>{t('ledgerSvcActionHistory')}</Button>
@@ -262,24 +348,37 @@ export function LedgerPaidServices(){
       <p className="text-xs text-muted-foreground">{t('ledgerServicesPriceNoteLocal')}</p>
     </div>
 
-    <LedgerRewardRules/>
-
     <Dialog open={Boolean(detail)} onOpenChange={open=>!open&&setDetail(null)}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{editing?serviceTitle(t,editing.serviceCode):t('ledgerSvcActionConfig')}</DialogTitle>
+          <DialogTitle>{editing?serviceTitle(t,editing):t('ledgerSvcActionConfig')}</DialogTitle>
           <DialogDescription>{t('ledgerLocalConfigIntro')}</DialogDescription>
         </DialogHeader>
         {editing?(
           <div className="space-y-4 text-sm">
             <div className="space-y-1">
+              <label className="text-muted-foreground">{t('ledgerLocalServiceName')}</label>
+              <Input value={draft.name} onChange={e=>setDraft(d=>({...d,name:e.target.value}))}/>
+            </div>
+            <div className="space-y-1">
+              <label className="text-muted-foreground">{t('ledgerLocalServiceDesc')}</label>
+              <Textarea
+                rows={3}
+                value={draft.description}
+                onChange={e=>setDraft(d=>({...d,description:e.target.value}))}
+              />
+            </div>
+            <div className="space-y-1">
               <label className="text-muted-foreground">{t('ledgerLocalBasePriceVnd')}</label>
               <Input type="number" min={0} value={draft.basePriceVnd} onChange={e=>setDraft(d=>({...d,basePriceVnd:e.target.value}))}/>
+              <p className="text-xs text-muted-foreground">
+                ≈ {formatCredit(parseVndInput(draft.basePriceVnd)??0,vndPerCredit,t.locale)}
+              </p>
             </div>
             {detail==='paid_pin'?(
               <div className="space-y-1">
-                <label className="text-muted-foreground">{t('ledgerLocalDurationSeconds')}</label>
-                <Input type="number" min={60} value={draft.durationSeconds} onChange={e=>setDraft(d=>({...d,durationSeconds:e.target.value}))}/>
+                <label className="text-muted-foreground">{t('ledgerLocalDurationDays')}</label>
+                <Input type="number" min={1} max={365} value={draft.durationDays} onChange={e=>setDraft(d=>({...d,durationDays:e.target.value}))}/>
               </div>
             ):null}
             {detail==='seo_entitlement'?(
@@ -293,8 +392,9 @@ export function LedgerPaidServices(){
               <span>{t('ledgerLocalEnabled')}</span>
             </div>
             <dl className="grid gap-2 rounded-md border p-3">
-              <div className="flex justify-between gap-3"><dt className="text-muted-foreground">{t('ledgerSvcColEffective')}</dt><dd>{formatCredit(editing.effectivePriceCredit,t.locale)}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-muted-foreground">{t('ledgerSvcColEffective')}</dt><dd>{formatCredit(editing.effectivePriceVnd??0,vndPerCredit,t.locale)}</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-muted-foreground">{t('ledgerPriceSourceLabel')}</dt><dd>{sourceLabel(t,editing.effectiveSource)}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-muted-foreground">service_code</dt><dd className="font-mono text-xs">{editing.serviceCode}</dd></div>
             </dl>
             <div className="flex justify-end gap-2">
               <Button variant="ghost" disabled={saving} onClick={()=>setDetail(null)}>{t('ledgerRewardCancel')}</Button>
@@ -302,6 +402,55 @@ export function LedgerPaidServices(){
             </div>
           </div>
         ):null}
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={rateEditing} onOpenChange={open=>!open&&setRateEditing(false)}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t('ledgerCreditRateTitle')}</DialogTitle>
+          <DialogDescription>{t('ledgerCreditRateEditIntro')}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 text-sm">
+          <div className="space-y-1">
+            <label className="text-muted-foreground">{t('ledgerCreditRateInput')}</label>
+            <Input type="number" min={1} value={rateDraft} onChange={e=>setRateDraft(e.target.value)}/>
+            <p className="text-xs text-muted-foreground">1 Credit = {formatVnd(parseVndInput(rateDraft)||0,t.locale)}</p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" disabled={saving} onClick={()=>setRateEditing(false)}>{t('ledgerRewardCancel')}</Button>
+            <Button disabled={saving} onClick={saveRate}>{t('ledgerLocalSave')}</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={Boolean(rateHistory)} onOpenChange={open=>!open&&setRateHistory(null)}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t('ledgerCreditRateHistoryTitle')}</DialogTitle>
+          <DialogDescription>{t('ledgerCreditRateHistoryIntro')}</DialogDescription>
+        </DialogHeader>
+        <div className="max-h-80 overflow-y-auto text-sm">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground">
+                <th className="py-2 pr-2">{t('ledgerCreditRateOld')}</th>
+                <th className="py-2 pr-2">{t('ledgerCreditRateNew')}</th>
+                <th className="py-2">{t('ledgerPriceHistoryWhen')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(rateHistory?.history||[]).map(row=>(
+                <tr key={row.id} className="border-b last:border-0">
+                  <td className="py-2 pr-2">{row.oldValue==null?'—':formatVnd(row.oldValue,t.locale)}</td>
+                  <td className="py-2 pr-2">{formatVnd(row.newValue,t.locale)}</td>
+                  <td className="py-2">{row.effectiveAt?new Date(row.effectiveAt).toLocaleString(t.locale):'—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </DialogContent>
     </Dialog>
 

@@ -1,5 +1,5 @@
 /**
- * 广告位数据初始化
+ * Ad slot seed data (English technical display names).
  */
 
 import { adSlots, ads } from '../../extensions/ads/schema.js';
@@ -8,13 +8,13 @@ import { BaseSeeder } from './base.js';
 import chalk from 'chalk';
 
 /**
- * 默认广告位列表
+ * Default ad slots
  */
 export const DEFAULT_AD_SLOTS = [
   {
     code: 'home_header_banner',
-    name: '首页顶部横幅',
-    description: '显示在首页顶部的横幅广告位',
+    name: 'Home header banner',
+    description: 'Banner slot at the top of the home page',
     width: 970,
     height: 90,
     maxAds: 1,
@@ -22,8 +22,8 @@ export const DEFAULT_AD_SLOTS = [
   },
   {
     code: 'home_footer_banner',
-    name: '首页页脚上方横幅',
-    description: '显示在首页页脚上方的横幅广告位',
+    name: 'Home footer banner',
+    description: 'Banner slot above the home page footer',
     width: 970,
     height: 90,
     maxAds: 1,
@@ -31,8 +31,8 @@ export const DEFAULT_AD_SLOTS = [
   },
   {
     code: 'home_sidebar_top',
-    name: '首页侧边栏顶部',
-    description: '显示在首页侧边栏顶部的广告位',
+    name: 'Home sidebar top',
+    description: 'Ad slot at the top of the home sidebar',
     width: 300,
     height: 250,
     maxAds: 1,
@@ -40,8 +40,8 @@ export const DEFAULT_AD_SLOTS = [
   },
   {
     code: 'home_sidebar_bottom',
-    name: '首页侧边栏底部',
-    description: '显示在首页侧边栏底部的广告位',
+    name: 'Home sidebar bottom',
+    description: 'Ad slot at the bottom of the home sidebar',
     width: 300,
     height: 250,
     maxAds: 1,
@@ -49,8 +49,8 @@ export const DEFAULT_AD_SLOTS = [
   },
   {
     code: 'topic_list_inline',
-    name: '首页话题列表内嵌',
-    description: '显示在首页话题列表中间的广告位',
+    name: 'Topic list inline',
+    description: 'Inline ad slot inside the home topic list',
     width: 728,
     height: 90,
     maxAds: 1,
@@ -58,8 +58,8 @@ export const DEFAULT_AD_SLOTS = [
   },
   {
     code: 'topic_detail_top',
-    name: '话题详情顶部',
-    description: '显示在话题详情页顶部的广告位',
+    name: 'Topic detail top',
+    description: 'Ad slot at the top of the topic detail page',
     width: 728,
     height: 90,
     maxAds: 1,
@@ -67,8 +67,8 @@ export const DEFAULT_AD_SLOTS = [
   },
   {
     code: 'topic_detail_bottom',
-    name: '话题详情底部',
-    description: '显示在话题详情页底部的广告位',
+    name: 'Topic detail bottom',
+    description: 'Ad slot at the bottom of the topic detail page',
     width: 728,
     height: 90,
     maxAds: 1,
@@ -76,8 +76,8 @@ export const DEFAULT_AD_SLOTS = [
   },
   {
     code: 'topic_sidebar_top',
-    name: '话题侧边栏顶部',
-    description: '显示在话题详情页侧边栏顶部的广告位',
+    name: 'Topic sidebar top',
+    description: 'Ad slot at the top of the topic detail sidebar',
     width: 300,
     height: 250,
     maxAds: 1,
@@ -85,8 +85,8 @@ export const DEFAULT_AD_SLOTS = [
   },
   {
     code: 'topic_sidebar_bottom',
-    name: '话题侧边栏底部',
-    description: '显示在话题详情页侧边栏底部的广告位',
+    name: 'Topic sidebar bottom',
+    description: 'Ad slot at the bottom of the topic detail sidebar',
     width: 300,
     height: 250,
     maxAds: 1,
@@ -100,21 +100,20 @@ export class AdsSeeder extends BaseSeeder {
   }
 
   /**
-   * 初始化广告位数据
-   * @param {Object} db - Drizzle 数据库实例
-   * @param {boolean} reset - 是否重置现有数据
+   * Initialize ad slots
+   * @param {Object} db - Drizzle database instance
+   * @param {boolean} reset - Whether to reset existing rows
    */
   async init(db, reset = false) {
-    this.logger.header('初始化广告位数据');
+    this.logger.header('Initialize ad slots');
 
     let addedCount = 0;
     let updatedCount = 0;
     let skippedCount = 0;
+    const skipped = [];
 
-    const skippedSlots = [];
     for (const slot of DEFAULT_AD_SLOTS) {
       try {
-        // 检查广告位是否已存在 (根据 code)
         const [existing] = await db
           .select()
           .from(adSlots)
@@ -123,30 +122,25 @@ export class AdsSeeder extends BaseSeeder {
 
         if (existing) {
           if (reset) {
-            // 重置模式：更新广告位信息
-            await db
-              .update(adSlots)
-              .set({ ...slot })
-              .where(eq(adSlots.id, existing.id));
+            await db.update(adSlots).set(slot).where(eq(adSlots.code, slot.code));
             updatedCount++;
-            this.logger.success(`重置: ${slot.name}`);
+            this.logger.success(`Reset: ${slot.name} (${slot.code})`);
           } else {
-            // 非重置模式：跳过
             skippedCount++;
-            skippedSlots.push(slot.name);
+            skipped.push(`${slot.name} (${slot.code})`);
           }
         } else {
-          // 插入新广告位
           await db.insert(adSlots).values(slot);
           addedCount++;
-          this.logger.success(`新增: ${slot.name}`);
+          this.logger.success(`Added: ${slot.name} (${slot.code})`);
         }
       } catch (error) {
-        this.logger.error(`失败: ${slot.name}`, error);
+        this.logger.error(`Failed: ${slot.name}`, error);
       }
     }
-    if (skippedSlots.length > 0) {
-      this.logger.info(`跳过: ${skippedSlots.join(', ')} (已存在)`);
+
+    if (skipped.length > 0) {
+      this.logger.info(`Skipped: ${skipped.join(', ')} (already exists)`);
     }
 
     this.logger.summary({
@@ -163,36 +157,23 @@ export class AdsSeeder extends BaseSeeder {
     };
   }
 
-  /**
-   * 列出所有默认广告位
-   */
   async list() {
-    this.logger.header('默认广告位');
-
-    DEFAULT_AD_SLOTS.forEach((slot, index) => {
+    this.logger.header('Default ad slots');
+    DEFAULT_AD_SLOTS.forEach((slot) => {
       this.logger.item(`${chalk.bold(slot.name)} (${slot.code})`, '📢');
-      this.logger.detail(`描述: ${slot.description}`);
-      this.logger.detail(`尺寸: ${slot.width} × ${slot.height}`);
-      this.logger.detail(`最大广告数: ${slot.maxAds}`);
+      this.logger.detail(slot.description);
     });
-
     this.logger.divider();
-    this.logger.result(`Total: ${DEFAULT_AD_SLOTS.length} ad slots`);
+    this.logger.result(`Total: ${DEFAULT_AD_SLOTS.length} slots`);
   }
 
-  /**
-   * 清空广告相关数据
-   * @param {import('drizzle-orm').NodePgDatabase} db
-   */
   async clean(db) {
-    this.logger.warn('正在清空广告相关数据...');
-
-    // 1. Delete ads (dependent on adSlots)
+    this.logger.warn('Clearing ad data...');
     await db.delete(ads);
-    this.logger.success('已清空广告 (ads)');
-
-    // 2. Delete ad slots
-    await db.delete(adSlots);
-    this.logger.success('已清空广告位 (adSlots)');
+    this.logger.success('Cleared ads');
+    for (const slot of DEFAULT_AD_SLOTS) {
+      await db.delete(adSlots).where(eq(adSlots.code, slot.code));
+      this.logger.success(`Deleted slot: ${slot.code}`);
+    }
   }
 }

@@ -103,11 +103,13 @@ export function LedgerCurrencies() {
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
         {pbnT('ledgerCurrencyIdentityHint')}{' '}
+        <Link href="/dashboard/ledger?tab=reward-rules" className="underline">
+          {pbnT('ledgerTabRewardRules')}
+        </Link>
+        {' · '}
         <Link href="/dashboard/ledger?tab=services" className="underline">
           {pbnT('ledgerTabServices')}
         </Link>
-        {' → '}
-        {pbnT('ledgerRewardRulesTitle')}
       </p>
       <div className="flex justify-end gap-2 flex-wrap">
         <Button

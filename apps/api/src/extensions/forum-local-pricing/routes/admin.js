@@ -98,6 +98,54 @@ export default async function adminRoutes(fastify) {
     }
   });
 
+  fastify.get('/settings/vnd-per-credit', { preHandler: requireAdmin }, async (request, reply) => {
+    try {
+      const vndPerCredit = await fastify.localPricing.getVndPerCredit();
+      const history = await fastify.localPricing.listVndPerCreditHistory(20);
+      return {
+        data: {
+          unit: 'VND',
+          vndPerCredit,
+          creditDisplay: {
+            unit: 'VND',
+            creditVnd: vndPerCredit,
+            label: `1 Credit = ${vndPerCredit.toLocaleString('vi-VN')} VND`,
+            opsReference: await fastify.localPricing.getOpsVndPerCreditReference(),
+          },
+          history,
+        },
+      };
+    } catch (err) {
+      return mapError(err, reply);
+    }
+  });
+
+  fastify.patch('/settings/vnd-per-credit', {
+    preHandler: requireAdmin,
+    schema: {
+      body: {
+        type: 'object',
+        required: ['value'],
+        additionalProperties: false,
+        properties: {
+          value: { type: 'integer', minimum: 1, maximum: 1_000_000_000 },
+          note: { type: 'string', maxLength: 255 },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const data = await fastify.localPricing.setVndPerCredit(
+        request.body.value,
+        request.user.id,
+        request.body.note,
+      );
+      return { data };
+    } catch (err) {
+      return mapError(err, reply);
+    }
+  });
+
   /**
    * Outbound sync stub — never claims success.
    * OPS counterpart has no compatible Forum-base service push contract yet.

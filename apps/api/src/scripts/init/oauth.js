@@ -46,7 +46,7 @@ export const OAUTH_PROVIDERS = [
   {
     provider: 'wechat_open',
     isEnabled: false,
-    displayName: '微信扫码',
+    displayName: 'WeChat Scan',
     displayOrder: 4,
     scope: JSON.stringify(['snsapi_login']),
     clientId: null, // AppID
@@ -58,7 +58,7 @@ export const OAUTH_PROVIDERS = [
   {
     provider: 'wechat_mp',
     isEnabled: false,
-    displayName: '微信公众号',
+    displayName: 'WeChat Official Account',
     displayOrder: 5,
     scope: JSON.stringify(['snsapi_userinfo']),
     clientId: null, // AppID
@@ -70,7 +70,7 @@ export const OAUTH_PROVIDERS = [
   {
     provider: 'wechat_miniprogram',
     isEnabled: false,
-    displayName: '微信小程序',
+    displayName: 'WeChat Mini Program',
     displayOrder: 6,
     scope: null,
     clientId: null, // AppID

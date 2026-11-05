@@ -3,20 +3,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { DataTable } from '@/components/common/DataTable';
 import { Loading } from '@/components/common/Loading';
 import {getTransactionTypeLabel} from '../../utils/transactionTypes';
+import { currencyDisplayName } from '../../utils/currencyLabels';
 import { TransactionTypeBadge } from './TransactionTypeBadge';
 import Time from '@/components/common/Time';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// 简单的辅助函数，避免依赖 rewards 扩展
+// User wallet view stays Credit-denominated (stored ledger unit).
 function formatAmount(amount) {
-  if (typeof amount !== 'number') return '0';
-  const sign = amount > 0 ? '+' : '';
-  return `${sign}${amount.toLocaleString()}`;
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return '0';
+  if (n === 0) return '0';
+  const sign = n > 0 ? '+' : '−';
+  return `${sign}${Math.abs(n).toLocaleString()}`;
 }
 function getAmountColorClass(amount) {
-  if (amount > 0) return 'text-green-600';
-  if (amount < 0) return 'text-red-600';
+  const n = Number(amount);
+  if (n > 0) return 'text-green-600';
+  if (n < 0) return 'text-red-600';
   return 'text-muted-foreground';
 }
 
@@ -51,7 +55,7 @@ export function LedgerTransactionTable({
     label: pbnT("m1863"),
     key: 'currencyName',
     render: (value, row) => <span className="text-sm" title={row.currencyCode}>
-          {row.currencyCode==='credits'?'Credit':value || row.currencyCode}
+          {currencyDisplayName({ code: row.currencyCode, name: value }, pbnT)}
         </span>
   }, {
     label: pbnT("m406"),

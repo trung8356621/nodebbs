@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "node scripts/dev.mjs",
+    "dev:apps": "turbo run dev",
     "lint": "eslint apps/web/src apps/api/src scripts",
     "i18n:check": "node scripts/check-i18n.mjs",
     "smoke:i18n": "node scripts/smoke-i18n.mjs",

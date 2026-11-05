@@ -1,0 +1,216 @@
+{
+  "overall": "PASS",
+  "forum": "forum_b",
+  "database": "pbn_forum_b",
+  "prefix": "e2er_",
+  "productionImpact": "none — Forum B only; fixture users deactivated; config restored",
+  "scenarios": [
+    {
+      "id": "setup.rules",
+      "status": "PASS",
+      "summary": "Enabled 4 reward rules with known VND on Forum B",
+      "at": "2026-11-05T03:31:52.490Z"
+    },
+    {
+      "id": "setup.free_mode",
+      "status": "PASS",
+      "summary": "Free Mode OFF — rewards use credits.config, not commercial free mode",
+      "at": "2026-11-05T03:31:52.491Z"
+    },
+    {
+      "id": "D2.checkin_first",
+      "status": "PASS",
+      "summary": "balance 0→1.0000000000, amount=1.0000000000, ref=2026-11-05_92",
+      "before": "0",
+      "after": "1.0000000000",
+      "txId": 103,
+      "valueVnd": 10000,
+      "at": "2026-11-05T03:31:52.808Z"
+    },
+    {
+      "id": "D2.checkin_same_day",
+      "status": "PASS",
+      "summary": "Second check-in same day: no extra credit",
+      "at": "2026-11-05T03:31:52.853Z"
+    },
+    {
+      "id": "D2.checkin_retry",
+      "status": "PASS",
+      "summary": "Retry idempotent",
+      "at": "2026-11-05T03:31:52.867Z"
+    },
+    {
+      "id": "D2.checkin_disabled",
+      "status": "PASS",
+      "summary": "Base+streak off → no grant",
+      "at": "2026-11-05T03:31:52.956Z"
+    },
+    {
+      "id": "D2.checkin_reenable_new_vnd",
+      "status": "PASS",
+      "summary": "Re-enabled @ 20000 VND → +2 Credit (1.0000000000→3.0000000000)",
+      "before": "1.0000000000",
+      "after": "3.0000000000",
+      "valueVnd": 20000,
+      "at": "2026-11-05T03:31:53.190Z"
+    },
+    {
+      "id": "D3.streak_day1",
+      "status": "PASS",
+      "summary": "Day1 base only, bal=1.0000000000",
+      "at": "2026-11-05T03:31:53.528Z"
+    },
+    {
+      "id": "D3.streak_day2",
+      "status": "PASS",
+      "summary": "Consecutive day grants streak (+1.5), 1.0000000000→2.5000000000",
+      "before": "1.0000000000",
+      "after": "2.5000000000",
+      "at": "2026-11-05T03:31:53.718Z"
+    },
+    {
+      "id": "D3.streak_reset_after_gap",
+      "status": "PASS",
+      "summary": "Gap reset streak→1, +1 Credit only",
+      "before": "2.5000000000",
+      "after": "3.5000000000",
+      "streak": 1,
+      "at": "2026-11-05T03:31:53.904Z"
+    },
+    {
+      "id": "D3.streak_retry",
+      "status": "PASS",
+      "summary": "Retry same forum day: no grant",
+      "at": "2026-11-05T03:31:53.944Z"
+    },
+    {
+      "id": "D3.streak_disabled",
+      "status": "PASS",
+      "summary": "Streak rule off → base only",
+      "at": "2026-11-05T03:31:54.195Z"
+    },
+    {
+      "id": "D3.timezone_no_double",
+      "status": "PASS",
+      "summary": "Same Forum calendar day cannot grant twice",
+      "at": "2026-11-05T03:31:54.444Z"
+    },
+    {
+      "id": "D4.like_grant",
+      "status": "PASS",
+      "summary": "Author 0→0.2000000000 (+0.2), ref=145_95",
+      "before": "0",
+      "after": "0.2000000000",
+      "txId": 110,
+      "at": "2026-11-05T03:31:54.860Z"
+    },
+    {
+      "id": "D4.like_unlike_relike",
+      "status": "PASS",
+      "summary": "Unlike/re-like does not farm Credit",
+      "at": "2026-11-05T03:31:54.998Z"
+    },
+    {
+      "id": "D4.like_self",
+      "status": "PASS",
+      "summary": "Self-like grants nothing",
+      "at": "2026-11-05T03:31:55.088Z"
+    },
+    {
+      "id": "D4.like_retry",
+      "status": "PASS",
+      "summary": "Retry like: balance unchanged",
+      "at": "2026-11-05T03:31:55.098Z"
+    },
+    {
+      "id": "D4.like_disabled",
+      "status": "PASS",
+      "summary": "Rule off → no grant",
+      "at": "2026-11-05T03:31:55.173Z"
+    },
+    {
+      "id": "D4.like_daily_cap",
+      "status": "PASS",
+      "summary": "Daily cap blocked second like grant; bal stayed 0.2000000000",
+      "at": "2026-11-05T03:31:55.683Z"
+    },
+    {
+      "id": "D5.invite_valid",
+      "status": "PASS",
+      "summary": "Inviter 0→2.0000000000 (+2), ref=invite_99",
+      "before": "0",
+      "after": "2.0000000000",
+      "txId": 112,
+      "at": "2026-11-05T03:31:56.033Z"
+    },
+    {
+      "id": "D5.invite_self",
+      "status": "PASS",
+      "summary": "Self-referral structurally impossible (code owner exists before invitee user id)",
+      "at": "2026-11-05T03:31:56.067Z"
+    },
+    {
+      "id": "D5.invite_second_member",
+      "status": "PASS",
+      "summary": "Second invitee grants again (+2); txCount=2",
+      "before": "2.0000000000",
+      "after": "4.0000000000",
+      "at": "2026-11-05T03:31:56.440Z"
+    },
+    {
+      "id": "D5.invite_disabled",
+      "status": "PASS",
+      "summary": "Rule off → no invite grant",
+      "at": "2026-11-05T03:31:57.016Z"
+    },
+    {
+      "id": "D5.invite_not_eligible",
+      "status": "PASS",
+      "summary": "No-code register blocked status=400",
+      "at": "2026-11-05T03:31:57.058Z"
+    },
+    {
+      "id": "D5.invite_rate_cap",
+      "status": "PASS",
+      "summary": "Daily cap blocked second invite grant; bal=2.0000000000",
+      "at": "2026-11-05T03:31:58.063Z"
+    },
+    {
+      "id": "F.toggle_save_vnd",
+      "status": "PASS",
+      "summary": "PATCH reward-rules persists VND+enabled",
+      "at": "2026-11-05T03:31:58.099Z"
+    },
+    {
+      "id": "F.credit_rate_readable",
+      "status": "PASS",
+      "summary": "VND/Credit rate endpoint reachable",
+      "at": "2026-11-05T03:31:58.119Z"
+    },
+    {
+      "id": "F.tx_history",
+      "status": "PASS",
+      "summary": "Admin transactions HTTP 200",
+      "at": "2026-11-05T03:31:58.169Z"
+    },
+    {
+      "id": "F.login",
+      "status": "PASS",
+      "summary": "Admin login OK",
+      "at": "2026-11-05T03:31:58.255Z"
+    },
+    {
+      "id": "F.i18n_tabs",
+      "status": "PASS",
+      "summary": "VI/EN tab + settings labels present",
+      "at": "2026-11-05T03:31:58.259Z"
+    },
+    {
+      "id": "cleanup",
+      "status": "PASS",
+      "summary": "Restored credits.config + registration_mode; deactivated 13 fixture users",
+      "at": "2026-11-05T03:31:58.294Z"
+    }
+  ],
+  "generatedAt": "2026-11-05T03:31:58.296Z"
+}

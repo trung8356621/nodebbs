@@ -83,5 +83,61 @@ for (const file of files('apps/api/src').filter((f) => !/[\\/](scripts|i18n)[\\/
   };
   traverse(ast, { StringLiteral(p) { check(p, p.node.value); }, TemplateLiteral(p) { check(p, p.node.quasis.map((q) => q.value.cooked).join('{arg}')); } });
 }
-console.log(JSON.stringify({ webKeysPerLocale: keys.length, webNamespaces: Object.keys(english), translatedReferences: references, backendTemplatesPerLocale: Object.keys(apiEn).length, hardCodedChineseUiStrings: errors.filter((error) => error.includes('hard-coded Chinese')).length, errors: errors.length }, null, 2));
+// Namespace registry must map every flattened key used by pbnT.
+for (const [key, ns] of Object.entries(namespaces)) {
+  if (!english[ns] || !(key in english[ns])) errors.push(`namespaces: ${key} points to missing ${ns}.${key}`);
+  if (!vietnamese[ns] || !(key in vietnamese[ns])) errors.push(`namespaces: ${key} missing in vi ${ns}.${key}`);
+}
+for (const ns of Object.keys(english)) {
+  for (const key of Object.keys(english[ns] || {})) {
+    if (namespaces[key] && namespaces[key] !== ns) errors.push(`namespaces: ${key} registered as ${namespaces[key]} but lives in ${ns}`);
+  }
+}
+
+// Broken Unicode markers in locale files (do not flag legitimate Latin-extended
+// Vietnamese such as "Âm thanh").
+for (const [locale, bag] of [['en-US', en], ['vi-VN', vi]]) {
+  for (const [key, value] of Object.entries(bag)) {
+    if (value.includes('\uFFFD') || value.includes('ï¿½')) errors.push(`${locale}: broken unicode ${key}`);
+    if (value === key || value === `common.${key}`) errors.push(`${locale}: raw i18n key exposed as value ${key}`);
+  }
+}
+
+// Seed / init display fields must not ship Chinese defaults (allow technical comments).
+const seedFiles = files('apps/api/src/scripts/init');
+const seedDisplayKeys = new Set(['name', 'displayName', 'description', 'title', 'label']);
+for (const file of seedFiles) {
+  const ast = parse(fs.readFileSync(file, 'utf8'), { sourceType: 'module' });
+  traverse(ast, {
+    ObjectProperty(p) {
+      const keyName = p.node.key.name || p.node.key.value;
+      if (!seedDisplayKeys.has(keyName)) return;
+      const valueNode = p.node.value;
+      const values = [];
+      if (valueNode.type === 'StringLiteral') values.push(valueNode.value);
+      if (valueNode.type === 'TemplateLiteral') values.push(valueNode.quasis.map((q) => q.value.cooked || '').join(''));
+      for (const value of values) {
+        if (/\p{Script=Han}/u.test(value)) {
+          errors.push(`${file}:${p.node.loc.start.line}: seed display field ${keyName} still contains Chinese`);
+        }
+      }
+    },
+  });
+}
+
+// Email templates must not contain Chinese after localization.
+for (const file of files('apps/api/src/plugins/message/templates/email')) {
+  const text = fs.readFileSync(file, 'utf8');
+  if (/\p{Script=Han}/u.test(text)) errors.push(`${file}: email template still contains Chinese`);
+}
+
+console.log(JSON.stringify({
+  webKeysPerLocale: keys.length,
+  webNamespaces: Object.keys(english),
+  translatedReferences: references,
+  backendTemplatesPerLocale: Object.keys(apiEn).length,
+  hardCodedChineseUiStrings: errors.filter((error) => error.includes('hard-coded Chinese')).length,
+  seedChineseDisplayFields: errors.filter((error) => error.includes('seed display field')).length,
+  errors: errors.length,
+}, null, 2));
 if (errors.length) { console.error(errors.join('\n')); process.exitCode = 1; }

@@ -15,22 +15,20 @@ import env from './config/env.js';
 
 /**
  * 日志配置
- * - 开发环境：debug 级别 + pino-pretty 彩色输出
+ * - 开发环境：debug 级别 + pino-pretty 彩色输出（sync stream; avoids
+ *   thread-stream worker crashes under `node --watch` on Node 24）
  * - 生产环境：info 级别 + JSON 格式
  */
-const logger = {
-  level: env.isDev ? 'debug' : 'info',
-  transport: env.isDev
-    ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:yyyy-mm-dd HH:MM:ss',
-          singleLine: false,
-        },
-      }
-    : undefined,
-};
+const logger = env.isDev
+  ? {
+      level: 'debug',
+      stream: (await import('pino-pretty')).default({
+        colorize: true,
+        translateTime: 'SYS:yyyy-mm-dd HH:MM:ss',
+        singleLine: false,
+      }),
+    }
+  : { level: 'info' };
 
 /**
  * 创建 Fastify 应用实例
@@ -67,6 +65,6 @@ app.listen(
       app.log.error(err);
       process.exit(1);
     }
-    app.log.info(`[系统] 服务启动成功，地址: ${address}`);
+    app.log.info(`[system] API listening at ${address}`);
   }
 );

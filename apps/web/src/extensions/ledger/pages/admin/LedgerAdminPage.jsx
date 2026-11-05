@@ -3,15 +3,16 @@
 import {usePbnTranslations} from '@/i18n/useTranslations';
 import {useEffect,useMemo,useState} from 'react';
 import {useSearchParams,useRouter} from 'next/navigation';
-import {Wallet,List as ListIcon,Coins,Store} from 'lucide-react';
+import {Wallet,List as ListIcon,Coins,Store,Scale} from 'lucide-react';
 import {Tabs,TabsContent,TabsList,TabsTrigger} from '@/components/ui/tabs';
 import {PageHeader} from '@/components/common/PageHeader';
 import {LedgerOverview} from '../../components/admin/LedgerOverview';
 import {LedgerTransactions} from '../../components/admin/LedgerTransactions';
 import {LedgerCurrencies} from '../../components/admin/LedgerCurrencies';
 import {LedgerPaidServices} from '../../components/admin/LedgerPaidServices';
+import {LedgerRewardRules} from '../../components/admin/LedgerRewardRules';
 
-const TAB_IDS=new Set(['overview','transactions','currencies','services']);
+const TAB_IDS=new Set(['overview','transactions','currencies','services','reward-rules']);
 
 function normalizeTab(raw){
   // Legacy bookmark: service-history content folded into services + topic/SEO contexts.
@@ -43,12 +44,14 @@ export default function LedgerAdminPage(){
         <TabsTrigger value="overview" className="gap-2"><Wallet className="h-4 w-4"/>{pbnT('m1498')}</TabsTrigger>
         <TabsTrigger value="transactions" className="gap-2"><ListIcon className="h-4 w-4"/>{pbnT('m1876')}</TabsTrigger>
         <TabsTrigger value="currencies" className="gap-2"><Coins className="h-4 w-4"/>{pbnT('m1504')}</TabsTrigger>
-        <TabsTrigger value="services" className="gap-2"><Store className="h-4 w-4"/>{pbnT('ledgerTabServicesRules')}</TabsTrigger>
+        <TabsTrigger value="services" className="gap-2"><Store className="h-4 w-4"/>{pbnT('ledgerTabServices')}</TabsTrigger>
+        <TabsTrigger value="reward-rules" className="gap-2"><Scale className="h-4 w-4"/>{pbnT('ledgerTabRewardRules')}</TabsTrigger>
       </TabsList>
       <TabsContent value="overview"><LedgerOverview/></TabsContent>
       <TabsContent value="transactions"><LedgerTransactions/></TabsContent>
       <TabsContent value="currencies"><LedgerCurrencies/></TabsContent>
       <TabsContent value="services"><LedgerPaidServices/></TabsContent>
+      <TabsContent value="reward-rules"><LedgerRewardRules/></TabsContent>
     </Tabs>
   </div>;
 }

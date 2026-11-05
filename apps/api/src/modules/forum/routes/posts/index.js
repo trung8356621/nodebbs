@@ -740,54 +740,37 @@ export default async function postRoutes(fastify, options) {
 
     const postNumber = Number(maxPostNumber) + 1;
 
-    // ============ 积分扣除逻辑 (Reply Cost) ============
-    // 4. 检查积分扣除 (如果配置为负数)
-    if (postNumber > 1 && request.policyDecision?.action !== 'REVIEW') {
+    // Pre-check reply fee (VND→Credit) before insert so failed posts never charge.
+    let replyFeePlan = null;
+    if (postNumber > 1 && request.policyDecision?.action !== 'REVIEW' && fastify.activityRewards) {
       try {
-        const replyCreditChange = await fastify.ledger.getCurrencyConfig(DEFAULT_CURRENCY_CODE, 'post_reply_amount', 2); // 默认值2，表示回复奖励2积分
-        const replyCost = replyCreditChange < 0 ? Math.abs(Number(replyCreditChange)) : 0;
-        
-        if (replyCost > 0) {
-           const effects = await getPassiveEffects(request.user.id);
-           let finalCost = Number(replyCost);
-
-           // Apply discount
-           if (effects.replyCostReductionPercent) {
-             const discount = Math.floor(finalCost * (effects.replyCostReductionPercent / 100));
-             finalCost = Math.max(0, finalCost - discount);
-           }
-           
-           // Deduct credits via Ledger
-           if (fastify.ledger) {
-              await fastify.ledger.deduct({
-                  userId: request.user.id,
-                  currencyCode: DEFAULT_CURRENCY_CODE,
-                  amount: finalCost,
-                  type: 'post_reply',
-                  referenceType: 'topic',
-                  referenceId: String(topicId),
-                  description: `发布回复扣费 (原价: ${replyCost}, 减免: ${replyCost - finalCost})`,
-                  metadata: {
-                    topicId,
-                    originalCost: replyCost,
-                    discountPercent: effects.replyCostReductionPercent || 0
-                  }
+        const { compareCreditAmount, creditFromDb } = await import('#core/extensions/ledger/utils/money.js');
+        replyFeePlan = await fastify.activityRewards.peekFeeCredit('post_reply_amount');
+        const creditStr = replyFeePlan.credit == null ? '0' : String(replyFeePlan.credit);
+        if (replyFeePlan.enabled && creditStr !== '0') {
+          const effects = await getPassiveEffects(request.user.id);
+          let finalCost = creditStr;
+          // Badge percent discount only applies cleanly to integer Credit fees.
+          if (effects.replyCostReductionPercent && !creditStr.includes('.')) {
+            const n = Number(creditStr);
+            const discount = Math.floor(n * (effects.replyCostReductionPercent / 100));
+            finalCost = String(Math.max(0, n - discount));
+          }
+          replyFeePlan.finalCost = finalCost;
+          if (finalCost !== '0' && fastify.ledger) {
+            const account = await fastify.ledger.getAccount(request.user.id, DEFAULT_CURRENCY_CODE);
+            if (compareCreditAmount(creditFromDb(account.balance), finalCost) < 0) {
+              const currencyName = await fastify.ledger.getCurrencyName(DEFAULT_CURRENCY_CODE).catch(() => DEFAULT_CURRENCY_CODE);
+              return reply.code(400).send({
+                error: `Insufficient ${currencyName}. Replying costs ${finalCost} ${currencyName}`,
               });
-           }
+            }
+          }
         }
       } catch (error) {
-        // 如果是余额不足，返回 400
-        if (error.message.includes('余额不足') || error.message.includes('Insufficient funds')) {
-           const currencyName = await fastify.ledger.getCurrencyName(DEFAULT_CURRENCY_CODE).catch(() => DEFAULT_CURRENCY_CODE);
-           const cost = Math.abs(await fastify.ledger.getCurrencyConfig(DEFAULT_CURRENCY_CODE, 'post_reply_amount', 0));
-           return reply.code(400).send({ error: `${currencyName}余额不足，发表回复需要 ${cost} ${currencyName}` });
-        }
-        // 其他积分系统错误（如未启用），记录日志但允许发帖（或者也可以选择拦截）
-        // 这里选择允许发帖，避免积分系统故障影响核心功能，除非是余额不足这种明确的业务限制
-        console.error('[奖励] 回复积分扣除失败:', error);
+        fastify.log.error(error, '[activity] reply fee pre-check failed');
       }
     }
-    // ===============================================
 
     // 创建帖子
     const [newPost] = await db.insert(posts).values({
@@ -799,6 +782,38 @@ export default async function postRoutes(fastify, options) {
       postNumber,
       replyToPostId
     }).returning();
+
+    // Deduct once after successful insert (idempotent by post id).
+    if (replyFeePlan?.enabled && replyFeePlan.finalCost && replyFeePlan.finalCost !== '0' && fastify.ledger) {
+      try {
+        await fastify.ledger.deduct({
+          userId: request.user.id,
+          currencyCode: DEFAULT_CURRENCY_CODE,
+          amount: replyFeePlan.finalCost,
+          type: 'post_reply',
+          referenceType: 'post',
+          referenceId: String(newPost.id),
+          description: `Reply fee for post #${newPost.id}`,
+          metadata: {
+            engine: 'activity-rules-v1',
+            ruleKey: 'post_reply_amount',
+            topicId,
+            postId: newPost.id,
+            originalCost: replyFeePlan.credit,
+            finalCost: replyFeePlan.finalCost,
+            valueVnd: replyFeePlan.vnd,
+            creditVnd: replyFeePlan.rate,
+          },
+        });
+      } catch (error) {
+        if (error.message?.includes('Insufficient funds') || error.message?.includes('余额不足')) {
+          // Post already created — log; prefer not to delete user content silently.
+          fastify.log.error(error, '[activity] reply fee deduct failed after insert');
+        } else {
+          fastify.log.error(error, '[activity] reply fee deduct failed');
+        }
+      }
+    }
 
     // 更新话题统计
     await db.update(topics).set({
@@ -1265,13 +1280,29 @@ export default async function postRoutes(fastify, options) {
         });
       }
 
-      // 积分奖励：给被点赞者发放积分
       if (fastify.eventBus) {
         fastify.eventBus.emit(EVENTS.POST_LIKED, {
           postId: id,
           postAuthorId: post.userId,
           userId: request.user.id
         });
+      }
+
+      // Activity reward to post author (never self-like; idempotent per liker+post).
+      if (fastify.activityRewards) {
+        try {
+          await fastify.activityRewards.grantForRule({
+            userId: post.userId,
+            ruleKey: 'receive_like_amount',
+            type: 'receive_like',
+            referenceType: 'post_like',
+            referenceId: `${id}_${request.user.id}`,
+            description: `Like reward for post #${id}`,
+            metadata: { postId: id, likerId: request.user.id },
+          });
+        } catch (err) {
+          fastify.log.error(err, '[activity] like reward failed');
+        }
       }
     }
 

@@ -126,7 +126,7 @@ export default async function moderationRoutes(fastify, options) {
     const { reportType = 'all', status = 'pending', page = 1, limit = 20, search } = request.query;
     const offset = (page - 1) * limit;
 
-    // 构建查询��件
+    // 构建查询条件
     const conditions = [];
     if (reportType !== 'all') {
       conditions.push(eq(reports.reportType, reportType));

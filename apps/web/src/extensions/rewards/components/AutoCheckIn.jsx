@@ -24,9 +24,8 @@ export default function AutoCheckIn() {
       try {
         // 尝试签到
         const result = await rewardsApi.checkIn();
-        if (result.amount) {
-          // 签到成功，显示提示
-          toast.success(result.message || pbnT("m1910"), {
+        if (result?.amount && String(result.amount) !== '0') {
+          toast.success(pbnT("m1910"), {
             description: pbnT("m1911", {
               arg0: result.checkInStreak
             }),

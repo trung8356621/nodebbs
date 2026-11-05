@@ -121,20 +121,20 @@ export const DEFAULT_SHOP_ITEMS = [
   // },
   {
     type: 'avatar_frame',
-    name: '神龙降世',
-    description: '霸气金龙环绕 (图片演示)',
+    name: 'Dragon Frame',
+    description: 'Demo golden dragon avatar frame',
     price: 5000,
     imageUrl: 'https://placehold.co/150x150/d4af37/000?text=Dragon',
-    stock: 10, // 限量
+    stock: 10, // limited stock demo
     isActive: true,
     displayOrder: 99,
     metadata: JSON.stringify({
       type: 'image',
       imageUrl: 'https://placehold.co/300x300/ffd700/000000?text=DragonFrame',
       scale: 1.45,
-      yOffset: '-2px'
-    })
-  }
+      yOffset: '-2px',
+    }),
+  },
 ];
 
 export class ShopSeeder extends BaseSeeder {

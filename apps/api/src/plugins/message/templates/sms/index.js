@@ -41,22 +41,22 @@ const aliyunTemplates = {
   SMS_LOGIN: {
     templateCode: 'SMS_LOGIN',
     params: ['code'],
-    description: '登录验证码',
+    description: 'Login verification code',
   },
   SMS_PASSWORD_RESET: {
     templateCode: 'SMS_PASSWORD_RESET',
     params: ['code'],
-    description: '密码重置验证码',
+    description: 'Password reset verification code',
   },
   SMS_BIND: {
     templateCode: 'SMS_BIND',
     params: ['code'],
-    description: '绑定手机号验证码',
+    description: 'Bind phone verification code',
   },
   SMS_CHANGE: {
     templateCode: 'SMS_CHANGE',
     params: ['code'],
-    description: '更换手机号验证码',
+    description: 'Change phone verification code',
   },
 };
 
@@ -68,22 +68,22 @@ const tencentTemplates = {
   SMS_LOGIN: {
     templateId: 'SMS_LOGIN',
     params: ['code'],
-    description: '登录验证码',
+    description: 'Login verification code',
   },
   SMS_PASSWORD_RESET: {
     templateId: 'SMS_PASSWORD_RESET',
     params: ['code'],
-    description: '密码重置验证码',
+    description: 'Password reset verification code',
   },
   SMS_BIND: {
     templateId: 'SMS_BIND',
     params: ['code'],
-    description: '绑定手机号验证码',
+    description: 'Bind phone verification code',
   },
   SMS_CHANGE: {
     templateId: 'SMS_CHANGE',
     params: ['code'],
-    description: '更换手机号验证码',
+    description: 'Change phone verification code',
   },
 };
 

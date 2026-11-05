@@ -73,8 +73,10 @@ async function messagePlugin(fastify, opts) {
         data: {
           ...data,
           type: config.description,
+          typeKey: config.typeKey,
           expiryMinutes: config.expiryMinutes,
           identifier: to,
+          locale: data?.locale || process.env.FORUM_DEFAULT_LOCALE || 'vi-VN',
         },
         provider,
       };

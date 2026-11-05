@@ -9,9 +9,9 @@ import { BaseSeeder } from './base.js';
 
 const DEFAULT_CATEGORIES = [
   {
-    name: '综合讨论',
+    name: 'General',
     slug: 'general',
-    description: '讨论各类话题',
+    description: 'Discuss general topics',
     color: '#3B82F6',
     position: 0,
   },

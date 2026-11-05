@@ -88,7 +88,8 @@ export const VerificationCodeConfig = {
     userValidation: UserValidation.MUST_NOT_EXIST,
     maxRetries: 5,
     rateLimitSeconds: 60,
-    description: '注册验证',
+    description: 'Registration',
+    typeKey: 'register',
     template: 'verification-code',
   },
 
@@ -100,7 +101,8 @@ export const VerificationCodeConfig = {
     userValidation: UserValidation.MUST_EXIST,
     maxRetries: 5,
     rateLimitSeconds: 60,
-    description: '邮箱验证',
+    description: 'Email verification',
+    typeKey: 'verify_email',
     template: 'verification-code',
   },
 
@@ -112,7 +114,8 @@ export const VerificationCodeConfig = {
     userValidation: UserValidation.MUST_EXIST,
     maxRetries: 3,
     rateLimitSeconds: 60,
-    description: '登录验证',
+    description: 'Login',
+    typeKey: 'login',
     template: 'verification-code',
   },
 
@@ -124,7 +127,8 @@ export const VerificationCodeConfig = {
     userValidation: UserValidation.MUST_EXIST,
     maxRetries: 5,
     rateLimitSeconds: 120,
-    description: '密码重置',
+    description: 'Password reset',
+    typeKey: 'password_reset',
     template: 'verification-code',
   },
 
@@ -136,7 +140,8 @@ export const VerificationCodeConfig = {
     // userValidation: 不设置，在业务逻辑中检查是否被其他用户占用
     maxRetries: 5,
     rateLimitSeconds: 60,
-    description: '绑定邮箱',
+    description: 'Bind email',
+    typeKey: 'bind_email',
     template: 'verification-code',
   },
 
@@ -149,7 +154,8 @@ export const VerificationCodeConfig = {
     userValidation: UserValidation.MUST_EXIST, // 旧邮箱必须存在且属于当前用户
     maxRetries: 5,
     rateLimitSeconds: 60,
-    description: '更换邮箱（验证旧邮箱）',
+    description: 'Change email (verify current)',
+    typeKey: 'change_email_old',
     template: 'verification-code',
   },
 
@@ -162,7 +168,8 @@ export const VerificationCodeConfig = {
     // userValidation: 不设置，在业务逻辑中检查是否被其他用户占用
     maxRetries: 5,
     rateLimitSeconds: 60,
-    description: '更换邮箱（验证新邮箱）',
+    description: 'Change email (verify new)',
+    typeKey: 'change_email_new',
     template: 'verification-code',
   },
 
@@ -175,7 +182,7 @@ export const VerificationCodeConfig = {
     // userValidation: UserValidation.MUST_EXIST, // 不设置，新用户自动注册
     maxRetries: 3,
     rateLimitSeconds: 60,
-    description: '登录验证',
+    description: 'Login',
     template: 'SMS_LOGIN',
   },
 
@@ -187,7 +194,7 @@ export const VerificationCodeConfig = {
     userValidation: UserValidation.MUST_EXIST,
     maxRetries: 5,
     rateLimitSeconds: 120,
-    description: '密码重置',
+    description: 'Password reset',
     template: 'SMS_PASSWORD_RESET',
   },
 
@@ -199,7 +206,7 @@ export const VerificationCodeConfig = {
     // userValidation: 不设置，在业务逻辑中检查是否被其他用户占用
     maxRetries: 5,
     rateLimitSeconds: 60,
-    description: '绑定手机号',
+    description: 'Bind phone',
     template: 'SMS_BIND',
   },
 
@@ -212,7 +219,7 @@ export const VerificationCodeConfig = {
     userValidation: UserValidation.MUST_EXIST,
     maxRetries: 5,
     rateLimitSeconds: 60,
-    description: '更换手机号（验证旧手机号）',
+    description: 'Change phone (verify current)',
     template: 'SMS_CHANGE',
   },
 
@@ -225,7 +232,7 @@ export const VerificationCodeConfig = {
     // userValidation: 不设置，在业务逻辑中检查是否被其他用户占用
     maxRetries: 5,
     rateLimitSeconds: 60,
-    description: '更换手机号（验证新手机号）',
+    description: 'Change phone (verify new)',
     template: 'SMS_CHANGE',
   },
 
@@ -238,7 +245,8 @@ export const VerificationCodeConfig = {
     // userValidation: 不设置，敏感操作不需要验证用户存在性
     maxRetries: 3,
     rateLimitSeconds: 30,
-    description: '敏感操作验证',
+    description: 'Sensitive action',
+    typeKey: 'sensitive',
     template: 'verification-code',
   },
 };

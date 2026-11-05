@@ -6,7 +6,9 @@ import {
   forumLocalServicePriceHistory,
   forumOpsServicePolicies,
   forumCommercialSettings,
+  forumCreditVndRateHistory,
 } from '../schema.js';
+import { vndToCreditAmount } from '../../ledger/utils/money.js';
 import {
   KNOWN_SERVICES,
   SERVICE_PAID_PIN,
@@ -84,17 +86,27 @@ export class LocalPricingService {
     });
   }
 
+  /**
+   * Forum-local display/conversion ratio (1 Credit = N VND).
+   * Authoritative for Admin config, activity rewards, and local service Credit display.
+   * Does not require OPS; OPS catalog rate is exposed separately as reference only.
+   */
   async getVndPerCredit() {
-    try {
-      const view = await this.fastify.forumPricing?.getCatalogView?.();
-      if (view && !view.expired && Number.isFinite(Number(view.vndPerCredit || view.creditVnd))) {
-        return Number(view.vndPerCredit || view.creditVnd);
-      }
-    } catch { /* local setting */ }
     const local = await this.getSetting('vnd_per_credit', { value: 10000 });
     const n = Number(local?.value);
     if (!Number.isSafeInteger(n) || n < 1) throw fail('Invalid VND-per-Credit setting', 409, 'INVALID_CONVERSION');
     return n;
+  }
+
+  async getOpsVndPerCreditReference() {
+    try {
+      const view = await this.fastify.forumPricing?.getCatalogView?.();
+      if (view && !view.expired && Number.isFinite(Number(view.vndPerCredit || view.creditVnd))) {
+        const n = Number(view.vndPerCredit || view.creditVnd);
+        if (Number.isSafeInteger(n) && n >= 1) return n;
+      }
+    } catch { /* ignore */ }
+    return null;
   }
 
   async isFreeMode() {
@@ -102,12 +114,22 @@ export class LocalPricingService {
     return Boolean(fm?.enabled);
   }
 
+  /**
+   * Exact Credit for a VND price (may be fractional string/number).
+   * Commercial pin/SEO still coerce to Number when callers require SafeInteger —
+   * fractional service charges need pin_entitlements.price NUMERIC (separate change).
+   * For whole Credits the value is an integer; for fractions returns a number when
+   * IEEE-exact (0.5) or the decimal string otherwise for ledger deduct.
+   */
   vndToCredits(priceVnd, vndPerCredit) {
     const vnd = Number(priceVnd);
     const rate = Number(vndPerCredit);
     if (!Number.isFinite(vnd) || vnd < 0) throw fail('Invalid VND price', 400, 'INVALID_PRICE');
     if (vnd === 0) return 0;
     if (!Number.isSafeInteger(rate) || rate < 1) throw fail('Invalid VND-per-Credit', 409, 'INVALID_CONVERSION');
+    const exact = vndToCreditAmount(vnd, rate);
+    if (!exact.includes('.')) return Number(exact);
+    // Prefer ceil for legacy pin bigint price column compatibility on fractional service prices.
     return Math.ceil(vnd / rate);
   }
 
@@ -126,6 +148,7 @@ export class LocalPricingService {
     const policyOk = policyValid(policy, now);
 
     if (policyOk && policy.banned) {
+      const bannedOpts = local.options || {};
       return {
         serviceCode,
         available: false,
@@ -136,7 +159,13 @@ export class LocalPricingService {
         overridePriceVnd: policy.overridePriceVnd ?? null,
         effectivePriceVnd: null,
         effectiveSource: SOURCE_OPS_BAN,
-        options: local.options || {},
+        options: bannedOpts,
+        name: typeof bannedOpts.name === 'string' ? bannedOpts.name : null,
+        description: typeof bannedOpts.description === 'string' ? bannedOpts.description : null,
+        durationDays: serviceCode === SERVICE_PAID_PIN
+          ? Math.max(1, Math.round((Number(bannedOpts.durationSeconds) || 86400) / 86400))
+          : null,
+        durationMonths: serviceCode === SERVICE_SEO ? (Number(bannedOpts.durationMonths) || 1) : null,
         ops: {
           banned: true,
           opsVersion: policy.opsVersion,
@@ -168,6 +197,7 @@ export class LocalPricingService {
     }
 
     const available = Boolean(local.enabled);
+    const options = local.options || {};
     return {
       serviceCode,
       available,
@@ -178,7 +208,15 @@ export class LocalPricingService {
       overridePriceVnd,
       effectivePriceVnd,
       effectiveSource,
-      options: local.options || {},
+      options,
+      name: typeof options.name === 'string' ? options.name : null,
+      description: typeof options.description === 'string' ? options.description : null,
+      durationDays: serviceCode === SERVICE_PAID_PIN
+        ? Math.max(1, Math.round((Number(options.durationSeconds) || 86400) / 86400))
+        : null,
+      durationMonths: serviceCode === SERVICE_SEO
+        ? (Number(options.durationMonths) || 1)
+        : null,
       ops: policy ? {
         banned: Boolean(policy.banned),
         opsVersion: policy.opsVersion,
@@ -289,10 +327,17 @@ export class LocalPricingService {
     for (const code of KNOWN_SERVICES) {
       rows.push(await this.resolveEffective(code));
     }
+    const vndPerCredit = await this.getVndPerCredit();
     return {
       services: rows,
       freeMode: await this.isFreeMode(),
-      vndPerCredit: await this.getVndPerCredit(),
+      vndPerCredit,
+      creditDisplay: {
+        unit: 'VND',
+        creditVnd: vndPerCredit,
+        label: `1 Credit = ${vndPerCredit.toLocaleString('vi-VN')} VND`,
+        opsReference: await this.getOpsVndPerCreditReference(),
+      },
       opsSync: {
         ...OPS_SERVICE_SYNC_STATUS,
         enrolled: enrolledFlag,
@@ -317,13 +362,42 @@ export class LocalPricingService {
 
     const nextPrice = basePriceVnd !== undefined ? Number(basePriceVnd) : current.basePriceVnd;
     const nextEnabled = enabled !== undefined ? Boolean(enabled) : current.enabled;
-    const nextOptions = options !== undefined
+    const mergedOptions = options !== undefined
       ? { ...(current.options || {}), ...options }
-      : (current.options || {});
+      : { ...(current.options || {}) };
+
+    // Admin configures pin duration in whole days; persist seconds for runtime/snapshots.
+    if (serviceCode === SERVICE_PAID_PIN && options && options.durationDays !== undefined) {
+      const days = Number(options.durationDays);
+      if (!Number.isInteger(days) || days < 1 || days > 365) {
+        throw fail('durationDays must be an integer 1..365', 400, 'INVALID_OPTIONS');
+      }
+      mergedOptions.durationDays = days;
+      mergedOptions.durationSeconds = days * 86400;
+    }
+    if (options && typeof options.name === 'string') {
+      const name = options.name.trim();
+      if (!name || name.length > 120) throw fail('name must be 1..120 chars', 400, 'INVALID_OPTIONS');
+      mergedOptions.name = name;
+    }
+    if (options && options.description !== undefined) {
+      if (options.description == null || options.description === '') {
+        mergedOptions.description = '';
+      } else if (typeof options.description !== 'string' || options.description.length > 500) {
+        throw fail('description must be <= 500 chars', 400, 'INVALID_OPTIONS');
+      } else {
+        mergedOptions.description = options.description.trim();
+      }
+    }
+
+    const nextOptions = mergedOptions;
     if (serviceCode === SERVICE_PAID_PIN) {
       const dur = Number(nextOptions.durationSeconds);
       if (!Number.isInteger(dur) || dur < 60 || dur > 31536000) {
         throw fail('durationSeconds must be 60..31536000', 400, 'INVALID_OPTIONS');
+      }
+      if (nextOptions.durationDays == null) {
+        nextOptions.durationDays = Math.max(1, Math.round(dur / 86400));
       }
     }
     if (serviceCode === SERVICE_SEO) {
@@ -375,13 +449,42 @@ export class LocalPricingService {
     return { freeMode: Boolean(enabled) };
   }
 
-  async setVndPerCredit(value, actorId) {
+  async setVndPerCredit(value, actorId, note) {
     const n = Number(value);
     if (!Number.isSafeInteger(n) || n < 1 || n > 1_000_000_000) {
-      throw fail('vndPerCredit must be integer >= 1', 400, 'INVALID_CONVERSION');
+      throw fail('vndPerCredit must be a positive integer VND amount', 400, 'INVALID_CONVERSION');
     }
-    await this.setSetting('vnd_per_credit', { value: n }, actorId);
-    return { vndPerCredit: n };
+    const previous = await this.getVndPerCredit().catch(() => null);
+    if (previous === n) {
+      return {
+        vndPerCredit: n,
+        changed: false,
+        opsReference: await this.getOpsVndPerCreditReference(),
+      };
+    }
+    const effectiveAt = new Date();
+    await this.setSetting('vnd_per_credit', { value: n, effectiveAt: effectiveAt.toISOString() }, actorId);
+    await db.insert(forumCreditVndRateHistory).values({
+      id: crypto.randomUUID(),
+      oldValue: previous,
+      newValue: n,
+      actorId: actorId ?? null,
+      effectiveAt,
+      note: note ? String(note).slice(0, 255) : 'admin_update',
+    });
+    return {
+      vndPerCredit: n,
+      previousVndPerCredit: previous,
+      changed: true,
+      effectiveAt: effectiveAt.toISOString(),
+      opsReference: await this.getOpsVndPerCreditReference(),
+    };
+  }
+
+  async listVndPerCreditHistory(limit = 20) {
+    return db.select().from(forumCreditVndRateHistory)
+      .orderBy(desc(forumCreditVndRateHistory.effectiveAt))
+      .limit(Math.min(100, Math.max(1, Number(limit) || 20)));
   }
 
   /**

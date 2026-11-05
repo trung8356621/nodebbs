@@ -58,7 +58,7 @@ const CAPTCHA_PROVIDERS = [
   },
   {
     provider: 'cap',
-    displayName: 'Cap (自托管 PoW)',
+    displayName: 'Cap (self-hosted PoW)',
     displayOrder: 4,
     isEnabled: false,
     config: JSON.stringify({

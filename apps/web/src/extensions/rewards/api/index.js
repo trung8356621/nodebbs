@@ -2,14 +2,13 @@ import apiClient from '../../../lib/api';
 
 // ============= 奖励系统 API =============
 export const rewardsApi = {
-  // 每日签到 (New Endpoint)
+  // Daily check-in via activity-rules engine (legacy /check-in remains HTTP 410).
   async checkIn() {
-    return apiClient.post('/check-in');
+    return apiClient.post('/ledger/activity/check-in');
   },
 
-  // 获取签到状态
   async getCheckInStatus() {
-    return apiClient.get('/check-in');
+    return apiClient.get('/ledger/activity/check-in');
   },
 
   // 打赏帖子 (Feature specific, remains)

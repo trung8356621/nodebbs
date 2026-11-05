@@ -15,7 +15,8 @@ import chalk from 'chalk';
 export const DEFAULT_CURRENCIES = [
   {
     code: DEFAULT_CURRENCY_CODE,
-    name: '积分',
+    // Technical/display identity in English; UI labels come from i18n.
+    name: 'Credit',
     symbol: 'pts',
     precision: 0,
     isActive: false,
@@ -24,22 +25,22 @@ export const DEFAULT_CURRENCIES = [
       color: 'yellow',
     }),
     config: JSON.stringify({
-      check_in_base_amount: { value: 10, description: '签到基础奖励' },
-      check_in_streak_bonus: { value: 5, description: '连续签到每日递增奖励' },
-      post_topic_amount: { value: 5, description: '发布话题奖励' },
-      post_reply_amount: { value: 2, description: '发布回复的积分变动 (正数=奖励，负数=扣费)' },
-      receive_like_amount: { value: 1, description: '获赞奖励' },
-      reward_min_amount: { value: 1, description: '打赏最小金额' },
-      reward_max_amount: { value: 1000, description: '打赏最大金额' },
-      invite_reward_amount: { value: 50, description: '邀请新用户奖励' }
-    })
+      check_in_base_amount: { value: 10, description: 'Check-in base reward' },
+      check_in_streak_bonus: { value: 5, description: 'Daily streak bonus increment' },
+      post_topic_amount: { value: 5, description: 'Topic create reward' },
+      post_reply_amount: { value: 2, description: 'Reply credit delta (positive=reward, negative=charge)' },
+      receive_like_amount: { value: 1, description: 'Receive-like reward' },
+      reward_min_amount: { value: 1, description: 'Tip minimum amount' },
+      reward_max_amount: { value: 1000, description: 'Tip maximum amount' },
+      invite_reward_amount: { value: 50, description: 'Invite new user reward' },
+    }),
   },
   {
     code: 'gold',
-    name: '金币',
+    name: 'Gold',
     symbol: 'g',
     precision: 2,
-    isActive: false, // 默认不启用，作为示例
+    isActive: false, // example currency; inactive by default
     metadata: JSON.stringify({
       icon: 'circle-dollar-sign',
       color: 'amber',

@@ -48,3 +48,17 @@ export const forumCommercialSettings = pgTable('forum_commercial_settings', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   updatedBy: integer('updated_by'),
 });
+
+/** Audit log for Forum-local Credit display ratio (1 Credit = N VND). */
+export const forumCreditVndRateHistory = pgTable('forum_credit_vnd_rate_history', {
+  id: uuid('id').primaryKey(),
+  oldValue: integer('old_value'),
+  newValue: integer('new_value').notNull(),
+  actorId: integer('actor_id'),
+  effectiveAt: timestamp('effective_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  note: varchar('note', { length: 255 }),
+}, (t) => [
+  index('forum_credit_vnd_rate_history_effective_idx').on(t.effectiveAt),
+  check('forum_credit_vnd_rate_history_pos', sql`${t.newValue} >= 1`),
+]);

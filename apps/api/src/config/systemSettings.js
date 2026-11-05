@@ -49,7 +49,7 @@ export const SETTING_KEYS = {
   },
   SITE_DESCRIPTION: {
     key: 'site_description',
-    defaultValue: '一个基于 Node.js 和 React 的现代化论坛系统',
+    defaultValue: 'A modern forum built with Node.js and React',
     valueType: 'string',
     description: '站点描述',
     category: 'general',

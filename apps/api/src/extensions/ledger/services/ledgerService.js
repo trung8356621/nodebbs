@@ -1,12 +1,20 @@
-import {rejectEngagementCredit} from '../engagement.js';
+import { rejectEngagementCredit } from '../engagement.js';
 import db from '../../../db/index.js';
 import { sysCurrencies, sysAccounts, sysTransactions } from '../schema.js';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { DEFAULT_CURRENCY_CODE } from '../constants.js';
+import {
+  addCreditAmount,
+  compareCreditAmount,
+  creditFromDb,
+  normalizeCreditAmount,
+  subCreditAmount,
+} from '../utils/money.js';
+import { creditToVndAmount } from '../utils/transactionDisplay.js';
 
 /**
- * 账本服务
- * 处理所有货币交易，具有原子完整性。
+ * Ledger service — atomic Credit grants/deducts/transfers.
+ * Amounts are decimal strings (NUMERIC) so VND÷creditVnd fractions are exact.
  */
 export class LedgerService {
   constructor(fastify) {
@@ -14,208 +22,256 @@ export class LedgerService {
   }
 
   /**
-   * 获取或创建用户的特定货币账户。
-   * @param {number} userId 
-   * @param {string} currencyCode 
-   * @param {object} [tx] - 可选的事务上下文
+   * Attach VND/Credit snapshots from the committed ledger write.
+   * Does not rewrite historical rows; only enrich metadata on new inserts.
+   * Never derives VND from a later "current" account balance.
    */
-  async getAccount(userId, currencyCode, tx = db) {
-    await tx.insert(sysAccounts).values({userId,currencyCode,balance:0,totalEarned:0,totalSpent:0}).onConflictDoNothing();
-    const [account] = await tx.select().from(sysAccounts).where(and(eq(sysAccounts.userId,userId),eq(sysAccounts.currencyCode,currencyCode))).limit(1).for('update');
-    if(account.isFrozen) throw Object.assign(new Error('Account is frozen'),{statusCode:409});
-    return account;
+  async buildCommittedSnapshot(metadata, { signedAmountCredit, balanceAfterCredit }) {
+    const meta = metadata && typeof metadata === 'object' && !Array.isArray(metadata)
+      ? { ...metadata }
+      : {};
+
+    const ledgerAmountCredit = creditFromDb(signedAmountCredit);
+    const balanceCredit = creditFromDb(balanceAfterCredit);
+    meta.ledgerAmountCredit = ledgerAmountCredit;
+    meta.balanceAfterCredit = balanceCredit;
+
+    if (meta.valueVnd == null) {
+      for (const alt of [meta.priceVnd, meta.amountVnd]) {
+        if (alt != null && Number.isFinite(Number(alt))) {
+          meta.valueVnd = Math.abs(Number(alt));
+          break;
+        }
+      }
+    }
+
+    let rate = null;
+    for (const c of [meta.creditVnd, meta.vndPerCredit, meta.credit_vnd]) {
+      const n = Number(c);
+      if (Number.isSafeInteger(n) && n >= 1) {
+        rate = n;
+        break;
+      }
+    }
+    if (rate == null) {
+      try {
+        const n = await this.fastify.localPricing?.getVndPerCredit?.();
+        if (Number.isSafeInteger(Number(n)) && Number(n) >= 1) rate = Number(n);
+      } catch {
+        // Rate unavailable — leave Credit-only snapshot; UI shows legacy Credit.
+      }
+    }
+
+    if (rate != null) {
+      meta.creditVnd = rate;
+      if (meta.valueVnd == null) {
+        const vndStr = creditToVndAmount(ledgerAmountCredit, rate);
+        if (vndStr != null) {
+          const abs = Math.abs(Number(vndStr));
+          if (Number.isFinite(abs)) meta.valueVnd = abs;
+        }
+      }
+    }
+
+    return meta;
   }
 
-  /**
-   * 授予用户货币（系统 -> 用户）。
-   * @param {object} params
-   * @param {number} params.userId
-   * @param {number} params.amount
-   * @param {string} params.currencyCode
-   * @param {string} params.type
-   * @param {string} params.referenceType
-   * @param {string} params.referenceId
-   * @param {string} [params.description]
-   * @param {object} [params.metadata]
-   */
-  async grant({ userId, amount, currencyCode, type, referenceType, referenceId, description, metadata, tx: outerTx }) {
-    rejectEngagementCredit({currencyCode,type,referenceType,metadata});
-    if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Grant amount must be positive');
+  async getAccount(userId, currencyCode, tx = db) {
+    await tx.insert(sysAccounts).values({
+      userId,
+      currencyCode,
+      balance: '0',
+      totalEarned: '0',
+      totalSpent: '0',
+    }).onConflictDoNothing();
+    const [account] = await tx.select().from(sysAccounts)
+      .where(and(eq(sysAccounts.userId, userId), eq(sysAccounts.currencyCode, currencyCode)))
+      .limit(1)
+      .for('update');
+    if (account.isFrozen) {
+      throw Object.assign(new Error('Account is frozen'), { statusCode: 409 });
+    }
+    return {
+      ...account,
+      balance: creditFromDb(account.balance),
+      totalEarned: creditFromDb(account.totalEarned),
+      totalSpent: creditFromDb(account.totalSpent),
+    };
+  }
+
+  async grant({
+    userId, amount, currencyCode, type, referenceType, referenceId, description, metadata, tx: outerTx,
+  }) {
+    rejectEngagementCredit({ currencyCode, type, referenceType, metadata });
+    const creditAmount = normalizeCreditAmount(amount);
 
     const run = async (tx) => {
       const account = await this.getAccount(userId, currencyCode, tx);
+      const newBalance = addCreditAmount(account.balance, creditAmount);
+      const newTotalEarned = addCreditAmount(account.totalEarned, creditAmount);
 
-      const newBalance = Number(account.balance) + amount;
-      const newTotalEarned = Number(account.totalEarned) + amount;
-
-      if(!Number.isSafeInteger(newBalance)||!Number.isSafeInteger(newTotalEarned))throw new Error('Credit arithmetic exceeds the supported range');
-      // 更新账户
       await tx.update(sysAccounts)
-        .set({
-          balance: newBalance,
-          totalEarned: newTotalEarned,
-        })
+        .set({ balance: newBalance, totalEarned: newTotalEarned })
         .where(eq(sysAccounts.id, account.id));
 
-      // 创建交易记录
+      const snapshot = await this.buildCommittedSnapshot(metadata, {
+        signedAmountCredit: creditAmount,
+        balanceAfterCredit: newBalance,
+      });
+
       const [transaction] = await tx.insert(sysTransactions).values({
         userId,
         accountId: account.id,
         currencyCode,
-        amount,
+        amount: creditAmount,
         balanceAfter: newBalance,
         type,
         referenceType,
         referenceId: String(referenceId),
         description,
-        metadata: metadata ? JSON.stringify(metadata) : null
+        metadata: JSON.stringify(snapshot),
       }).returning();
 
-      return transaction;
+      return {
+        ...transaction,
+        amount: creditFromDb(transaction.amount),
+        balanceAfter: creditFromDb(transaction.balanceAfter),
+      };
     };
 
     if (outerTx) return run(outerTx);
     return db.transaction(run);
   }
 
-  /**
-   * 从用户扣除货币（用户 -> 系统）。
-   * @param {object} params
-   * @param {number} params.userId
-   * @param {number} params.amount
-   * @param {string} params.currencyCode
-   * @param {string} params.type
-   * @param {string} params.referenceType
-   * @param {string} params.referenceId
-   * @param {string} [params.description]
-   * @param {object} [params.metadata]
-   */
-  async deduct({ userId, amount, currencyCode, type, referenceType, referenceId, description, metadata, tx: outerTx }) {
-    if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Deduct amount must be positive');
+  async deduct({
+    userId, amount, currencyCode, type, referenceType, referenceId, description, metadata, tx: outerTx,
+  }) {
+    const creditAmount = normalizeCreditAmount(amount);
 
     const run = async (tx) => {
       const account = await this.getAccount(userId, currencyCode, tx);
 
-      if (Number(account.balance) < amount) {
-        throw Object.assign(new Error(`Insufficient funds. Balance: ${account.balance}, Required: ${amount}`),{statusCode:409});
+      if (compareCreditAmount(account.balance, creditAmount) < 0) {
+        throw Object.assign(
+          new Error(`Insufficient funds. Balance: ${account.balance}, Required: ${creditAmount}`),
+          { statusCode: 409 },
+        );
       }
 
-      const newBalance = Number(account.balance) - amount;
-      const newTotalSpent = Number(account.totalSpent) + amount;
+      const newBalance = subCreditAmount(account.balance, creditAmount);
+      const newTotalSpent = addCreditAmount(account.totalSpent, creditAmount);
 
-      if(!Number.isSafeInteger(newTotalSpent))throw new Error('Credit arithmetic exceeds the supported range');
       await tx.update(sysAccounts)
-        .set({
-          balance: newBalance,
-          totalSpent: newTotalSpent,
-        })
+        .set({ balance: newBalance, totalSpent: newTotalSpent })
         .where(eq(sysAccounts.id, account.id));
+
+      const signedAmount = `-${creditAmount}`;
+      const snapshot = await this.buildCommittedSnapshot(metadata, {
+        signedAmountCredit: signedAmount,
+        balanceAfterCredit: newBalance,
+      });
 
       const [transaction] = await tx.insert(sysTransactions).values({
         userId,
         accountId: account.id,
         currencyCode,
-        amount: -amount, // 扣除为负数
+        amount: signedAmount,
         balanceAfter: newBalance,
         type,
         referenceType,
         referenceId: String(referenceId),
         description,
-        metadata: metadata ? JSON.stringify(metadata) : null
+        metadata: JSON.stringify(snapshot),
       }).returning();
 
-      return transaction;
+      return {
+        ...transaction,
+        amount: creditFromDb(transaction.amount),
+        balanceAfter: creditFromDb(transaction.balanceAfter),
+      };
     };
 
     if (outerTx) return run(outerTx);
     return db.transaction(run);
   }
 
-  /**
-   * 在用户之间转账货币（用户 A -> 用户 B）。
-   * @param {object} params
-   * @param {number} params.fromUserId
-   * @param {number} params.toUserId
-   * @param {number} params.amount
-   * @param {string} params.currencyCode
-   * @param {string} params.type
-   * @param {string} params.referenceType
-   * @param {string} params.referenceId
-   * @param {string} [params.description]
-   * @param {object} [params.metadata]
-   */
-  async transfer({ fromUserId, toUserId, amount, currencyCode, type, referenceType, referenceId, description, metadata }) {
-    if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Transfer amount must be positive');
+  async transfer({
+    fromUserId, toUserId, amount, currencyCode, type, referenceType, referenceId, description, metadata,
+  }) {
+    const creditAmount = normalizeCreditAmount(amount);
     if (fromUserId === toUserId) throw new Error('Cannot transfer to self');
 
-    return await db.transaction(async (tx) => {
-      // Consistent lock order also protects existing transfer callers; no new transfer API.
-      const first=await this.getAccount(Math.min(fromUserId,toUserId),currencyCode,tx);
-      const second=await this.getAccount(Math.max(fromUserId,toUserId),currencyCode,tx);
-      const fromAccount=fromUserId<toUserId?first:second;
-      const toAccount=fromUserId<toUserId?second:first;
+    return db.transaction(async (tx) => {
+      const first = await this.getAccount(Math.min(fromUserId, toUserId), currencyCode, tx);
+      const second = await this.getAccount(Math.max(fromUserId, toUserId), currencyCode, tx);
+      const fromAccount = fromUserId < toUserId ? first : second;
+      const toAccount = fromUserId < toUserId ? second : first;
 
-      // 检查余额
-      if (Number(fromAccount.balance) < amount) {
-        throw new Error(`Insufficient funds. Balance: ${fromAccount.balance}, Required: ${amount}`);
+      if (compareCreditAmount(fromAccount.balance, creditAmount) < 0) {
+        throw new Error(`Insufficient funds. Balance: ${fromAccount.balance}, Required: ${creditAmount}`);
       }
 
-      if(![Number(fromAccount.totalSpent)+amount,Number(toAccount.totalEarned)+amount,Number(toAccount.balance)+amount].every(Number.isSafeInteger))throw new Error('Credit arithmetic exceeds the supported range');
-      // 更新来源账户
-      const fromNewBalance = Number(fromAccount.balance) - amount;
+      const fromNewBalance = subCreditAmount(fromAccount.balance, creditAmount);
+      const toNewBalance = addCreditAmount(toAccount.balance, creditAmount);
+
       await tx.update(sysAccounts)
         .set({
           balance: fromNewBalance,
-          totalSpent: Number(fromAccount.totalSpent) + amount,
+          totalSpent: addCreditAmount(fromAccount.totalSpent, creditAmount),
         })
         .where(eq(sysAccounts.id, fromAccount.id));
 
-      // 更新目标账户
-      const toNewBalance = Number(toAccount.balance) + amount;
       await tx.update(sysAccounts)
         .set({
           balance: toNewBalance,
-          totalEarned: Number(toAccount.totalEarned) + amount,
+          totalEarned: addCreditAmount(toAccount.totalEarned, creditAmount),
         })
         .where(eq(sysAccounts.id, toAccount.id));
 
-      // 创建来源交易
+      const fromSnapshot = await this.buildCommittedSnapshot(metadata, {
+        signedAmountCredit: `-${creditAmount}`,
+        balanceAfterCredit: fromNewBalance,
+      });
+      const toSnapshot = await this.buildCommittedSnapshot(metadata, {
+        signedAmountCredit: creditAmount,
+        balanceAfterCredit: toNewBalance,
+      });
+
       const [fromTx] = await tx.insert(sysTransactions).values({
         userId: fromUserId,
         accountId: fromAccount.id,
         currencyCode,
-        amount: -amount,
+        amount: `-${creditAmount}`,
         balanceAfter: fromNewBalance,
         type,
         referenceType,
         referenceId: String(referenceId),
         relatedUserId: toUserId,
         description: description || `Transfer to user ${toUserId}`,
-        metadata: metadata ? JSON.stringify(metadata) : null
+        metadata: JSON.stringify(fromSnapshot),
       }).returning();
 
-      // 创建目标交易
       const [toTx] = await tx.insert(sysTransactions).values({
         userId: toUserId,
         accountId: toAccount.id,
         currencyCode,
-        amount: amount,
+        amount: creditAmount,
         balanceAfter: toNewBalance,
         type,
         referenceType,
         referenceId: String(referenceId),
         relatedUserId: fromUserId,
         description: description || `Transfer from user ${fromUserId}`,
-        metadata: metadata ? JSON.stringify(metadata) : null
+        metadata: JSON.stringify(toSnapshot),
       }).returning();
 
-      return { fromTx, toTx };
+      return {
+        fromTx: { ...fromTx, amount: creditFromDb(fromTx.amount), balanceAfter: creditFromDb(fromTx.balanceAfter) },
+        toTx: { ...toTx, amount: creditFromDb(toTx.amount), balanceAfter: creditFromDb(toTx.balanceAfter) },
+      };
     });
   }
 
-  /**
-   * 检查货币是否启用
-   */
   async isCurrencyActive(currencyCode) {
     const [currency] = await db
       .select({ isActive: sysCurrencies.isActive })
@@ -225,12 +281,6 @@ export class LedgerService {
     return currency?.isActive ?? false;
   }
 
-  /**
-   * 获取货币配置
-   * @param {string} currencyCode
-   * @param {string} key 配置键名
-   * @param {any} defaultValue 默认值
-   */
   async getCurrencyConfig(currencyCode, key, defaultValue = null) {
     try {
       const [currency] = await db
@@ -245,9 +295,8 @@ export class LedgerService {
       const item = config[key];
       if (item === undefined) return defaultValue;
 
-      // Handle both old format (direct value) and new format ({ value, description })
       if (item !== null && typeof item === 'object' && 'value' in item) {
-          return item.value;
+        return item.value;
       }
       return item;
     } catch (error) {
@@ -256,14 +305,9 @@ export class LedgerService {
     }
   }
 
-  /**
-   * 获取货币名称（带缓存）
-   * @param {string} currencyCode - 货币代码，默认 DEFAULT_CURRENCY_CODE
-   * @returns {Promise<string>} 货币名称
-   */
   async getCurrencyName(currencyCode = DEFAULT_CURRENCY_CODE) {
     const cacheKey = `currency:name:${currencyCode}`;
-    const ttl = 3600; // 缓存 1 小时
+    const ttl = 3600;
 
     try {
       return await this.fastify.cache.remember(cacheKey, ttl, async () => {
