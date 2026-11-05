@@ -1,0 +1,43 @@
+{
+  "enabled": false,
+  "sandbox": true,
+  "connectionStatus": "payment_off",
+  "bankConfigured": false,
+  "packageCount": 4,
+  "packages": [
+    {
+      "code": "topup_50k",
+      "amountVnd": 50000,
+      "enabled": true
+    },
+    {
+      "code": "topup_100k",
+      "amountVnd": 100000,
+      "enabled": true
+    },
+    {
+      "code": "topup_200k",
+      "amountVnd": 200000,
+      "enabled": true
+    },
+    {
+      "code": "topup_500k",
+      "amountVnd": 500000,
+      "enabled": true
+    }
+  ],
+  "orderTotal": 0,
+  "secretFlags": {
+    "webhookSecret": false,
+    "apiToken": false,
+    "accountNumber": false,
+    "bankCode": false
+  },
+  "leakedSecretValue": false,
+  "productionActivation": {
+    "supportedInUi": false,
+    "reason": "not_supported",
+    "message": "Production activation requires env + PO approval — not available in Admin UI."
+  },
+  "webhookUrl": "https://pbn-dev.cholinktonghop.com/payments/webhooks/sepay"
+}

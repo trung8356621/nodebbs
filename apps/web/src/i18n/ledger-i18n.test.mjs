@@ -27,6 +27,7 @@ const REQUIRED = [
   'ledgerCurrencyIdentityHint',
   'ledgerTabServicesRules',
   'ledgerTabRewardRules',
+  'ledgerTabPayments',
   'ledgerRewardLimitsSettingsLink',
   'ledgerRewardKey_daily_activity_reward_cap_vnd',
   'creditAbuseNavLabel',
@@ -36,6 +37,14 @@ const REQUIRED = [
   'txOpsCreditGrant',
   'pinFailure_INSUFFICIENT',
   'pinCatalogUnavailable',
+  'payPaymentsTitle',
+  'paySubOverview',
+  'paySubPackages',
+  'paySubOrders',
+  'paySubConfig',
+  'payBadgeOff',
+  'payNotSupported',
+  'payProdActivationDisabled',
 ];
 
 function messagesFor(locale) {
@@ -77,6 +86,7 @@ test('LedgerPaidServices and LedgerServiceHistory only reference known common ke
     path.join(import.meta.dirname, '../extensions/ledger/components/admin/LedgerRewardRules.jsx'),
     path.join(import.meta.dirname, '../extensions/ledger/components/admin/LedgerCurrencies.jsx'),
     path.join(import.meta.dirname, '../extensions/ledger/pages/admin/LedgerAdminPage.jsx'),
+    path.join(import.meta.dirname, '../extensions/ledger/components/admin/LedgerPayments.jsx'),
   ];
   const keyRe = /\bt\(['"]([a-zA-Z0-9_]+)['"]/g;
   const missing = [];

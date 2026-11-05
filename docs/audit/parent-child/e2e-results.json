@@ -1,0 +1,434 @@
+{
+  "ok": true,
+  "passed": 23,
+  "failed": 0,
+  "results": [
+    {
+      "id": "guard.registry",
+      "ok": true,
+      "summary": "Using forum_p / forum_c only; A/B excluded by assertMutableForum",
+      "at": "2026-11-05T05:10:39.038Z"
+    },
+    {
+      "id": "reset.forum_c",
+      "ok": true,
+      "summary": "Dropped fixture pbn_forum_c",
+      "at": "2026-11-05T05:11:10.512Z"
+    },
+    {
+      "id": "reset.forum_p",
+      "ok": true,
+      "summary": "Dropped fixture pbn_forum_p",
+      "at": "2026-11-05T05:11:11.252Z"
+    },
+    {
+      "id": "parent.provision",
+      "ok": true,
+      "summary": "Parent provisioned + role enabled",
+      "forumId": "forum_p",
+      "database": "pbn_forum_p",
+      "users": 1,
+      "networkRole": "parent",
+      "freeMode": {
+        "enabled": false
+      },
+      "topicReferences": 0,
+      "localServices": 2,
+      "creditsActive": false,
+      "parentRuntimeRequired": false,
+      "opsRequired": false,
+      "at": "2026-11-05T05:11:17.226Z"
+    },
+    {
+      "id": "child.create",
+      "ok": true,
+      "summary": "Child create wizard completed",
+      "steps": [
+        "validate",
+        "parent_ready",
+        "configure",
+        "create_db",
+        "migrate_baseline",
+        "migrate_forward",
+        "seed",
+        "admin",
+        "apply_template",
+        "apply_managed_policy",
+        "topic_refs",
+        "link_parent_child",
+        "health"
+      ],
+      "freeModeExpiresAt": "2027-01-05T05:11:20.755Z",
+      "at": "2026-11-05T05:11:21.037Z"
+    },
+    {
+      "id": "isolation.users",
+      "ok": true,
+      "summary": "No admin/user leak between Parent and Child",
+      "pUsers": [
+        "forum_p_admin"
+      ],
+      "cUsers": [
+        "forum_c_admin"
+      ],
+      "pTx": 0,
+      "cTx": 0,
+      "at": "2026-11-05T05:11:21.232Z"
+    },
+    {
+      "id": "policy.fixture",
+      "ok": true,
+      "summary": "Attached development policy snapshot to Parent/Child secrets",
+      "at": "2026-11-05T05:11:21.494Z"
+    },
+    {
+      "id": "parent.start",
+      "ok": true,
+      "summary": "Parent API up on 7400",
+      "at": "2026-11-05T05:12:21.832Z"
+    },
+    {
+      "id": "child.start",
+      "ok": true,
+      "summary": "Child API up on 7500",
+      "at": "2026-11-05T05:13:22.140Z"
+    },
+    {
+      "id": "parent.login",
+      "ok": true,
+      "summary": "Parent admin login OK",
+      "at": "2026-11-05T05:13:22.248Z"
+    },
+    {
+      "id": "child.login",
+      "ok": true,
+      "summary": "Child admin login OK",
+      "at": "2026-11-05T05:13:22.354Z"
+    },
+    {
+      "id": "isolation.cross_login",
+      "ok": true,
+      "summary": "Parent credentials rejected on Child",
+      "at": "2026-11-05T05:13:22.362Z"
+    },
+    {
+      "id": "child.network_status",
+      "ok": true,
+      "summary": "Child network status independent of OPS/Parent runtime",
+      "ready": true,
+      "role": "child",
+      "forumId": "forum_c",
+      "parentLink": {
+        "linkedAt": "2026-11-05T05:11:20.919Z",
+        "parentOrigin": "http://127.0.0.1:7400",
+        "parentForumId": "forum_p",
+        "runtimeDependency": false
+      },
+      "lastManagedPolicy": {
+        "version": "2026-11-05T05:11:20.764Z#init-forum_c",
+        "checksum": "3318842ef9bcae7c53765e8900aa269fda00d142577c19d47176b96f40a216ba",
+        "appliedAt": "2026-11-05T05:11:20.805Z",
+        "appliedKeys": [
+          "moderation_config",
+          "spam_protection_enabled",
+          "content_policy_sample",
+          "service_catalog_managed",
+          "credit_defaults_managed",
+          "ui_defaults_managed",
+          "seo_technical_managed",
+          "locale_catalog_managed"
+        ]
+      },
+      "opsAdapter": {
+        "status": "unsupported",
+        "contract": null
+      },
+      "fieldClasses": {
+        "template": [
+          "site_name",
+          "site_description",
+          "site_logo",
+          "site_primary_color",
+          "forum_default_locale",
+          "categories_seed",
+          "admin_bootstrap",
+          "free_mode_initial",
+          "credit_seed",
+          "service_prices_seed"
+        ],
+        "managed": [
+          "moderation_config",
+          "spam_protection_enabled",
+          "spam_protection_block_proxy",
+          "spam_protection_block_tor",
+          "spam_protection_block_vpn",
+          "content_policy_sample",
+          "service_catalog_managed",
+          "credit_defaults_managed",
+          "ui_defaults_managed",
+          "seo_technical_managed",
+          "locale_catalog_managed"
+        ],
+        "local": [
+          "site_url",
+          "registration_mode",
+          "free_mode",
+          "vnd_per_credit",
+          "forum_local_services",
+          "ops_forum_connections",
+          "jwt_secret",
+          "cookie_secret",
+          "database_url",
+          "admin_credentials",
+          "users",
+          "topics",
+          "posts",
+          "sys_accounts",
+          "sys_transactions",
+          "sessions"
+        ]
+      },
+      "parentOfflineSafe": true,
+      "installationKeyRequired": false,
+      "opsRequired": false,
+      "at": "2026-11-05T05:13:22.381Z"
+    },
+    {
+      "id": "child.free_mode",
+      "ok": true,
+      "summary": "Free Mode enabled with expiry from template",
+      "freeMode": true,
+      "expiresAt": "2027-01-05T05:11:20.755Z",
+      "services": {
+        "services": [
+          {
+            "serviceCode": "paid_pin",
+            "available": true,
+            "reason": null,
+            "enabled": true,
+            "basePriceVnd": 50000,
+            "localPriceVersion": 1,
+            "overridePriceVnd": null,
+            "effectivePriceVnd": 0,
+            "effectiveSource": "free_mode",
+            "options": {
+              "name": "Paid topic pin 24h",
+              "skuCode": "paid_pin_default",
+              "durationSeconds": 86400
+            },
+            "name": "Paid topic pin 24h",
+            "description": null,
+            "durationDays": 1,
+            "durationMonths": null,
+            "ops": null,
+            "freeMode": true,
+            "vndPerCredit": 10000,
+            "effectivePriceCredit": 0,
+            "purchaseSupported": true,
+            "updatedAt": "2026-11-05T05:11:20.762Z"
+          },
+          {
+            "serviceCode": "seo_entitlement",
+            "available": true,
+            "reason": null,
+            "enabled": true,
+            "basePriceVnd": 30000,
+            "localPriceVersion": 1,
+            "overridePriceVnd": null,
+            "effectivePriceVnd": 0,
+            "effectiveSource": "free_mode",
+            "options": {
+              "name": "SEO entitlement 1 month",
+              "skuCode": "seo_monthly_local",
+              "durationMonths": 1
+            },
+            "name": "SEO entitlement 1 month",
+            "description": null,
+            "durationDays": null,
+            "durationMonths": 1,
+            "ops": null,
+            "freeMode": true,
+            "vndPerCredit": 10000,
+            "effectivePriceCredit": 0,
+            "purchaseSupported": true,
+            "updatedAt": "2026-11-05T05:11:20.764Z"
+          }
+        ],
+        "freeMode": true,
+        "vndPerCredit": 10000,
+        "creditDisplay": {
+          "unit": "VND",
+          "creditVnd": 10000,
+          "label": "1 Credit = 10.000 VND",
+          "opsReference": null
+        },
+        "opsSync": {
+          "supported": false,
+          "labelKey": "ledgerOpsSyncUnsupported",
+          "reason": "No compatible OPS endpoint for Forum-base service sync. Requires a new contract (not forum-pricing/1 catalog pull).",
+          "enrolled": false,
+          "enabled": false,
+          "status": "unsupported"
+        }
+      },
+      "at": "2026-11-05T05:13:22.416Z"
+    },
+    {
+      "id": "child.post",
+      "ok": true,
+      "summary": "Child can create topic",
+      "status": 200,
+      "topicId": 1,
+      "body": {
+        "topic": {
+          "id": 1,
+          "createdAt": "2026-11-05T05:13:22.484Z",
+          "updatedAt": "2026-11-05T05:13:22.484Z",
+          "title": "Child E2E topic 1793855602430",
+          "slug": "child-e2e-topic-1793855602430-rn5bm",
+          "categoryId": 1,
+          "userId": 1,
+          "viewCount": 0,
+          "postCount": 1,
+          "seoPurchaseAllowed": true,
+          "isPinned": false,
+          "isClosed": false,
+          "isDeleted": false,
+          "approvalStatus": "approved",
+          "lastPostAt": "2026-11-05T05:13:22.473Z",
+          "lastPostUserId": null
+        },
+        "firstPost": {
+          "id": 1,
+          "createdAt": "2026-11-05T05:13:22.484Z",
+          "updatedAt": "2026-11-05T05:13:22.484Z",
+          "topicId": 1,
+          "userId": 1,
+          "content": "Independent child content — not synced from parent.",
+          "rawContent": "Independent child content — not synced from parent.",
+          "postNumber": 1,
+          "replyToPostId": null,
+          "likeCount": 0,
+          "isDeleted": false,
+          "approvalStatus": "approved",
+          "deletedAt": null,
+          "deletedBy": null,
+          "editedAt": null,
+          "editCount": 0
+        },
+        "message": "话题创建成功",
+        "requiresApproval": false
+      },
+      "at": "2026-11-05T05:13:22.745Z"
+    },
+    {
+      "id": "child.wallet",
+      "ok": true,
+      "summary": "Child ledger/pin wallet readable",
+      "status": 200,
+      "at": "2026-11-05T05:13:22.868Z"
+    },
+    {
+      "id": "child.pin",
+      "ok": true,
+      "summary": "Paid pin works without OPS (Free Mode / local pricing)",
+      "status": 200,
+      "body": {
+        "id": "984762b6-44f9-42e5-a0a4-61e47a2a7258",
+        "topic_id": 1,
+        "user_id": 1,
+        "product_id": null,
+        "transaction_id": null,
+        "idempotency_key": "2aff3d95-2720-4809-a870-ee7e62df0257",
+        "payload_hash": "206a91a9a146e2bd5704358ac5c8e7e53af5db62e62fb30a23f19f7ed8578b8b",
+        "price": "0",
+        "duration_seconds": 86400,
+        "balance_before": "50",
+        "balance_after": "50",
+        "starts_at": "2026-11-05 12:13:22.90609+07",
+        "ends_at": "2026-11-06 12:13:22.90609+07",
+        "status": "active",
+        "reason": null,
+        "created_at": "2026-11-05 12:13:22.882851+07",
+        "ops_sku_code": "paid_pin_default",
+        "pricing_version": 1,
+        "pricing_authority": "forum-free-mode"
+      },
+      "at": "2026-11-05T05:13:22.911Z"
+    },
+    {
+      "id": "policy.sync",
+      "ok": true,
+      "summary": "Managed policy apply + anti-duplicate retry",
+      "first": {
+        "status": "applied",
+        "version": "2026-11-05T05:13:22.912Z#forum_p",
+        "appliedKeys": [
+          "moderation_config",
+          "spam_protection_enabled",
+          "content_policy_sample",
+          "service_catalog_managed",
+          "credit_defaults_managed",
+          "ui_defaults_managed",
+          "seo_technical_managed",
+          "locale_catalog_managed"
+        ],
+        "skippedKeys": []
+      },
+      "second": {
+        "status": "skipped_duplicate",
+        "version": "2026-11-05T05:13:22.912Z#forum_p",
+        "previousStatus": "applied"
+      },
+      "version": "2026-11-05T05:13:22.912Z#forum_p",
+      "at": "2026-11-05T05:13:23.036Z"
+    },
+    {
+      "id": "parent.offline",
+      "ok": true,
+      "summary": "Parent stopped",
+      "at": "2026-11-05T05:13:24.184Z"
+    },
+    {
+      "id": "child.while_parent_offline",
+      "ok": true,
+      "summary": "Child login/settings work while Parent offline",
+      "me": 200,
+      "pricing": 200,
+      "at": "2026-11-05T05:13:24.211Z"
+    },
+    {
+      "id": "child.offline",
+      "ok": true,
+      "summary": "Child stopped cleanly",
+      "at": "2026-11-05T05:13:25.316Z"
+    },
+    {
+      "id": "topic_refs.not_public",
+      "ok": true,
+      "summary": "Topic reference snapshots exist and are not published as Child topics",
+      "refs": 3,
+      "publicTopics": 1,
+      "leaked": [],
+      "at": "2026-11-05T05:13:25.354Z"
+    },
+    {
+      "id": "isolation.counts",
+      "ok": true,
+      "summary": "Separate user/topic counts",
+      "parentUsers": 1,
+      "childUsers": 1,
+      "parentTopics": 0,
+      "childTopics": 1,
+      "at": "2026-11-05T05:13:25.509Z"
+    }
+  ],
+  "fixtures": {
+    "parent": "forum_p",
+    "child": "forum_c"
+  },
+  "preserved": [
+    "forum_a/pbn_dev",
+    "forum_b/pbn_forum_b"
+  ]
+}

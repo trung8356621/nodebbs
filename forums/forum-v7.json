@@ -1,0 +1,14 @@
+{
+  "id": "forum_v7",
+  "database": "pbn_forum_v7",
+  "webPort": 3700,
+  "apiPort": 7700,
+  "hostname": "127.0.0.1",
+  "name": "PBN Baseline V7 Forum",
+  "locale": "en-US",
+  "primaryColor": "#0f766e",
+  "logo": "/logo.svg",
+  "description": "Greenfield fixture provisioned with baseline manifest v7",
+  "status": "active",
+  "networkRole": "parent"
+}

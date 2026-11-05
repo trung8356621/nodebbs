@@ -1,0 +1,47 @@
+{
+  "schema": "forum-network-policy/1",
+  "version": "2026-11-05T05:13:22.912Z#forum_p",
+  "parentForumId": "forum_p",
+  "notes": "E2E managed policy v2",
+  "managed": {
+    "moderation_config": {
+      "enabled": false,
+      "types": {
+        "topic": true,
+        "post": true
+      }
+    },
+    "spam_protection_enabled": true,
+    "content_policy_sample": {
+      "prohibitedTopics": [],
+      "requireOriginalContent": true
+    },
+    "service_catalog_managed": {
+      "paid_pin": {
+        "recommended": true
+      },
+      "seo_entitlement": {
+        "recommended": true
+      }
+    },
+    "credit_defaults_managed": {
+      "check_in_base_amount": 10,
+      "post_topic_amount": 5
+    },
+    "ui_defaults_managed": {
+      "showCreditsBadge": true
+    },
+    "seo_technical_managed": {
+      "robotsIndexDefault": true,
+      "canonicalPreferHttps": true
+    },
+    "locale_catalog_managed": {
+      "supported": [
+        "vi-VN",
+        "en-US"
+      ]
+    }
+  },
+  "createdAt": "2026-11-05T05:13:22.912Z",
+  "checksum": "899ea67defb5e2bc9d5c774d93d742d77a0d6de721f16dafdfd14fb741fd5f83"
+}

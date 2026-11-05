@@ -1,0 +1,13 @@
+{
+  "id": "forum_v7_probe",
+  "database": "pbn_baseline_v7_probe",
+  "webPort": 3600,
+  "apiPort": 7600,
+  "hostname": "127.0.0.1",
+  "name": "Baseline V7 Probe",
+  "locale": "en-US",
+  "primaryColor": "#115e59",
+  "logo": "/logo.svg",
+  "description": "Temporary probe for baseline v7; not a product forum",
+  "status": "active"
+}

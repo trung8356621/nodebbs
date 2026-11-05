@@ -1,0 +1,83 @@
+{
+  "ok": true,
+  "v7": {
+    "version": 7,
+    "files": [
+      {
+        "file": "0005_forum_credit.sql",
+        "sha256": "e9072ba6a2af78149f4e5cee66e1e8f9ff1357afd2ba705f22a91e06807c2e91"
+      },
+      {
+        "file": "0006_forum_pricing.sql",
+        "sha256": "7a27e8986a5922293fc24221a4716f913d0b577f7fa2f6ee6d2c564bf30c5dd2"
+      },
+      {
+        "file": "0007_forum_pricing_ops.sql",
+        "sha256": "3f2921342c03ab317881b231b5be22e9b38fc68263a6144b8da9ca6c5b70305b"
+      },
+      {
+        "file": "0008_forum_pricing_hardening.sql",
+        "sha256": "bd28c666d4af58c81114c90739e1ecb665f83299ac506e5174878f263b97572b"
+      },
+      {
+        "file": "0009_forum_local_pricing.sql",
+        "sha256": "9a17c86789314a57cce22e36ea2ec17de5400ea29c9dc5814b9c6f9644715554"
+      },
+      {
+        "file": "0010_ledger_credit_numeric.sql",
+        "sha256": "c987737bf318a4c51f6a5b113ec2fbd163c84c77e7484b8cf535e2ba42d99c86"
+      },
+      {
+        "file": "0011_bank_payment.sql",
+        "sha256": "e11009363373c2e0f526754398e2664f854ccb3df444f0c2736f7b28038420fc"
+      },
+      {
+        "file": "0012_forum_network.sql",
+        "sha256": "135f7ffc7e2dbb8b8b335072753ab3674c5f57cc2d73d34c7bad6cfae463e665"
+      }
+    ]
+  },
+  "v7Checksum": "8815e91ed9e52718e1d91a05ac06ebc948786cc6038995af42d606ea60e7acce",
+  "catalog": {
+    "columns": {
+      "count": 972,
+      "sha256": "6fe72ef6eb777f49085fdf5eef1e7acc21044a0da0b8636cd5f86d803d044ec4"
+    },
+    "constraints": {
+      "count": 270,
+      "sha256": "83e37015a67a81cbda25b454fc6387fbd7a5dc9cd349cac3fa72c1aed98ed94a"
+    },
+    "indexes": {
+      "count": 372,
+      "sha256": "2667a906a130759adc5a8e051025c01a94a5086fc55a0fd9c4a4669f7392ed47"
+    }
+  },
+  "audit": {
+    "order": [
+      "0005_forum_credit.sql",
+      "0006_forum_pricing.sql",
+      "0007_forum_pricing_ops.sql",
+      "0008_forum_pricing_hardening.sql",
+      "0009_forum_local_pricing.sql",
+      "0010_ledger_credit_numeric.sql",
+      "0011_bank_payment.sql",
+      "0012_forum_network.sql"
+    ],
+    "dependencies": [
+      "0005: ops credit tables (IF NOT EXISTS) — after users",
+      "0006: seo_quotes/purchases columns — needs seo_* from v5 (0003_big_emma_frost)",
+      "0007: ops pricing snapshots + seo_purchases columns — after 0006",
+      "0008: pin_entitlements OPS columns/constraint — needs pin_entitlements from v3",
+      "0009: local pricing + Free Mode pin constraint — replaces 0008 pin constraint",
+      "0010: ledger numeric + rate history — needs sys_accounts from v1",
+      "0011: bank payment packages/orders — needs users + numeric credits",
+      "0012: forum-network Parent/Child — needs users"
+    ],
+    "idempotencyNotes": [
+      "CREATE TABLE/INDEX IF NOT EXISTS throughout 0005/0007/0009/0011/0012",
+      "0006/0008/0009 constraints use DROP IF EXISTS before ADD",
+      "Seed INSERTs use ON CONFLICT DO NOTHING / NOT EXISTS",
+      "0010 ALTER TYPE numeric is stable when re-run on numeric columns"
+    ]
+  }
+}

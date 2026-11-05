@@ -1,0 +1,58 @@
+{
+  "id": "default",
+  "name": "Default PBN Child Template",
+  "description": "Init-only template: branding defaults, managed policy seed, commercial seed. No users/secrets copied.",
+  "template": {
+    "site_description": "Independent PBN child forum",
+    "site_logo": "/logo.svg",
+    "site_primary_color": "#0f766e",
+    "categories_seed": [
+      { "name": "General", "slug": "general" }
+    ],
+    "credit_seed": {
+      "activateCredits": true,
+      "vndPerCredit": 10000
+    },
+    "service_prices_seed": {
+      "paid_pin": 50000,
+      "seo_entitlement": 30000
+    },
+    "free_mode_initial": {
+      "enabled": true
+    }
+  },
+  "managed": {
+    "moderation_config": {
+      "enabled": false,
+      "types": { "topic": true, "post": true }
+    },
+    "spam_protection_enabled": true,
+    "content_policy_sample": {
+      "prohibitedTopics": [],
+      "requireOriginalContent": true
+    },
+    "service_catalog_managed": {
+      "paid_pin": { "recommended": true },
+      "seo_entitlement": { "recommended": true }
+    },
+    "credit_defaults_managed": {
+      "check_in_base_amount": 10,
+      "post_topic_amount": 5
+    },
+    "ui_defaults_managed": {
+      "showCreditsBadge": true
+    },
+    "seo_technical_managed": {
+      "robotsIndexDefault": true,
+      "canonicalPreferHttps": true
+    },
+    "locale_catalog_managed": {
+      "supported": ["vi-VN", "en-US"]
+    }
+  },
+  "topicReferences": [
+    { "title": "Welcome to the forum", "categoryHint": "general" },
+    { "title": "Forum rules and guidelines", "categoryHint": "general" },
+    { "title": "How to buy credits", "categoryHint": "general" }
+  ]
+}

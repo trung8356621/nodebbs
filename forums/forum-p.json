@@ -1,0 +1,14 @@
+{
+  "id": "forum_p",
+  "database": "pbn_forum_p",
+  "webPort": 3400,
+  "apiPort": 7400,
+  "hostname": "127.0.0.1",
+  "name": "PBN Parent Fixture",
+  "locale": "en-US",
+  "primaryColor": "#0f766e",
+  "logo": "/logo.svg",
+  "description": "Parent/Child E2E parent fixture (role enabled via addon; not hardcoded)",
+  "status": "active",
+  "networkRole": "parent"
+}

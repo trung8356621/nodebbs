@@ -1,0 +1,59 @@
+{
+  "ok": true,
+  "passed": 9,
+  "failed": 0,
+  "results": [
+    {
+      "id": "login",
+      "ok": true,
+      "summary": "Admin login"
+    },
+    {
+      "id": "overview",
+      "ok": true,
+      "summary": "GET overview",
+      "role": "parent",
+      "provision": false
+    },
+    {
+      "id": "enable_parent",
+      "ok": true,
+      "summary": "Already role=parent"
+    },
+    {
+      "id": "templates",
+      "ok": true,
+      "summary": "GET templates",
+      "count": 1
+    },
+    {
+      "id": "children",
+      "ok": true,
+      "summary": "GET children"
+    },
+    {
+      "id": "policy_applications",
+      "ok": true,
+      "summary": "GET policy-applications"
+    },
+    {
+      "id": "publish_from_template",
+      "ok": "2026-11-05T06:44:38.360Z#1",
+      "summary": "Publish managed from template",
+      "version": "2026-11-05T06:44:38.360Z#1"
+    },
+    {
+      "id": "draft_child",
+      "ok": true,
+      "summary": "Draft child does not fake provision",
+      "command": "node scripts/forum-network.mjs create-child --config forums/forum_ui_draft.json --parent forums/forum_v7.json --template default --free-months 2"
+    },
+    {
+      "id": "draft_blocks_a",
+      "ok": true,
+      "summary": "Draft rejects Forum A target",
+      "status": 400,
+      "error": "protected_target"
+    }
+  ]
+}

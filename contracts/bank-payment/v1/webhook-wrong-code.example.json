@@ -1,0 +1,11 @@
+{
+  "id": 900004,
+  "gateway": "Vietcombank",
+  "transactionDate": "2026-11-05 10:15:00",
+  "accountNumber": "0123456789",
+  "code": "PBNWRONG999",
+  "content": "PBNWRONG999",
+  "transferType": "in",
+  "transferAmount": 100000,
+  "referenceCode": "FT260004WRONG"
+}

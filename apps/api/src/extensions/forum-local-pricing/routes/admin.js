@@ -86,12 +86,19 @@ export default async function adminRoutes(fastify) {
         type: 'object',
         required: ['enabled'],
         additionalProperties: false,
-        properties: { enabled: { type: 'boolean' } },
+        properties: {
+          enabled: { type: 'boolean' },
+          expiresAt: { type: 'string', format: 'date-time' },
+        },
       },
     },
   }, async (request, reply) => {
     try {
-      const data = await fastify.localPricing.setFreeMode(request.body.enabled, request.user.id);
+      const data = await fastify.localPricing.setFreeMode(
+        request.body.enabled,
+        request.user.id,
+        { expiresAt: request.body.expiresAt },
+      );
       return { data };
     } catch (err) {
       return mapError(err, reply);

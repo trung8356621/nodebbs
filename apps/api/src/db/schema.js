@@ -723,6 +723,12 @@ export * from '../extensions/forum-pricing/schema.js';
 // ============ Forum Local Commercial Pricing (Forum-primary) ============
 export * from '../extensions/forum-local-pricing/schema.js';
 
+// ============ Forum Network Parent/Child addon ============
+export * from '../extensions/forum-network/schema.js';
+
+// ============ Independent bank-transfer Credit top-up (SePay-first) ============
+export * from '../extensions/bank-payment/schema.js';
+
 // ============ Ads System (广告系统) ============
 export * from '../extensions/ads/schema.js';
 

@@ -1,0 +1,14 @@
+{
+  "id": "forum_c",
+  "database": "pbn_forum_c",
+  "webPort": 3500,
+  "apiPort": 7500,
+  "hostname": "127.0.0.1",
+  "name": "PBN Child Fixture",
+  "locale": "vi-VN",
+  "primaryColor": "#0369a1",
+  "logo": "/logo.svg",
+  "description": "Parent/Child E2E child fixture — independent DB/process",
+  "status": "active",
+  "networkRole": "child"
+}

@@ -57,6 +57,43 @@
           "sha256": "0d7adc5a0b98c1126711e77701aab79ee347bffadc4f0641f0ca4078cf39fc72"
         }
       ]
+    },
+    {
+      "version": 7,
+      "files": [
+        {
+          "file": "0005_forum_credit.sql",
+          "sha256": "e9072ba6a2af78149f4e5cee66e1e8f9ff1357afd2ba705f22a91e06807c2e91"
+        },
+        {
+          "file": "0006_forum_pricing.sql",
+          "sha256": "7a27e8986a5922293fc24221a4716f913d0b577f7fa2f6ee6d2c564bf30c5dd2"
+        },
+        {
+          "file": "0007_forum_pricing_ops.sql",
+          "sha256": "3f2921342c03ab317881b231b5be22e9b38fc68263a6144b8da9ca6c5b70305b"
+        },
+        {
+          "file": "0008_forum_pricing_hardening.sql",
+          "sha256": "bd28c666d4af58c81114c90739e1ecb665f83299ac506e5174878f263b97572b"
+        },
+        {
+          "file": "0009_forum_local_pricing.sql",
+          "sha256": "9a17c86789314a57cce22e36ea2ec17de5400ea29c9dc5814b9c6f9644715554"
+        },
+        {
+          "file": "0010_ledger_credit_numeric.sql",
+          "sha256": "c987737bf318a4c51f6a5b113ec2fbd163c84c77e7484b8cf535e2ba42d99c86"
+        },
+        {
+          "file": "0011_bank_payment.sql",
+          "sha256": "e11009363373c2e0f526754398e2664f854ccb3df444f0c2736f7b28038420fc"
+        },
+        {
+          "file": "0012_forum_network.sql",
+          "sha256": "135f7ffc7e2dbb8b8b335072753ab3674c5f57cc2d73d34c7bad6cfae463e665"
+        }
+      ]
     }
   ]
 }

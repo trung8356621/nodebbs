@@ -109,9 +109,14 @@ export class LocalPricingService {
     return null;
   }
 
-  async isFreeMode() {
+  async isFreeMode(now = new Date()) {
     const fm = await this.getSetting('free_mode', { enabled: false });
-    return Boolean(fm?.enabled);
+    if (!fm?.enabled) return false;
+    if (fm.expiresAt) {
+      const exp = new Date(fm.expiresAt);
+      if (Number.isFinite(exp.getTime()) && now.getTime() >= exp.getTime()) return false;
+    }
+    return true;
   }
 
   /**
@@ -444,9 +449,17 @@ export class LocalPricingService {
       .limit(Math.min(100, Math.max(1, Number(limit) || 50)));
   }
 
-  async setFreeMode(enabled, actorId) {
-    await this.setSetting('free_mode', { enabled: Boolean(enabled) }, actorId);
-    return { freeMode: Boolean(enabled) };
+  async setFreeMode(enabled, actorId, options = {}) {
+    const value = { enabled: Boolean(enabled) };
+    if (options.expiresAt) {
+      const exp = new Date(options.expiresAt);
+      if (!Number.isFinite(exp.getTime())) {
+        throw fail('free_mode expiresAt must be a valid date', 400, 'INVALID_FREE_MODE');
+      }
+      value.expiresAt = exp.toISOString();
+    }
+    await this.setSetting('free_mode', value, actorId);
+    return { freeMode: value.enabled, expiresAt: value.expiresAt || null };
   }
 
   async setVndPerCredit(value, actorId, note) {

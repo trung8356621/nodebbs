@@ -1,0 +1,14 @@
+{
+  "id": "forum_v7c",
+  "database": "pbn_forum_v7c",
+  "webPort": 3800,
+  "apiPort": 7800,
+  "hostname": "127.0.0.1",
+  "name": "PBN Baseline V7 Child",
+  "locale": "vi-VN",
+  "primaryColor": "#0369a1",
+  "logo": "/logo.svg",
+  "description": "Child created against baseline-v7 Parent fixture",
+  "status": "active",
+  "networkRole": "child"
+}

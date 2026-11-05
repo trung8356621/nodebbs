@@ -1,0 +1,13 @@
+{
+  "id": "forum_v7_verify",
+  "database": "pbn_forum_v7_verify",
+  "webPort": 3601,
+  "apiPort": 7601,
+  "hostname": "127.0.0.1",
+  "name": "Baseline V7 Verify",
+  "locale": "en-US",
+  "primaryColor": "#134e4a",
+  "logo": "/logo.svg",
+  "description": "Empty-DB migrate verification for manifest v7",
+  "status": "active"
+}

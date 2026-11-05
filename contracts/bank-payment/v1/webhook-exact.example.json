@@ -1,0 +1,14 @@
+{
+  "id": 900001,
+  "gateway": "Vietcombank",
+  "transactionDate": "2026-11-05 10:00:00",
+  "accountNumber": "0123456789",
+  "subAccount": "",
+  "code": "PBNABCDEF12",
+  "content": "PBNABCDEF12 nap credit",
+  "transferType": "in",
+  "description": "FIXTURE exact pay",
+  "transferAmount": 100000,
+  "accumulated": 1000000,
+  "referenceCode": "FT260001EXACT"
+}
