@@ -1,38 +1,54 @@
 'use client';
 
-import { usePbnTranslations } from "@/i18n/useTranslations";
-import { Wallet, List as ListIcon, Coins } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PageHeader } from '@/components/common/PageHeader';
-import { LedgerOverview } from '../../components/admin/LedgerOverview';
-import { LedgerTransactions } from '../../components/admin/LedgerTransactions';
-import { LedgerCurrencies } from '../../components/admin/LedgerCurrencies';
-export default function LedgerAdminPage() {
-  const pbnT = usePbnTranslations();
+import {usePbnTranslations} from '@/i18n/useTranslations';
+import {useEffect,useMemo,useState} from 'react';
+import {useSearchParams,useRouter} from 'next/navigation';
+import {Wallet,List as ListIcon,Coins,Store} from 'lucide-react';
+import {Tabs,TabsContent,TabsList,TabsTrigger} from '@/components/ui/tabs';
+import {PageHeader} from '@/components/common/PageHeader';
+import {LedgerOverview} from '../../components/admin/LedgerOverview';
+import {LedgerTransactions} from '../../components/admin/LedgerTransactions';
+import {LedgerCurrencies} from '../../components/admin/LedgerCurrencies';
+import {LedgerPaidServices} from '../../components/admin/LedgerPaidServices';
+
+const TAB_IDS=new Set(['overview','transactions','currencies','services']);
+
+function normalizeTab(raw){
+  // Legacy bookmark: service-history content folded into services + topic/SEO contexts.
+  if(raw==='service-history')return 'services';
+  return TAB_IDS.has(raw)?raw:'overview';
+}
+
+export default function LedgerAdminPage(){
+  const pbnT=usePbnTranslations();
+  const searchParams=useSearchParams();
+  const router=useRouter();
+  const initial=useMemo(()=>normalizeTab(searchParams.get('tab')),[searchParams]);
+  const [tab,setTab]=useState(initial);
+
+  useEffect(()=>{setTab(initial);},[initial]);
+
+  const onTabChange=value=>{
+    setTab(value);
+    const params=new URLSearchParams(searchParams.toString());
+    if(value==='overview')params.delete('tab');else params.set('tab',value);
+    const qs=params.toString();
+    router.replace(qs?`/dashboard/ledger?${qs}`:'/dashboard/ledger',{scroll:false});
+  };
+
   return <div className="space-y-6">
-      <PageHeader title={pbnT("m1504")} description={pbnT("m1893")} />
-
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList>
-            <TabsTrigger value="overview" className="gap-2">
-                <Wallet className="h-4 w-4" />{pbnT("m1498")}</TabsTrigger>
-            <TabsTrigger value="transactions" className="gap-2">
-                <ListIcon className="h-4 w-4" />{pbnT("m1876")}</TabsTrigger>
-            <TabsTrigger value="currencies" className="gap-2">
-                <Coins className="h-4 w-4" />{pbnT("m1504")}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-            <LedgerOverview />
-        </TabsContent>
-
-        <TabsContent value="transactions">
-            <LedgerTransactions />
-        </TabsContent>
-
-        <TabsContent value="currencies">
-            <LedgerCurrencies />
-        </TabsContent>
-      </Tabs>
-    </div>;
+    <PageHeader title={pbnT('m1504')} description={pbnT('ledgerAdminDescription')}/>
+    <Tabs value={tab} onValueChange={onTabChange} className="space-y-6">
+      <TabsList className="flex flex-wrap h-auto gap-1">
+        <TabsTrigger value="overview" className="gap-2"><Wallet className="h-4 w-4"/>{pbnT('m1498')}</TabsTrigger>
+        <TabsTrigger value="transactions" className="gap-2"><ListIcon className="h-4 w-4"/>{pbnT('m1876')}</TabsTrigger>
+        <TabsTrigger value="currencies" className="gap-2"><Coins className="h-4 w-4"/>{pbnT('m1504')}</TabsTrigger>
+        <TabsTrigger value="services" className="gap-2"><Store className="h-4 w-4"/>{pbnT('ledgerTabServicesRules')}</TabsTrigger>
+      </TabsList>
+      <TabsContent value="overview"><LedgerOverview/></TabsContent>
+      <TabsContent value="transactions"><LedgerTransactions/></TabsContent>
+      <TabsContent value="currencies"><LedgerCurrencies/></TabsContent>
+      <TabsContent value="services"><LedgerPaidServices/></TabsContent>
+    </Tabs>
+  </div>;
 }

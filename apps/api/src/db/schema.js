@@ -720,6 +720,9 @@ export * from '../extensions/forum-credit/schema.js';
 // ============ Forum Pricing OPS Integration (forum-pricing/1) ============
 export * from '../extensions/forum-pricing/schema.js';
 
+// ============ Forum Local Commercial Pricing (Forum-primary) ============
+export * from '../extensions/forum-local-pricing/schema.js';
+
 // ============ Ads System (广告系统) ============
 export * from '../extensions/ads/schema.js';
 

@@ -1,4 +1,4 @@
-import {effectivePinned,pinExpiresAt,effectiveLinkPolicy} from '../../services/pinService.js';
+import {effectivePinned,pinExpiresAt,seoExpiresAt,effectiveLinkPolicy} from '../../services/pinService.js';
 import { eq, sql, desc, and, or, like, inArray, not, count, lt, gt } from 'drizzle-orm';
 import { generateSlug } from '#core/utils/slug.js';
 import { nanoid } from 'nanoid';
@@ -414,7 +414,7 @@ export default async function topicRoutes(fastify, options) {
           isPinned: effectivePinned,
           adminPinned: topics.isPinned,
           seoPurchaseAllowed: topics.seoPurchaseAllowed,
-          seoExpiresAt: pinExpiresAt,
+          seoExpiresAt,
           pinExpiresAt,
           linkPolicy: effectiveLinkPolicy,
           canonicalOrigin: sql`${process.env.FORUM_WEB_ORIGIN || 'http://localhost:3100'}`,
@@ -672,7 +672,7 @@ export default async function topicRoutes(fastify, options) {
           isPinned: effectivePinned,
           adminPinned: topics.isPinned,
           seoPurchaseAllowed: topics.seoPurchaseAllowed,
-          seoExpiresAt: pinExpiresAt,
+          seoExpiresAt,
           pinExpiresAt,
           linkPolicy: effectiveLinkPolicy,
           canonicalOrigin: sql`${process.env.FORUM_WEB_ORIGIN || 'http://localhost:3100'}`,

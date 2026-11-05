@@ -10,7 +10,7 @@ import MarkdownRender from '@/components/common/MarkdownRender';
 export default function TopicBody({ content, topic }) {
   return (
     <article className='max-w-none prose prose-stone dark:prose-invert break-all'>
-      <MarkdownRender content={content} linkPolicy={topic?.linkPolicy} canonicalOrigin={topic?.canonicalOrigin} pinExpiresAt={topic?.pinExpiresAt} pinServerNow={topic?.pinServerNow} />
+      <MarkdownRender content={content} linkPolicy={topic?.linkPolicy} canonicalOrigin={topic?.canonicalOrigin} pinExpiresAt={topic?.seoExpiresAt||topic?.pinExpiresAt} pinServerNow={topic?.pinServerNow} />
     </article>
   );
 }

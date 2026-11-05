@@ -1,5 +1,11 @@
 import { sysAccounts, sysTransactions, sysCurrencies } from './schema.js';
 import { DEFAULT_CURRENCY_CODE } from './constants.js';
+import {
+  REWARD_RULE_CURRENCY,
+  buildRewardRulesView,
+  mergeRewardRuleUpdates,
+  parseCurrencyConfig,
+} from './rewardRules.js';
 import db from '../../db/index.js';
 import { eq, and, desc, sql, gte, lt, count } from 'drizzle-orm';
 import { users } from '../../db/schema.js';
@@ -264,25 +270,59 @@ export default async function ledgerRoutes(fastify, options) {
       return db.select().from(sysCurrencies).orderBy(sysCurrencies.id);
   });
 
-  // 创建/更新货币 (Admin Only: POST /currencies)
+  // 创建/更新货币身份 (Admin Only: POST /currencies)
+  // Identity-only updates MUST omit config so existing reward rules are preserved.
   fastify.post('/currencies', {
       preHandler: [fastify.requirePermission('dashboard.extensions')],
       schema: {
           tags: ['ledger', 'admin'],
-          description: '创建或更新货币配置（仅管理员）'
-          // ... 剩余 schema
+          description: 'Create or update currency identity. Omitting config preserves existing rules.',
+          body: {
+            type: 'object',
+            required: ['code', 'name', 'symbol'],
+            additionalProperties: false,
+            properties: {
+              code: { type: 'string', minLength: 1, maxLength: 32 },
+              name: { type: 'string', minLength: 1, maxLength: 64 },
+              symbol: { type: 'string', minLength: 1, maxLength: 16 },
+              isActive: { type: 'boolean' },
+              config: { type: ['string', 'object', 'null'] },
+            },
+          },
       }
   }, async (req, reply) => {
-      const { code, name, symbol, rate, isActive, config } = req.body;
+      const { code, name, symbol, isActive, config } = req.body;
+      const active = isActive !== undefined ? isActive : true;
+
+      const [existing] = await db.select({
+        code: sysCurrencies.code,
+        config: sysCurrencies.config,
+      }).from(sysCurrencies).where(eq(sysCurrencies.code, code)).limit(1);
+
+      let nextConfig;
+      if (config !== undefined) {
+        // Explicit config (legacy clients). Normalize to JSON string.
+        nextConfig = typeof config === 'string' ? config : JSON.stringify(config ?? {});
+      } else if (existing) {
+        nextConfig = existing.config; // preserve reward rules on identity edit
+      } else {
+        nextConfig = null; // new currency: no invented reward keys
+      }
+
       await db.insert(sysCurrencies).values({
           code,
           name,
           symbol,
-          isActive: isActive !== undefined ? isActive : true,
-          config: config
+          isActive: active,
+          config: nextConfig,
       }).onConflictDoUpdate({
           target: sysCurrencies.code,
-          set: { name, symbol, isActive, config }
+          set: {
+            name,
+            symbol,
+            isActive: active,
+            ...(config !== undefined ? { config: nextConfig } : {}),
+          },
       });
 
       // 清除货币名称缓存
@@ -290,7 +330,76 @@ export default async function ledgerRoutes(fastify, options) {
         await fastify.cache.invalidate(`currency:name:${code}`);
       }
 
-      return { success: true };
+      return { success: true, configPreserved: config === undefined && Boolean(existing) };
+  });
+
+  // Local activity reward/spend rules stored in credits.config (not OPS pricing).
+  fastify.get('/reward-rules', {
+    preHandler: [fastify.requirePermission('dashboard.extensions')],
+    schema: {
+      tags: ['ledger', 'admin'],
+      description: 'List local Credit activity reward/spend rules from credits.config',
+    },
+  }, async () => {
+    const [row] = await db.select().from(sysCurrencies)
+      .where(eq(sysCurrencies.code, REWARD_RULE_CURRENCY)).limit(1);
+    if (!row) {
+      return { data: buildRewardRulesView({}), currencyActive: false, missingCurrency: true };
+    }
+    const config = parseCurrencyConfig(row.config);
+    return {
+      data: buildRewardRulesView(config),
+      currencyActive: Boolean(row.isActive),
+      missingCurrency: false,
+    };
+  });
+
+  fastify.patch('/reward-rules', {
+    preHandler: [fastify.requirePermission('dashboard.extensions')],
+    schema: {
+      tags: ['ledger', 'admin'],
+      description: 'Update permitted credits.config reward rule values (merge; no unknown keys)',
+      body: {
+        type: 'object',
+        required: ['updates'],
+        additionalProperties: false,
+        properties: {
+          currency: { type: 'string', enum: [REWARD_RULE_CURRENCY] },
+          updates: { type: 'object', additionalProperties: { type: 'number' } },
+        },
+      },
+    },
+  }, async (req, reply) => {
+    const currency = req.body.currency || REWARD_RULE_CURRENCY;
+    if (currency !== REWARD_RULE_CURRENCY) {
+      return reply.code(400).send({ error: 'only_credits', message: 'Only credits reward rules are editable' });
+    }
+    try {
+      const [row] = await db.select().from(sysCurrencies)
+        .where(eq(sysCurrencies.code, REWARD_RULE_CURRENCY)).limit(1);
+      if (!row) {
+        return reply.code(404).send({ error: 'currency_missing', message: 'credits currency not found' });
+      }
+      const existing = parseCurrencyConfig(row.config);
+      const { nextConfig, applied } = mergeRewardRuleUpdates(existing, req.body.updates);
+      await db.update(sysCurrencies)
+        .set({ config: JSON.stringify(nextConfig) })
+        .where(eq(sysCurrencies.code, REWARD_RULE_CURRENCY));
+      if (fastify.cache) {
+        await fastify.cache.invalidate(`currency:name:${REWARD_RULE_CURRENCY}`);
+      }
+      return {
+        data: buildRewardRulesView(nextConfig),
+        applied,
+      };
+    } catch (err) {
+      const status = err.statusCode || 500;
+      return reply.code(status).send({
+        error: err.code || 'request_failed',
+        message: err.message,
+        unknown: err.unknown,
+      });
+    }
   });
 
   // 管理员操作：发放/扣除货币 (保留 /admin 前缀 - 纯管理操作)

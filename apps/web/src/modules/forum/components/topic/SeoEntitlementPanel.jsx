@@ -3,7 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import {useAuth} from '@/contexts/AuthContext';
 import {useTopicContext} from '@/modules/forum/contexts/TopicContext';
 import {usePbnTranslations} from '@/i18n/useTranslations';
-import {usePaidPinExpired} from '@/hooks/usePaidPinExpired';
+import {useDeadlineExpired} from '@/hooks/usePaidPinExpired';
 import api from '@/lib/api';
 import Link from '@/components/common/Link';
 import {Button} from '@/components/ui/button';
@@ -12,7 +12,7 @@ const failureCodes=new Set(['RENEWAL_WINDOW','RESERVED','OWNER','REQUOTE','PRICE
 export default function SeoEntitlementPanel(){
   const {user}=useAuth(),{topic,updateTopic}=useTopicContext(),t=usePbnTranslations();
   const [catalog,setCatalog]=useState(null),[history,setHistory]=useState(null),[quote,setQuote]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState(false),[selected,setSelected]=useState('');
-  const pending=useRef(null),owner=user?.id===topic.userId,expired=usePaidPinExpired(topic),storageKey=`pbn:seo:${user?.id}:${topic.id}`;
+  const pending=useRef(null),owner=user?.id===topic.userId,expired=useDeadlineExpired(topic.seoExpiresAt,topic.pinServerNow),storageKey=`pbn:seo:${user?.id}:${topic.id}`;
   const date=v=>new Date(v).toLocaleString(t.locale,{timeZone:'Asia/Ho_Chi_Minh'});
   const load=async()=>{const [p,h]=await Promise.all([api.get('/seo/products'),api.get('/seo/topics/'+topic.id)]);setCatalog(p);setHistory(h);setSelected(id=>p.products.some(v=>v.productId===id)?id:p.products[0]?.productId||'');};
   const showError=e=>{setSaved(false);setError(failureCodes.has(e.code)?e.code:'UNAVAILABLE');};

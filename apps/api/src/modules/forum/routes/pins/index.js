@@ -2,31 +2,37 @@ import {eq,sql} from 'drizzle-orm';
 import db from '#core/db/index.js';
 import {shopItems} from '#core/db/schema.js';
 import {rows} from '../../services/pinService.js';
-import {PAID_PIN_MIGRATION_STATUS} from '../../services/seo/constants.js';
+import {seoError} from '../../services/seo/errors.js';
 
 export default async function pinRoutes(fastify){
-  // Forum Admin cannot create/edit monetary pin prices — OPS catalog is authority.
+  fastify.setErrorHandler((error,request,reply)=>{
+    const safe=seoError(error);
+    if(safe.status===500)fastify.log.error({err:error,topicId:request.params?.topicId},'Paid pin checkout failed');
+    reply.code(safe.status).send({code:safe.code,message:safe.status===500?'Paid pin checkout is temporarily unavailable; please try again':safe.message});
+  });
+
+  // Legacy shop-item product CRUD retired — configure via /api/forum/local-pricing.
   fastify.addHook('onRequest',async(request,reply)=>{
     if((request.method==='POST'||request.method==='PUT')&&request.url.includes('/admin/products')){
       return reply.code(410).send({
-        error:'Pin monetary prices are owned by OPS forum-pricing/1 catalog',
-        code:'OPS_PRICING_AUTHORITY',
-        migrationStatus:PAID_PIN_MIGRATION_STATUS,
+        error:'Pin prices are configured under Forum local pricing (/dashboard/ledger?tab=services)',
+        code:'USE_LOCAL_PRICING',
       });
     }
   });
 
   const auth={preHandler:[fastify.authenticate]};
-  const admin={preHandler:[fastify.requirePermission('dashboard.shop')]};
+  // ledger consolidation: commercial admin uses dashboard.extensions (dashboard.shop was never seeded)
+  const admin={preHandler:[fastify.requirePermission('dashboard.extensions')]};
   const body=(properties,required=[])=>({type:'object',properties,required,additionalProperties:false});
   const topicParams={type:'object',properties:{topicId:{type:'integer',minimum:1}},required:['topicId']};
 
   fastify.get('/products',async()=>{
     const plans=await fastify.pins.plans();
+    const authority=plans[0]?.pricingAuthority||'forum-local';
     return {
-      migrationStatus:PAID_PIN_MIGRATION_STATUS,
-      pricingAuthority:'ops-forum-pricing/1',
-      note:'paid_pin prices consumed from verified OPS catalog; Forum-admin price edits disabled',
+      pricingAuthority:authority,
+      note:'paid_pin uses Forum-local base price with optional OPS override/ban and Free Mode',
       plans,
     };
   });
@@ -39,7 +45,7 @@ export default async function pinRoutes(fastify){
   fastify.get('/topics/:topicId',{...auth,schema:{params:topicParams}},async(request,reply)=>{
     const [t]=await rows(sql`SELECT id,user_id FROM topics WHERE id=${request.params.topicId}`);
     if(!t)return reply.code(404).send({error:'Topic not found'});
-    if(t.user_id!==request.user.id&&!await fastify.permission.can(request,'dashboard.shop')){
+    if(t.user_id!==request.user.id&&!await fastify.permission.can(request,'dashboard.extensions')){
       return reply.code(403).send({error:'Only the topic owner may inspect purchases'});
     }
     return {
@@ -55,7 +61,7 @@ export default async function pinRoutes(fastify){
       body:body({
         skuCode:{type:'string',pattern:'^[-a-zA-Z0-9_]{1,80}$'},
         productId:{type:'string',pattern:'^[-a-zA-Z0-9_]{1,80}$'},
-        expectedPrice:{type:'integer',minimum:1},
+        expectedPrice:{type:'integer',minimum:0},
         expectedDuration:{type:'integer',minimum:60},
         idempotencyKey:{type:'string',minLength:16,maxLength:100},
       },['idempotencyKey']),
@@ -75,8 +81,7 @@ export default async function pinRoutes(fastify){
   fastify.post('/topics/:topicId/cancel',{...auth,schema:{params:topicParams}},request=>fastify.pins.cancel(request.params.topicId,request.user.id));
 
   fastify.get('/admin',admin,async()=>({
-    pricingAuthority:'ops-forum-pricing/1',
-    migrationStatus:PAID_PIN_MIGRATION_STATUS,
+    pricingAuthority:'forum-local',
     catalogPlans:await fastify.pins.plans().catch((err)=>({error:err.message,code:err.code})),
     legacyShopItems:await db.select().from(shopItems).where(eq(shopItems.type,'topic_pin')),
     entitlements:await rows(sql`SELECT * FROM pin_entitlements ORDER BY created_at DESC LIMIT 100`),

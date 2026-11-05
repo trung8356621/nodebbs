@@ -12,14 +12,43 @@ function digestSnapshot(snapshot) {
   return crypto.createHash('sha256').update(JSON.stringify(snapshot)).digest('hex');
 }
 
+/** Missing additive baseline 0007/0008 — treat as no HTTP catalog, never 500. */
+function isMissingPricingStore(err) {
+  const msg = String(err?.cause?.message || err?.message || '');
+  return err?.cause?.code === '42P01'
+    || /ops_forum_pricing_snapshots/i.test(msg)
+    || /relation .* does not exist/i.test(msg);
+}
+
 export class ForumPricingSyncService {
   constructor(fastify, connectionStore, opsClient) {
     this.fastify = fastify;
     this.connectionStore = connectionStore;
     this.opsClient = opsClient;
+    this._pricingStoreMissing = null;
+  }
+
+  async pricingStoreAvailable() {
+    if (this._pricingStoreMissing === true) return false;
+    if (this._pricingStoreMissing === false) return true;
+    try {
+      await db.select({ version: opsForumPricingSnapshots.version }).from(opsForumPricingSnapshots).limit(1);
+      this._pricingStoreMissing = false;
+      return true;
+    } catch (err) {
+      if (isMissingPricingStore(err)) {
+        this._pricingStoreMissing = true;
+        this.fastify?.log?.warn?.(
+          '[forum-pricing] ops_forum_pricing_snapshots missing; apply baseline 0007_forum_pricing_ops.sql',
+        );
+        return false;
+      }
+      throw err;
+    }
   }
 
   async getMaxStoredVersion() {
+    if (!(await this.pricingStoreAvailable())) return 0;
     const [row] = await db.select({
       max: sql`coalesce(max(${opsForumPricingSnapshots.version}), 0)`,
     }).from(opsForumPricingSnapshots);
@@ -27,10 +56,19 @@ export class ForumPricingSyncService {
   }
 
   async getLatestVerified() {
-    const [row] = await db.select().from(opsForumPricingSnapshots)
-      .orderBy(desc(opsForumPricingSnapshots.version))
-      .limit(1);
-    return row || null;
+    if (!(await this.pricingStoreAvailable())) return null;
+    try {
+      const [row] = await db.select().from(opsForumPricingSnapshots)
+        .orderBy(desc(opsForumPricingSnapshots.version))
+        .limit(1);
+      return row || null;
+    } catch (err) {
+      if (isMissingPricingStore(err)) {
+        this._pricingStoreMissing = true;
+        return null;
+      }
+      throw err;
+    }
   }
 
   /**
@@ -38,16 +76,25 @@ export class ForumPricingSyncService {
    * and validUntil is null or future. Offline: last verified still usable while valid.
    */
   async getEffectiveVerified(now = new Date()) {
-    const rows = await db.select().from(opsForumPricingSnapshots)
-      .orderBy(desc(opsForumPricingSnapshots.version))
-      .limit(50);
-    const t = now.getTime();
-    for (const row of rows) {
-      if (new Date(row.effectiveAt).getTime() > t) continue;
-      if (row.validUntil && new Date(row.validUntil).getTime() <= t) continue;
-      return row;
+    if (!(await this.pricingStoreAvailable())) return null;
+    try {
+      const rows = await db.select().from(opsForumPricingSnapshots)
+        .orderBy(desc(opsForumPricingSnapshots.version))
+        .limit(50);
+      const t = now.getTime();
+      for (const row of rows) {
+        if (new Date(row.effectiveAt).getTime() > t) continue;
+        if (row.validUntil && new Date(row.validUntil).getTime() <= t) continue;
+        return row;
+      }
+      return null;
+    } catch (err) {
+      if (isMissingPricingStore(err)) {
+        this._pricingStoreMissing = true;
+        return null;
+      }
+      throw err;
     }
-    return null;
   }
 
   async getCatalogView(now = new Date()) {

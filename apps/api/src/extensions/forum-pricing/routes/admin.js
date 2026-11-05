@@ -14,16 +14,22 @@ export default async function adminRoutes(fastify) {
   };
 
   fastify.get('/status', { preHandler: requireAdmin }, async () => {
-    const latest = await fastify.forumPricing.sync.getLatestVerified();
-    const catalog = await fastify.forumPricing.getCatalogView();
+    const storeOk = await fastify.forumPricing.sync.pricingStoreAvailable();
+    const latest = storeOk ? await fastify.forumPricing.sync.getLatestVerified() : null;
+    const catalog = storeOk ? await fastify.forumPricing.getCatalogView() : null;
     return {
       data: {
+        pricingStoreReady: storeOk,
+        pricingStoreMissing: !storeOk,
         hasVerifiedSnapshot: Boolean(latest),
         latestVersion: latest?.version ?? null,
         pricingVersionId: latest?.pricingVersionId ?? null,
-        vndPerCredit: latest?.vndPerCredit ?? null,
+        vndPerCredit: latest?.vndPerCredit ?? catalog?.vndPerCredit ?? null,
         catalog,
         paidPinMigrationStatus: catalog?.paidPinMigrationStatus || 'MIGRATION_PENDING',
+        hint: storeOk
+          ? null
+          : 'Apply apps/api/baseline/0007_forum_pricing_ops.sql then POST /api/ops/forum/pricing/sync',
       },
     };
   });

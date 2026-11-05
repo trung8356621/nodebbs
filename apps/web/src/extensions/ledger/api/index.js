@@ -38,9 +38,18 @@ export const ledgerApi = {
     return apiClient.get('/ledger/currencies');
   },
 
-  // 创建或更新货币 (Admin Only: POST /ledger/currencies)
+  // 创建或更新货币身份 (Admin Only: POST /ledger/currencies)
+  // Omit config to preserve existing reward rules on identity edits.
   async upsertCurrency(data) {
     return apiClient.post('/ledger/currencies', data);
+  },
+
+  async getRewardRules() {
+    return apiClient.get('/ledger/reward-rules');
+  },
+
+  async patchRewardRules(body) {
+    return apiClient.patch('/ledger/reward-rules', body);
   },
 
   // 管理员 API

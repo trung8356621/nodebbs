@@ -42,7 +42,34 @@ export class SeoService{
   }
 
   async catalogAuthority(){
-    // Prefer verified forum-pricing/1 snapshots from OPS (HTTP sync).
+    // Forum-primary local SEO entitlement (optional OPS override/ban via localPricing).
+    if(this.fastify.localPricing?.seoProduct){
+      try{
+        const product=await this.fastify.localPricing.seoProduct();
+        const creditVnd=product.vndPerCredit;
+        return {
+          authority:product.pricingAuthority||'forum-local',
+          snapshotVersion:product.snapshotVersion,
+          sourceId:'forum-local-pricing',
+          checksum:null,
+          validUntil:product.snapshotValidUntil,
+          creditVnd,
+          conversionAvailable:creditVnd!=null,
+          businessTimeZone:BUSINESS_TIME_ZONE,
+          quoteTtlSeconds:QUOTE_SECONDS,
+          schemaVersion:'forum-local/1',
+          contract:'forum-local-pricing',
+          paidPinMigrationStatus:PAID_PIN_MIGRATION_STATUS,
+          view:null,
+          payload:null,
+          localProduct:product,
+        };
+      }catch(err){
+        if(err.code!=='OPS_BAN'&&err.code!=='SERVICE_DISABLED')throw err;
+        throw fail(err.message);
+      }
+    }
+    // Prefer verified forum-pricing/1 snapshots from OPS (HTTP sync) when local pricing missing.
     if(this.fastify.forumPricing?.getCatalogView){
       const view=await this.fastify.forumPricing.getCatalogView();
       if(view&&!view.expired){
@@ -53,6 +80,7 @@ export class SeoService{
           checksum:null,
           validUntil:view.validUntil,
           creditVnd:view.creditVnd,
+          conversionAvailable:view.creditVnd!=null,
           businessTimeZone:view.businessTimeZone||BUSINESS_TIME_ZONE,
           quoteTtlSeconds:view.quoteTtlSeconds||QUOTE_SECONDS,
           schemaVersion:view.schemaVersion,
@@ -67,9 +95,6 @@ export class SeoService{
     const snap=await this.activeSnapshot();
     if(!snap)throw fail('No authorized current SEO price is available');
     const meta=catalogMetaFromPayload(snap.payload);
-    if(meta.creditVnd==null){
-      throw fail('No authorized Credit/VND conversion is available from OPS pricing snapshot');
-    }
     return {
       authority:'legacy-seo-envelope',
       snapshotVersion:snap.version,
@@ -77,6 +102,7 @@ export class SeoService{
       checksum:snap.checksum,
       validUntil:iso(snap.valid_until),
       creditVnd:meta.creditVnd,
+      conversionAvailable:meta.creditVnd!=null,
       businessTimeZone:meta.businessTimeZone||BUSINESS_TIME_ZONE,
       quoteTtlSeconds:meta.quoteTtlSeconds||QUOTE_SECONDS,
       schemaVersion:meta.schemaVersion,
@@ -89,9 +115,33 @@ export class SeoService{
 
   async products(){
     const auth=await this.catalogAuthority();
+    if(auth.localProduct){
+      let paidPins=[];
+      try{
+        if(this.fastify.localPricing?.paidPinPlan){
+          paidPins=[await this.fastify.localPricing.paidPinPlan()];
+        }
+      }catch{ /* banned/disabled pin */ }
+      return {
+        creditVnd:auth.creditVnd,
+        conversionAvailable:auth.conversionAvailable!==false,
+        businessTimeZone:auth.businessTimeZone,
+        quoteTtlSeconds:auth.quoteTtlSeconds,
+        snapshotVersion:auth.snapshotVersion,
+        schemaVersion:auth.schemaVersion,
+        contract:auth.contract,
+        paidPinMigrationStatus:auth.paidPinMigrationStatus,
+        authority:auth.authority,
+        freeLaunch:null,
+        products:[auth.localProduct],
+        creditPackages:[],
+        paidPins,
+      };
+    }
     if(auth.view){
       return {
         creditVnd:auth.creditVnd,
+        conversionAvailable:auth.conversionAvailable!==false,
         businessTimeZone:auth.businessTimeZone,
         quoteTtlSeconds:auth.quoteTtlSeconds,
         snapshotVersion:auth.snapshotVersion,
@@ -124,6 +174,7 @@ export class SeoService{
     });
     return {
       creditVnd:auth.creditVnd,
+      conversionAvailable:auth.conversionAvailable===true,
       businessTimeZone:auth.businessTimeZone,
       quoteTtlSeconds:auth.quoteTtlSeconds,
       snapshotVersion:auth.snapshotVersion,
@@ -138,6 +189,11 @@ export class SeoService{
   }
 
   async product(id,now){
+    if(this.fastify.localPricing?.seoProduct){
+      const local=await this.fastify.localPricing.seoProduct(now instanceof Date?now:new Date(now));
+      if(local.productId===id||local.code===id)return local;
+      throw fail('No authorized current SEO price is available');
+    }
     if(this.fastify.forumPricing?.getSeoProduct){
       const mapped=await this.fastify.forumPricing.getSeoProduct(id,now);
       if(mapped)return mapped;
@@ -215,6 +271,9 @@ export class SeoService{
       await this.eligible(topic,userId);
       const [{now}]=await rows(sql`SELECT clock_timestamp() AS now`);
       const auth=await this.catalogAuthority();
+      if(auth.creditVnd==null){
+        throw fail('No authorized Credit/VND conversion is available from OPS pricing snapshot');
+      }
       const p=await this.product(productId,now);
       await this.renewal(topicId,now,p.renewalWindowDays);
       const unitPrice=p.unitPriceCredit;

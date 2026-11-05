@@ -3,47 +3,33 @@ import crypto from 'node:crypto';
 import {sql} from 'drizzle-orm';
 import db,{atomicWrite} from '#core/db/index.js';
 import {DEFAULT_CURRENCY_CODE} from '#core/extensions/ledger/constants.js';
-import {PAID_PIN_MIGRATION_STATUS} from './seo/constants.js';
 const fail=(message,statusCode=400)=>Object.assign(new Error(message),{statusCode});
 // Use the ambient transaction connection; concurrent purchases must not exhaust
 // the pool waiting for a second policy-inspection connection.
 const policyClient={query:(text,values=[])=>db.execute(sql.join(text.split(/(\$\d+)/g).filter(Boolean).map(part=>/^\$\d+$/.test(part)?sql`${values[Number(part.slice(1))-1]}`:sql.raw(part)),sql``))};
 export const rows=async statement=>(await db.execute(statement)).rows;
-// Legacy purchase history is preserved; SEO never grants placement.
+// SEO controls outbound link policy only — never topic placement.
 export const paidActive=seoActive;
-export const effectivePinned=sql`topics.is_pinned`;
-export const pinExpiresAt=seoExpiresAt;
+export {seoExpiresAt};
+// Paid pin entitlements OR admin manual pin share the public pinned band.
+export const paidPinActive=sql`EXISTS(SELECT 1 FROM pin_entitlements pe WHERE pe.topic_id=topics.id AND pe.status='active' AND pe.starts_at<=statement_timestamp() AND pe.ends_at>statement_timestamp())`;
+export const effectivePinned=sql`(topics.is_pinned OR ${paidPinActive})`;
+export const pinExpiresAt=sql`(SELECT max(ends_at) FROM pin_entitlements WHERE topic_id=topics.id AND status='active' AND ends_at>statement_timestamp())`;
 export const effectiveLinkPolicy=sql`CASE WHEN EXISTS(SELECT 1 FROM topic_link_classifications c WHERE c.topic_id=topics.id AND c.advertising) THEN 'sponsored' WHEN EXISTS(SELECT 1 FROM topic_link_classifications c WHERE c.topic_id=topics.id AND c.editorial) AND NOT EXISTS(SELECT 1 FROM pin_entitlements e WHERE e.topic_id=topics.id) AND NOT EXISTS(SELECT 1 FROM seo_purchases s WHERE s.topic_id=topics.id) THEN 'editorial' WHEN ${seoActive} THEN 'paid' ELSE 'ugc' END`;
 export function validateProduct(body){
-  if(typeof body.name!=='string'||!body.name.trim()||body.name.length>100||!Number.isSafeInteger(body.price)||body.price<1||body.price>1000000000||!Number.isInteger(body.durationSeconds)||body.durationSeconds<60||body.durationSeconds>31536000)throw fail('Invalid pin product');
+  if(typeof body.name!=='string'||!body.name.trim()||body.name.length>100||!Number.isSafeInteger(body.price)||body.price<0||body.price>1000000000||!Number.isInteger(body.durationSeconds)||body.durationSeconds<60||body.durationSeconds>31536000)throw fail('Invalid pin product');
   return {type:'topic_pin',consumeType:'consumable',name:body.name.trim(),price:body.price,currencyCode:DEFAULT_CURRENCY_CODE,isActive:body.enabled!==false,displayOrder:Number.isInteger(body.displayOrder)?body.displayOrder:0,metadata:JSON.stringify({durationSeconds:body.durationSeconds})};
 }
 export class PinService {
   constructor(fastify){this.fastify=fastify;}
   async plans(){
-    if(this.fastify.forumPricing?.getCatalogView){
-      const catalog=await this.fastify.forumPricing.getCatalogView();
-      if(catalog&&!catalog.expired&&catalog.paidPins?.length){
-        return catalog.paidPins.map(p=>({
-          id:p.code,
-          code:p.code,
-          name:p.name,
-          price:p.unitPriceCredit,
-          durationSeconds:p.durationSeconds,
-          durationHours:p.durationHours,
-          currencyCode:DEFAULT_CURRENCY_CODE,
-          isActive:true,
-          pricingAuthority:'ops-forum-pricing/1',
-          pricingMigrationStatus:PAID_PIN_MIGRATION_STATUS,
-          snapshotVersion:p.snapshotVersion,
-          priceVersion:p.priceVersion,
-        }));
-      }
+    if(!this.fastify.localPricing?.paidPinPlan){
+      const err=fail('Local pricing is unavailable',409);
+      err.code='PRICE_UNAVAILABLE';
+      throw err;
     }
-    // Fail closed for monetary listing when OPS catalog unavailable — do not expose Forum-admin prices.
-    const err=fail('No authorized current paid_pin price is available from OPS catalog',409);
-    err.code='PRICE_UNAVAILABLE';
-    throw err;
+    const plan=await this.fastify.localPricing.paidPinPlan();
+    return [plan];
   }
   async lockTopic(id){
     await db.execute(sql`SELECT pg_advisory_xact_lock_shared(hashtext('pbn-policy'))`);
@@ -59,29 +45,71 @@ export class PinService {
   }
   async purchase({userId,topicId,productId,skuCode,idempotencyKey,expectedPrice,expectedDuration}){
     if(typeof idempotencyKey!=='string'||!/^[a-zA-Z0-9_-]{16,100}$/.test(idempotencyKey))throw fail('Invalid idempotency key');
-    const code=typeof skuCode==='string'&&skuCode.trim()?skuCode.trim():(typeof productId==='string'?productId:null);
-    if(!code||!/^[-a-z0-9_]{1,80}$/i.test(code))throw fail('skuCode from OPS paid_pin catalog is required',400);
-    const hash=crypto.createHash('sha256').update(JSON.stringify({topicId,skuCode:code,expectedPrice,expectedDuration})).digest('hex');
+    if(!this.fastify.localPricing?.paidPinPlan){
+      const err=fail('Local pricing is unavailable',409);err.code='PRICE_UNAVAILABLE';throw err;
+    }
+    const plan=await this.fastify.localPricing.paidPinPlan();
+    const code=typeof skuCode==='string'&&skuCode.trim()?skuCode.trim():(typeof productId==='string'?productId:plan.code);
+    if(!code||!/^[-a-z0-9_]{1,80}$/i.test(code))throw fail('skuCode is required',400);
+    if(code!==plan.code)throw fail('Pin plan changed; review the current price and duration',409);
+    const price=Number(plan.price);
+    const duration=Number(plan.durationSeconds);
+    if(!Number.isSafeInteger(price)||price<0||!Number.isInteger(duration)||duration<60)throw fail('Pin product is unavailable',409);
+    if((expectedPrice!==undefined&&expectedPrice!==price)||(expectedDuration!==undefined&&expectedDuration!==duration)){
+      throw fail('Pin plan changed; review the current price and duration',409);
+    }
+    const hash=crypto.createHash('sha256').update(JSON.stringify({topicId,skuCode:code,expectedPrice:price,expectedDuration:duration})).digest('hex');
     return atomicWrite(async()=>{
       await db.execute(sql`SET LOCAL lock_timeout='10s'`);
       await db.execute(sql`SELECT pg_advisory_xact_lock(hashtext('pin-purchase'),hashtext(${userId+':'+idempotencyKey}))`);
       const [prior]=await rows(sql`SELECT * FROM pin_entitlements WHERE user_id=${userId} AND idempotency_key=${idempotencyKey}`);
       if(prior){if(prior.payload_hash!==hash)throw fail('Idempotency key conflicts with an earlier purchase',409);return prior;}
       const topic=await this.lockTopic(topicId);await this.eligible(topic,userId);
-      if(!this.fastify.forumPricing?.getPaidPin)throw fail('No authorized current paid_pin price is available from OPS catalog',409);
-      const pin=await this.fastify.forumPricing.getPaidPin(code);
-      const price=Number(pin.unitPriceCredit);
-      const duration=Number(pin.durationSeconds);
-      if(!Number.isSafeInteger(price)||price<1||!Number.isInteger(duration)||duration<60)throw fail('Pin product is unavailable',409);
-      if((expectedPrice!==undefined&&expectedPrice!==price)||(expectedDuration!==undefined&&expectedDuration!==duration))throw fail('Pin plan changed; review the current price and duration',409);
+      // Re-resolve inside the transaction boundary for consistency against concurrent admin edits.
+      const live=await this.fastify.localPricing.paidPinPlan();
+      if(live.code!==code||Number(live.price)!==price||Number(live.durationSeconds)!==duration){
+        throw fail('Pin plan changed; review the current price and duration',409);
+      }
       if(!await this.fastify.ledger.isCurrencyActive(DEFAULT_CURRENCY_CODE))throw fail('Credit is unavailable',409);
       const id=crypto.randomUUID();
-      const metadata={entitlementId:id,topicId,skuCode:code,durationSeconds:duration,idempotencyKey,source:'ops-forum-pricing/1',pricingVersion:pin.priceVersion,snapshotVersion:pin.snapshotVersion};
-      const transaction=await this.fastify.ledger.deduct({userId,amount:price,currencyCode:DEFAULT_CURRENCY_CODE,type:'pin_purchase',referenceType:'pin_entitlement',referenceId:id,description:'Paid topic pin: '+pin.name,metadata});
+      const authority=live.pricingAuthority||'forum-local';
+      const metadata={
+        entitlementId:id,
+        topicId,
+        skuCode:code,
+        durationSeconds:duration,
+        idempotencyKey,
+        source:authority,
+        pricingSource:live.pricingSource,
+        localPriceVersion:live.localPriceVersion,
+        priceVnd:live.priceVnd,
+        freeMode:Boolean(live.freeMode),
+      };
+      let transaction=null;
+      let balanceBefore;
+      let balanceAfter;
+      if(price>0){
+        transaction=await this.fastify.ledger.deduct({
+          userId,
+          amount:price,
+          currencyCode:DEFAULT_CURRENCY_CODE,
+          type:'pin_purchase',
+          referenceType:'pin_entitlement',
+          referenceId:id,
+          description:'Paid topic pin: '+live.name,
+          metadata,
+        });
+        balanceBefore=Number(transaction.balanceAfter)+price;
+        balanceAfter=transaction.balanceAfter;
+      }else{
+        const account=await this.fastify.ledger.getAccount(userId,DEFAULT_CURRENCY_CODE);
+        balanceBefore=Number(account.balance);
+        balanceAfter=Number(account.balance);
+      }
       const [clock]=await rows(sql`SELECT clock_timestamp() AS now,coalesce(max(ends_at),clock_timestamp()) AS previous_end FROM pin_entitlements WHERE topic_id=${topicId} AND status='active' AND ends_at>clock_timestamp()`);
       const [entitlement]=await rows(sql`INSERT INTO pin_entitlements(id,topic_id,user_id,product_id,transaction_id,idempotency_key,payload_hash,price,duration_seconds,balance_before,balance_after,starts_at,ends_at,ops_sku_code,pricing_version,pricing_authority)
-        VALUES(${id},${topicId},${userId},NULL,${transaction.id},${idempotencyKey},${hash},${price},${duration},${Number(transaction.balanceAfter)+price},${transaction.balanceAfter},greatest(${clock.now}::timestamptz,${clock.previous_end}::timestamptz),greatest(${clock.now}::timestamptz,${clock.previous_end}::timestamptz)+${duration}*interval '1 second',${code},${pin.priceVersion},'ops-forum-pricing/1') RETURNING *`);
-      await db.execute(sql`INSERT INTO pin_events(id,entitlement_id,topic_id,type,actor_id,reason,metadata) VALUES(${crypto.randomUUID()},${id},${topicId},'purchase',${userId},'Owner confirmed non-refundable paid pin',${JSON.stringify({transactionId:transaction.id,price,skuCode:code,pricingVersion:pin.priceVersion})}::jsonb)`);
+        VALUES(${id},${topicId},${userId},NULL,${transaction?.id??null},${idempotencyKey},${hash},${price},${duration},${balanceBefore},${balanceAfter},greatest(${clock.now}::timestamptz,${clock.previous_end}::timestamptz),greatest(${clock.now}::timestamptz,${clock.previous_end}::timestamptz)+${duration}*interval '1 second',${code},${String(live.localPriceVersion)},${authority}) RETURNING *`);
+      await db.execute(sql`INSERT INTO pin_events(id,entitlement_id,topic_id,type,actor_id,reason,metadata) VALUES(${crypto.randomUUID()},${id},${topicId},'purchase',${userId},${price>0?'Owner confirmed non-refundable paid pin':'Owner confirmed free-mode pin'},${JSON.stringify({transactionId:transaction?.id??null,price,skuCode:code,pricingSource:live.pricingSource,localPriceVersion:live.localPriceVersion,freeMode:Boolean(live.freeMode)})}::jsonb)`);
       return entitlement;
     });
   }
@@ -99,6 +127,11 @@ export class PinService {
       const [e]=await rows(sql`SELECT * FROM pin_entitlements WHERE id=${id}::uuid FOR UPDATE`);
       const [prior]=await rows(sql`SELECT * FROM pin_events WHERE entitlement_id=${id}::uuid AND type='correction'`);
       if(prior){if(prior.metadata.key!==key||prior.reason!==reason)throw fail('This purchase already has a technical correction',409);return prior;}
+      if(Number(e.price)<=0){
+        await db.execute(sql`UPDATE pin_entitlements SET status='cancelled',reason=${reason} WHERE id=${id}::uuid`);
+        const [event]=await rows(sql`INSERT INTO pin_events(id,entitlement_id,topic_id,type,actor_id,reason,metadata) VALUES(${crypto.randomUUID()},${id}::uuid,${e.topic_id},'correction',${actorId},${reason},${JSON.stringify({transactionId:null,originalTransactionId:e.transaction_id,key,freeMode:true})}::jsonb) RETURNING *`);
+        return event;
+      }
       const tx=await this.fastify.ledger.grant({userId:e.user_id,amount:Number(e.price),currencyCode:DEFAULT_CURRENCY_CODE,type:'pin_correction',referenceType:'pin_entitlement',referenceId:id,description:'Technical pin correction',metadata:{actorId,reason,originalTransactionId:e.transaction_id,key}});
       await db.execute(sql`UPDATE pin_entitlements SET status='cancelled',reason=${reason} WHERE id=${id}::uuid`);
       const [event]=await rows(sql`INSERT INTO pin_events(id,entitlement_id,topic_id,type,actor_id,reason,metadata) VALUES(${crypto.randomUUID()},${id}::uuid,${e.topic_id},'correction',${actorId},${reason},${JSON.stringify({transactionId:tx.id,originalTransactionId:e.transaction_id,key})}::jsonb) RETURNING *`);return event;

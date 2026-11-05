@@ -4,7 +4,7 @@ import { usePbnTranslations } from "@/i18n/useTranslations";
 import { useState, useMemo } from 'react';
 import Link from '@/components/common/Link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FolderTree, Users, Tag, Smile, Flag, Settings, Shield, MessageSquare, MessagesSquare, ShoppingCart, Coins, Store, ChevronDown, ChevronRight, FileText, UserCog, ShieldAlert, Gift, Medal, Megaphone, Files, FileCode, History, Cable } from 'lucide-react';
+import { LayoutDashboard, FolderTree, Users, Tag, Smile, Flag, Settings, Shield, MessageSquare, MessagesSquare, Coins, Store, ChevronDown, ChevronRight, FileText, UserCog, ShieldAlert, Gift, Medal, Megaphone, Files, FileCode, History, Cable } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePermission } from '@/hooks/usePermission';
 export default function DashboardSidebar() {
@@ -27,7 +27,6 @@ export default function DashboardSidebar() {
     }));
   };
   const navItems = [
-  {href: '/dashboard/seo', icon: ShoppingCart, label: pbnT('seoAdmin'), permission: 'dashboard.shop'},
   {href: '/dashboard/ops-connection', icon: Cable, label: pbnT('opsConnection'), permission: 'dashboard.extensions'},
   // 概览 - 独立项
   {
@@ -144,7 +143,8 @@ export default function DashboardSidebar() {
       href: '/dashboard/ledger',
       icon: Coins,
       label: pbnT("m1504"),
-      permission: 'dashboard.extensions'
+      // Former /dashboard/seo used dashboard.shop; keep both so commercial admins still reach the merged page.
+      permissions: ['dashboard.extensions', 'dashboard.shop']
     }, {
       href: '/dashboard/badges',
       icon: Medal,
@@ -167,12 +167,19 @@ export default function DashboardSidebar() {
     permission: 'dashboard.settings'
   }];
 
+  const allowed = entry => {
+    if (Array.isArray(entry.permissions) && entry.permissions.length) {
+      return entry.permissions.some(p => hasPermission(p));
+    }
+    return !entry.permission || hasPermission(entry.permission);
+  };
+
   // 根据权限过滤菜单项
   const filteredNavItems = useMemo(() => {
     return navItems.map(item => {
       // 有子菜单的项
       if (item.children) {
-        const filteredChildren = item.children.filter(child => !child.permission || hasPermission(child.permission));
+        const filteredChildren = item.children.filter(allowed);
         // 如果没有可见的子菜单，隐藏整个分组
         return filteredChildren.length > 0 ? {
           ...item,
@@ -180,7 +187,7 @@ export default function DashboardSidebar() {
         } : null;
       }
       // 独立菜单项
-      return !item.permission || hasPermission(item.permission) ? item : null;
+      return allowed(item) ? item : null;
     }).filter(Boolean);
   }, [hasPermission]);
   const isActive = (href, exact = false) => {

@@ -2,8 +2,22 @@ import fp from 'fastify-plugin';
 import cors from '@fastify/cors';
 import env from '../config/env.js';
 import { isOriginAllowed, parseAllowedOrigins } from '../utils/http-helpers.js';
+import { resolveTrustedCorsOriginConfig } from '../utils/trusted-cors-origins.js';
 
 async function securityPlugin(fastify, opts) {
+  // Trusted origins only: CORS_ORIGIN + FORUM_PUBLIC_ORIGIN (+ FORUM_WEB_ORIGIN).
+  // In development also merge ALLOWED_DEV_ORIGINS / FORUM_ALLOWED_HOSTS.
+  // Never derived from request Host / X-Forwarded-*.
+  const trustedCorsConfig = resolveTrustedCorsOriginConfig(process.env, { isDev: env.isDev });
+  const allowedPatterns = trustedCorsConfig && trustedCorsConfig !== 'false'
+    ? parseAllowedOrigins(trustedCorsConfig)
+    : [];
+
+  fastify.log.info(
+    { corsOrigins: allowedPatterns.filter((p) => typeof p === 'string') },
+    '[security] CORS allowlist loaded from trusted env',
+  );
+
   // Register CORS https://github.com/fastify/fastify-cors?tab=readme-ov-file#options
   await fastify.register(cors, {
     origin: (origin, cb) => {
@@ -13,35 +27,34 @@ async function securityPlugin(fastify, opts) {
         return;
       }
 
-      // 1. 优先检查 CORS_ORIGIN 环境变量
-      if (env.security.corsOrigin) {
-        if (env.security.corsOrigin === 'false') {
+      if (trustedCorsConfig === 'false') {
+        cb(new Error('Not allowed by CORS'), false);
+        return;
+      }
+
+      if (allowedPatterns.length && isOriginAllowed(origin, allowedPatterns)) {
+        cb(null, true);
+        return;
+      }
+
+      // 开发环境下，自动允许 localhost 和 127.0.0.1（保持本地登录不变）
+      if (env.isDev) {
+        try {
+          const url = new URL(origin);
+          if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+            cb(null, true);
+            return;
+          }
+        } catch {
           cb(new Error('Not allowed by CORS'), false);
-          return;
-        }
-        
-        // 解析一次 (生产环境建议缓存这个结果，但这里作为插件闭包也可以)
-        const allowedPatterns = parseAllowedOrigins(env.security.corsOrigin);
-        
-        if (isOriginAllowed(origin, allowedPatterns)) {
-          cb(null, true);
           return;
         }
       }
 
-      // 2. 开发环境下，自动允许 localhost 和 127.0.0.1
-      if (env.isDev) {
-        const url = new URL(origin);
-        if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
-          cb(null, true);
-          return;
-        }
-      }
-      
-      // 3. 特殊处理：允许 Apple 登录回调的 Origin
+      // 特殊处理：允许 Apple 登录回调的 Origin
       if (origin === 'https://appleid.apple.com') {
-          cb(null, true);
-          return;
+        cb(null, true);
+        return;
       }
 
       // 拒绝其他来源

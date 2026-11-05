@@ -1,4 +1,5 @@
 import createNextIntlPlugin from 'next-intl/plugin';
+import { resolveAllowedDevOrigins } from './src/lib/allowed-dev-origins.js';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -18,6 +19,11 @@ const nextConfig = {
   // 启用 standalone 输出模式，用于 Docker 部署
   output: 'standalone',
   // 代理逻辑已迁移至 src/proxy.js，以支持 Docker 运行时环境变量动态注入
+
+  // Next.js 16 blocks non-localhost access to /_next dev assets by default.
+  // Without this, Cloudflare Tunnel / Tailscale serve SSR HTML but React never
+  // hydrates — login buttons appear dead. Hostnames come from trusted env only.
+  allowedDevOrigins: resolveAllowedDevOrigins(),
 
   // 增加中间件请求体大小限制，支持大文件上传
   experimental: {
