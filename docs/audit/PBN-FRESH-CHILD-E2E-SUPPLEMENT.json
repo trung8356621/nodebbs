@@ -1,0 +1,39 @@
+{
+  "purpose": "Corrected probes after first-pass wrong routes / schema assumptions",
+  "comment_edit_wallet_policy": {
+    "supp.admin_login": "PASS",
+    "supp.wallet": "PASS (/api/ledger/balance or /api/ledger/accounts; /api/ledger/me is 404)",
+    "supp.comment": "PASS (POST /api/posts with topicId; reply fee applies via post_reply_amount)",
+    "supp.edit_own": "PASS (PATCH /api/posts/:id)",
+    "supp.policy_version": "PASS (forum_network_policy_applications.policy_version)",
+    "supp.pin_listed": "PASS (topics.is_pinned / pin_entitlements; no pinned_until column)"
+  },
+  "pin_expire_fixture": {
+    "status": "PASS",
+    "method": "UPDATE status/reason only — ends_at immutable by pbn_pin_entitlement_guard",
+    "before": {
+      "id": "a520a28c-526d-4344-8d61-8f6eef360f74",
+      "status": "active",
+      "topic_id": 1,
+      "ends_at": "2026-11-06T07:38:30.754Z"
+    },
+    "after": {
+      "status": "expired",
+      "reason": "E2E fixture expire (no OS clock change)"
+    }
+  },
+  "payment_pages": [
+    { "p": "/dashboard/payment", "status": 404, "note": "No dedicated page; UI is Ledger tab=payments" },
+    { "p": "/dashboard/ledger", "status": 200 },
+    { "p": "/dashboard/ledger?tab=services", "status": 200 },
+    { "p": "/dashboard/pins", "status": 200 },
+    { "p": "/dashboard/settings", "status": 200 },
+    { "p": "/dashboard/forum-network", "status": 200 }
+  ],
+  "payment_admin_overview": {
+    "status": 200,
+    "sandbox": true,
+    "enabled": false,
+    "publicCheckout": false
+  }
+}

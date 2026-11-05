@@ -729,6 +729,9 @@ export * from '../extensions/forum-network/schema.js';
 // ============ Independent bank-transfer Credit top-up (SePay-first) ============
 export * from '../extensions/bank-payment/schema.js';
 
+// ============ Forum external topic ingest (SEO-OPS machine API) ============
+export * from '../extensions/forum-ingest/schema.js';
+
 // ============ Ads System (广告系统) ============
 export * from '../extensions/ads/schema.js';
 

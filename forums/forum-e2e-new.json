@@ -1,0 +1,14 @@
+{
+  "id": "forum_e2e_new",
+  "database": "pbn_forum_e2e_new",
+  "webPort": 3900,
+  "apiPort": 7900,
+  "hostname": "127.0.0.1",
+  "name": "PBN Fresh Child E2E",
+  "locale": "vi-VN",
+  "primaryColor": "#0e7490",
+  "logo": "/logo.svg",
+  "description": "Fresh child forum for Parent/Child provisioning + functional E2E",
+  "status": "active",
+  "networkRole": "child"
+}

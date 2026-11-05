@@ -1,6 +1,25 @@
 import fp from 'fastify-plugin';
 import rateLimit from '@fastify/rate-limit';
 
+/**
+ * Public read-only shell endpoints hit heavily by Next.js SSR (generateMetadata +
+ * root layout) from a shared localhost IP. Skipping only these GETs keeps auth /
+ * payment / mutation endpoints under the normal limiter.
+ */
+const SSR_SHELL_ALLOWLIST = new Set([
+  'GET /api',
+  'GET /api/',
+  'GET /api/settings',
+]);
+
+function isSsrShellAllowlisted(request) {
+  const method = String(request.method || 'GET').toUpperCase();
+  if (method !== 'GET') return false;
+  // onRequest runs before route match; use raw URL path (strip query).
+  const path = String(request.url || '').split('?')[0];
+  return SSR_SHELL_ALLOWLIST.has(`${method} ${path}`);
+}
+
 async function rateLimitPlugin(fastify, opts) {
   // 先尝试可选认证，以便限速器可以识别用户
   fastify.addHook('onRequest', async (request, reply) => {
@@ -19,6 +38,11 @@ async function rateLimitPlugin(fastify, opts) {
       try {
         const enabled = await fastify.settings.get('rate_limit_enabled', true);
         if (!enabled) {
+          return true;
+        }
+
+        // Scoped bypass: SSR site shell only (not login/payment/mutations).
+        if (isSsrShellAllowlisted(request)) {
           return true;
         }
 

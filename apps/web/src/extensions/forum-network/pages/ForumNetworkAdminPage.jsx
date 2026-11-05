@@ -26,7 +26,8 @@ export default function ForumNetworkAdminPage() {
   const allowed = hasPermission('dashboard.extensions');
   const searchParams = useSearchParams();
   const router = useRouter();
-  const initial = useMemo(() => normalizeTab(searchParams.get('tab')), [searchParams]);
+  const tabParam = searchParams.get('tab');
+  const initial = useMemo(() => normalizeTab(tabParam), [tabParam]);
   const [tab, setTab] = useState(initial);
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,23 +37,27 @@ export default function ForumNetworkAdminPage() {
 
   useEffect(() => { setTab(initial); }, [initial]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async ({ signal } = {}) => {
     setLoading(true);
     setError('');
     try {
       const res = await forumNetworkApi.overview();
+      if (signal?.aborted) return;
       setOverview(res?.data || res);
     } catch (err) {
+      if (signal?.aborted) return;
       setError(err?.message || t('fnLoadError'));
       setOverview(null);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [t]);
 
   useEffect(() => {
-    if (!allowed) return;
-    load();
+    if (!allowed) return undefined;
+    const ac = new AbortController();
+    load({ signal: ac.signal });
+    return () => ac.abort();
   }, [allowed, load]);
 
   const onTabChange = (value) => {

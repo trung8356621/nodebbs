@@ -17,11 +17,13 @@ async function forumNetworkPlugin(fastify) {
 
   fastify.decorate('forumNetwork', service);
 
+  // Always mount admin routes. Missing schema must surface as 503 schema_missing
+  // (via requireReady), not Fastify 404 "route not found".
+  await fastify.register(adminRoutes, { prefix: '/api/forum/network' });
   if (ready) {
-    await fastify.register(adminRoutes, { prefix: '/api/forum/network' });
     fastify.log.info('[forum-network] extension registered (Parent/Child; OPS optional stub only)');
   } else {
-    fastify.log.info('[forum-network] schema missing — addon idle until baseline/0012 applied');
+    fastify.log.info('[forum-network] routes mounted; schema missing until baseline/0012 applied');
   }
 }
 

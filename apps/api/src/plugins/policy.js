@@ -32,7 +32,10 @@ async function policyPlugin(fastify) {
     const registrationRoute=url==='/api/auth/register';
     const profileRoute=/^\/api\/users(?:\/(?:me|:userId))?\/?$/.test(url);
     const pageRoute=/^\/api\/pages\/admin(?:\/:id)?$/.test(url);
-    const contentRoute = /^\/api\/(topics|posts)(\/:[^/]+)?\/?$/.test(url) || profileRoute || pageRoute || registrationRoute || /^\/api\/ads(\/:[^/]+)?\/?$/.test(url);
+    // Include machine ingest so BLOCK/REVIEW policy still applies to SEO-OPS posts.
+    const contentRoute = /^\/api\/(topics|posts)(\/:[^/]+)?\/?$/.test(url)
+      || /^\/api\/integrations\/topics\/?$/.test(url)
+      || profileRoute || pageRoute || registrationRoute || /^\/api\/ads(\/:[^/]+)?\/?$/.test(url);
     const moderationRoute = url.includes('/moderation');
     const methods=Array.isArray(route.method)?route.method:[route.method];
     if ((!contentRoute && !moderationRoute) || !methods.some(m=>['POST','PATCH','PUT'].includes(m))) return;

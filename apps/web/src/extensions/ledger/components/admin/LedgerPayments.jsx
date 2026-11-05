@@ -99,22 +99,27 @@ export function LedgerPayments() {
   const [loadError, setLoadError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const refreshOverview = useCallback(async () => {
+  const refreshOverview = useCallback(async ({ signal } = {}) => {
     setLoading(true);
     setLoadError('');
     try {
       const data = unwrap(await bankPaymentAdminApi.getOverview());
+      if (signal?.aborted) return;
       setOverview(data);
     } catch (err) {
+      if (signal?.aborted) return;
       setOverview(null);
       setLoadError(err?.message || t('payLoadError'));
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [t]);
 
+  // Initial load only; manual refresh via button. Do not re-fetch on every render.
   useEffect(() => {
-    refreshOverview();
+    const ac = new AbortController();
+    refreshOverview({ signal: ac.signal });
+    return () => ac.abort();
   }, [refreshOverview]);
 
   return (
@@ -132,7 +137,7 @@ export function LedgerPayments() {
           {overview?.enabled && !overview.paymentOpen ? (
             <StatusPill tone="warn">{t('payBadgeNotPublic')}</StatusPill>
           ) : null}
-          <Button type="button" variant="outline" size="sm" onClick={refreshOverview} disabled={loading}>
+          <Button type="button" variant="outline" size="sm" onClick={() => refreshOverview()} disabled={loading}>
             {t('payRefresh')}
           </Button>
         </div>
@@ -228,21 +233,26 @@ function PackagesPanel({ t, onChanged }) {
   const [draft, setDraft] = useState({ code: '', label: '', amountVnd: '', enabled: true, displayOrder: '100' });
   const [saving, setSaving] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async ({ signal } = {}) => {
     setLoading(true);
     setError('');
     try {
-      setPayload(unwrap(await bankPaymentAdminApi.listPackages()));
+      const data = unwrap(await bankPaymentAdminApi.listPackages());
+      if (signal?.aborted) return;
+      setPayload(data);
     } catch (err) {
+      if (signal?.aborted) return;
       setPayload(null);
       setError(err?.message || t('payLoadError'));
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [t]);
 
   useEffect(() => {
-    load();
+    const ac = new AbortController();
+    load({ signal: ac.signal });
+    return () => ac.abort();
   }, [load]);
 
   const rate = payload?.vndPerCredit;
@@ -461,7 +471,7 @@ function OrdersPanel({ t }) {
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const load = useCallback(async (page = 1) => {
+  const load = useCallback(async (page = 1, { signal } = {}) => {
     setLoading(true);
     setError('');
     try {
@@ -472,18 +482,23 @@ function OrdersPanel({ t }) {
         page,
         limit: 20,
       }));
+      if (signal?.aborted) return;
       setItems(data?.items || []);
       setPagination(data?.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 });
     } catch (err) {
+      if (signal?.aborted) return;
       setItems([]);
       setError(err?.message || t('payLoadError'));
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [status, from, to, t]);
 
+  // Reload when filters change; ignore stale responses on unmount / filter change.
   useEffect(() => {
-    load(1);
+    const ac = new AbortController();
+    load(1, { signal: ac.signal });
+    return () => ac.abort();
   }, [load]);
 
   const openDetail = async (orderId) => {
@@ -769,7 +784,7 @@ function ConfigPanel({ overview, loading, t, onRefresh }) {
         </Button>
       </div>
 
-      <Button type="button" variant="outline" size="sm" onClick={onRefresh}>
+      <Button type="button" variant="outline" size="sm" onClick={() => onRefresh?.()}>
         {t('payRefresh')}
       </Button>
     </div>

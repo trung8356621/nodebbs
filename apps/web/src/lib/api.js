@@ -1127,5 +1127,24 @@ export const webhookConfigApi = {
   }
 };
 
+// ============= Forum external topic ingest (admin) =============
+export const forumIngestApi = {
+  async list() {
+    return apiClient.get('/integrations/admin');
+  },
+  async searchAuthors(q, limit = 10) {
+    return apiClient.get('/integrations/admin/authors', { q, limit });
+  },
+  async create(data) {
+    return apiClient.post('/integrations/admin', data);
+  },
+  async update(id, data) {
+    return apiClient.patch(`/integrations/admin/${id}`, data);
+  },
+  async revoke(id) {
+    return apiClient.post(`/integrations/admin/${id}/revoke`);
+  },
+};
+
 // 导出 API 客户端实例
 export default apiClient;

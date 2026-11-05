@@ -1,7 +1,6 @@
 import {effectivePinned,pinExpiresAt,seoExpiresAt,effectiveLinkPolicy} from '../../services/pinService.js';
 import { eq, sql, desc, and, or, like, inArray, not, count, lt, gt } from 'drizzle-orm';
 import { generateSlug } from '#core/utils/slug.js';
-import { nanoid } from 'nanoid';
 
 import db from '#core/db/index.js';
 import {
@@ -21,6 +20,7 @@ import { shouldHideUserInfo } from '#core/utils/visibility.js';
 import { bindPollsToTopic } from '../../services/pollService.js';
 import { bindLotteriesToTopic } from '../../services/lotteryService.js';
 import { bindAttachmentsToTopic, deleteAttachmentsByTopicIds } from '../../services/attachmentService.js';
+import { createTopic } from '../../services/topicCreateService.js';
 
 // :::protected{attrs}\n...\n::: 块（行首 ::: 结束）
 // 捕获组：1=attrs，2=content（由详情处理器消费；列表摘要处理仅使用整体匹配）
@@ -931,154 +931,14 @@ export default async function topicRoutes(fastify, options) {
       },
     },
     async (request, reply) => {
-      const { title, categoryId, content, tags: tagNames } = request.body;
-
-      // 验证分类是否存在
-      const [category] = await db
-        .select()
-        .from(categories)
-        .where(eq(categories.id, categoryId))
-        .limit(1);
-      if (!category) {
-        return reply.code(404).send({ error: '分类不存在' });
-      }
-
-      // 检查创建话题权限（带分类上下文）
-      await fastify.permission.check(request, 'topic.create', {
-        categoryId: category.id,
-      });
-
-      // 检查私有分类权限
-      if (category.isPrivate) {
-        const canAccessPrivate = await fastify.permission.can(request, 'dashboard.topics', { categoryId: category.id });
-        if (!canAccessPrivate) {
-          return reply.code(403).send({ error: '没有权限在私有分类中发帖' });
+      try {
+        return await createTopic(fastify, request, request.body);
+      } catch (error) {
+        if (error.statusCode && error.body) {
+          return reply.code(error.statusCode).send(error.body);
         }
+        throw error;
       }
-
-      // 生成 slug，使用 5 位随机字符作为后缀，并限制总长度不超过 100
-      const slug = generateSlug(title, { suffix: nanoid(5).toLowerCase(), maxLength: 100 });
-
-      // 创建话题（默认 approved；下方经审核服务按配置决定是否转入待审）
-      const [newTopic] = await db
-        .insert(topics)
-        .values({
-          approvalStatus: request.policyDecision?.action === 'REVIEW' ? 'pending' : 'approved',
-          title,
-          slug,
-          categoryId,
-          userId: request.user.id,
-          postCount: 1,
-          lastPostAt: new Date(),
-        })
-        .returning();
-
-      // 绑定正文里的 ::poll{id} / ::lottery{id} / ::attachment{id} 到本话题，剥离非法/盗用引用
-      const afterPolls = await bindPollsToTopic(newTopic.id, content, request.user.id);
-      const afterLotteries = await bindLotteriesToTopic(newTopic.id, afterPolls, request.user.id);
-      const cleanContent = await bindAttachmentsToTopic(newTopic.id, afterLotteries, request.user.id);
-
-      // 创建首贴
-      const [firstPost] = await db
-        .insert(posts)
-        .values({
-          topicId: newTopic.id,
-          userId: request.user.id,
-          content: cleanContent,
-          rawContent: cleanContent,
-          approvalStatus: request.policyDecision?.action === 'REVIEW' ? 'pending' : 'approved',
-          postNumber: 1,
-        })
-        .returning();
-
-      // 处理标签
-      if (tagNames && tagNames.length > 0) {
-        const canUseTags = await fastify.permission.can(request, 'tag.read');
-        if (canUseTags) {
-          const canCreateTags = await fastify.permission.can(request, 'tag.create');
-          for (const tagName of tagNames) {
-            const tagSlug = generateSlug(tagName);
-
-            // 获取或创建标签（同时匹配 slug 和 name，兼容旧 slug）
-            let [tag] = await db
-              .select()
-              .from(tags)
-              .where(or(eq(tags.slug, tagSlug), eq(tags.name, tagName)))
-              .limit(1);
-
-            if (!tag) {
-              if (!canCreateTags) continue; // 无创建权限，跳过不存在的标签
-              [tag] = await db
-                .insert(tags)
-                .values({
-                  name: tagName,
-                  slug: tagSlug,
-                  topicCount: 1,
-                })
-                .returning();
-            } else {
-              await db
-                .update(tags)
-                .set({
-                  topicCount: sql`${tags.topicCount} + 1`,
-                  ...(tag.slug !== tagSlug && { slug: tagSlug }),
-                })
-                .where(eq(tags.id, tag.id));
-            }
-
-            // 关联标签与话题
-            await db.insert(topicTags).values({
-              topicId: newTopic.id,
-              tagId: tag.id,
-            });
-          }
-        }
-      }
-
-      // 通用审核：按配置决定是否转入待审；未开启则直接通过并触发 TOPIC_CREATED（发积分等）
-      const moderation = await fastify.moderation.submit({
-        forceReview: request.policyDecision?.action === 'REVIEW',
-        targetType: 'topic',
-        targetId: newTopic.id,
-        submittedBy: request.user.id,
-        snapshot: {
-          title: newTopic.title,
-          slug: newTopic.slug,
-          preview: cleanContent ? cleanContent.slice(0, 200) : null,
-        },
-      });
-      // 同步返回对象的状态，避免响应体状态陈旧
-      newTopic.approvalStatus = moderation.status;
-      firstPost.approvalStatus = moderation.status;
-
-      const requiresApproval = moderation.status === 'pending';
-      const message = requiresApproval
-        ? '您的话题已提交，等待审核后将公开显示'
-        : '话题创建成功';
-
-      // Activity reward: grant only when topic is immediately approved (idempotent by topic id).
-      if (!requiresApproval && fastify.activityRewards) {
-        try {
-          await fastify.activityRewards.grantForRule({
-            userId: request.user.id,
-            ruleKey: 'post_topic_amount',
-            type: 'post_topic',
-            referenceType: 'topic',
-            referenceId: String(newTopic.id),
-            description: `Topic create reward #${newTopic.id}`,
-            metadata: { topicId: newTopic.id },
-          });
-        } catch (err) {
-          fastify.log.error(err, '[activity] topic reward failed');
-        }
-      }
-
-      return {
-        topic: newTopic,
-        firstPost,
-        message,
-        requiresApproval,
-      };
     }
   );
 

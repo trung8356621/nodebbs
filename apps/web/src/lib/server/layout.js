@@ -15,6 +15,15 @@ export const getApiInfo = cache(async () => {
   return await request('/', undefined, pbnT);
 });
 
+/**
+ * Deduped per React request — generateMetadata + getLayoutData + getSiteInfo
+ * must share one /settings round-trip (no retry storm).
+ */
+export const getCachedSettings = cache(async () => {
+  const pbnT = await getPbnTranslations();
+  return await request('/settings', undefined, pbnT);
+});
+
 // ============ 主函数 ============
 
 /**
@@ -32,7 +41,11 @@ export async function getLayoutData(pbnT = pbnRuntimeT) {
     }
     return null;
   };
-  const [settings, apiInfo, currenciesData] = await Promise.all([request('/settings', undefined, pbnT).catch(swallow('/settings')), getApiInfo().catch(swallow('/')), request('/ledger/active-currencies', undefined, pbnT).catch(swallow('/ledger/active-currencies'))]);
+  const [settings, apiInfo, currenciesData] = await Promise.all([
+    getCachedSettings().catch(swallow('/settings')),
+    getApiInfo().catch(swallow('/')),
+    request('/ledger/active-currencies', undefined, pbnT).catch(swallow('/ledger/active-currencies')),
+  ]);
   const activeCurrencies = Array.isArray(currenciesData) ? currenciesData : [];
 
   // 获取当前用户 (SSR)
@@ -48,6 +61,9 @@ export async function getLayoutData(pbnT = pbnRuntimeT) {
 /**
  * 生成 RootLayout 的 Metadata
  * 包含完整的 SEO 优化：Open Graph、Twitter Cards 等
+ *
+ * On API 429/5xx/network failure: return safe fallback metadata once — no retries.
+ * When API is healthy, SEO fields are unchanged (same /settings source as layout).
  */
 export async function getLayoutMetadata(pbnT = pbnRuntimeT) {
   let siteName = DEFAULT_SITE_NAME;
@@ -58,7 +74,7 @@ export async function getLayoutMetadata(pbnT = pbnRuntimeT) {
   let siteKeywords = '';
   let siteUrl = '';
   try {
-    const settings = await request('/settings', undefined, pbnT);
+    const settings = await getCachedSettings();
     if (settings?.site_name?.value) {
       siteName = settings.site_name.value;
     }
@@ -81,7 +97,12 @@ export async function getLayoutMetadata(pbnT = pbnRuntimeT) {
       siteUrl = settings.site_url.value.replace(/\/+$/, '');
     }
   } catch (error) {
-    console.error('Error fetching settings for metadata:', error);
+    // Do not retry. Log status/resetTime so ops can see the 429 without hiding it.
+    console.error('Error fetching settings for metadata:', {
+      status: error?.status,
+      message: error?.message,
+      resetTime: error?.resetTime,
+    });
   }
 
   // 生成社交分享图片的绝对 URL
@@ -153,7 +174,7 @@ export async function getSiteInfo(pbnT = pbnRuntimeT) {
   let siteUrl = '';
   let siteLogo = DEFAULT_SITE_LOGO;
   try {
-    const settings = await request('/settings', undefined, pbnT);
+    const settings = await getCachedSettings();
     if (settings?.site_name?.value) {
       siteName = settings.site_name.value;
     }
@@ -164,7 +185,11 @@ export async function getSiteInfo(pbnT = pbnRuntimeT) {
       siteLogo = settings.site_logo.value;
     }
   } catch (error) {
-    console.error('Error fetching site info:', error);
+    console.error('Error fetching site info:', {
+      status: error?.status,
+      message: error?.message,
+      resetTime: error?.resetTime,
+    });
   }
   return {
     siteName,

@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'sonner';
-import { Settings, KeyRound, Shield, ShieldCheck, Bot, Fingerprint, Users, ShieldAlert, Gauge, Unplug, Send, HardDrive, Webhook, Wallet } from 'lucide-react';
+import { Settings, KeyRound, Shield, ShieldCheck, Bot, Fingerprint, Users, ShieldAlert, Gauge, Unplug, Send, HardDrive, Webhook, Wallet, Plug } from 'lucide-react';
 import { Loading } from '@/components/common/Loading';
 
 // 导入所有重构后或原有的配置子组件
@@ -26,6 +26,7 @@ import { MessageSettings } from './components/MessageSettings';
 import { StorageSettings } from './components/StorageProviderCard';
 import { WebhookSettings } from './components/WebhookSettings';
 import { CreditAbuseSettings } from './components/CreditAbuseSettings';
+import { ExternalIntegrationsSettings } from './components/ExternalIntegrationsSettings';
 
 // 扁平化的全局导航菜单
 const navigationGroups = (pbnT = pbnRuntimeT) => [{
@@ -112,6 +113,11 @@ const navigationGroups = (pbnT = pbnRuntimeT) => [{
     label: pbnT("m815"),
     icon: Webhook,
     description: pbnT("m816")
+  }, {
+    id: 'external-integrations',
+    label: pbnT("ingestNavLabel"),
+    icon: Plug,
+    description: pbnT("ingestNavDesc")
   }]
 }];
 
@@ -214,6 +220,8 @@ function SystemSettingsContent() {
         return <StorageSettings />;
       case 'webhook':
         return <WebhookSettings />;
+      case 'external-integrations':
+        return <ExternalIntegrationsSettings />;
       default:
         return null;
     }

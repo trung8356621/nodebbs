@@ -1,0 +1,601 @@
+{
+  "overall": "FAIL",
+  "counts": {
+    "PASS": 35,
+    "FAIL": 2,
+    "BLOCKED": 1
+  },
+  "elapsedMs": 39150,
+  "forum": {
+    "id": "forum_e2e_new",
+    "database": "pbn_forum_e2e_new",
+    "webPort": 3900,
+    "apiPort": 7900,
+    "parent": "forum_p",
+    "template": "default"
+  },
+  "results": [
+    {
+      "id": "provision.create_child",
+      "status": "PASS",
+      "summary": "Create-child report present",
+      "report": "create-child-1793864126138.json",
+      "freeModeExpiresAt": "2027-01-05T07:35:25.854Z",
+      "steps": [
+        "validate:ok",
+        "parent_ready:ok",
+        "configure:ok",
+        "create_db:ok",
+        "migrate_baseline:ok",
+        "migrate_forward:ok",
+        "seed:ok",
+        "admin:ok",
+        "apply_template:ok",
+        "apply_managed_policy:applied",
+        "topic_refs:ok",
+        "link_parent_child:ok",
+        "health:ok"
+      ],
+      "at": "2026-11-05T07:38:18.647Z"
+    },
+    {
+      "id": "provision.health",
+      "status": "PASS",
+      "summary": "Child health check",
+      "ok": true,
+      "forumId": "forum_e2e_new",
+      "database": "pbn_forum_e2e_new",
+      "users": 1,
+      "networkRole": "child",
+      "freeMode": {
+        "enabled": true,
+        "expiresAt": "2027-01-05T07:35:25.854Z"
+      },
+      "topicReferences": 3,
+      "localServices": 2,
+      "creditsActive": true,
+      "parentRuntimeRequired": false,
+      "opsRequired": false,
+      "at": "2026-11-05T07:38:18.702Z"
+    },
+    {
+      "id": "runtime.parent_start",
+      "status": "PASS",
+      "summary": "Parent API :7400",
+      "at": "2026-11-05T07:38:22.837Z"
+    },
+    {
+      "id": "runtime.child_start",
+      "status": "PASS",
+      "summary": "Child API :7900",
+      "at": "2026-11-05T07:38:26.997Z"
+    },
+    {
+      "id": "auth.admin_login",
+      "status": 200,
+      "summary": "Admin login + session",
+      "role": "admin",
+      "at": "2026-11-05T07:38:27.284Z"
+    },
+    {
+      "id": "auth.admin_dashboard_apis",
+      "status": "PASS",
+      "summary": "Admin can reach settings/ledger APIs",
+      "dash": 404,
+      "settings": 200,
+      "ledger": 200,
+      "at": "2026-11-05T07:38:27.328Z"
+    },
+    {
+      "id": "auth.register_users",
+      "status": "PASS",
+      "summary": "Registered two test users",
+      "a": "e2en_ahq4gb6",
+      "b": "e2en_bhrapa9",
+      "at": "2026-11-05T07:38:29.469Z"
+    },
+    {
+      "id": "auth.user_denied_admin",
+      "status": "PASS",
+      "summary": "Regular user blocked from admin reward-rules",
+      "get": 403,
+      "patch": 403,
+      "at": "2026-11-05T07:38:29.507Z"
+    },
+    {
+      "id": "content.create_topic",
+      "status": 200,
+      "summary": "Create topic",
+      "topicId": 1,
+      "categoryId": 1,
+      "at": "2026-11-05T07:38:29.607Z"
+    },
+    {
+      "id": "content.list_topic",
+      "status": 200,
+      "summary": "Topic list readable",
+      "shown": true,
+      "at": "2026-11-05T07:38:29.641Z"
+    },
+    {
+      "id": "content.comment",
+      "status": 404,
+      "summary": "Post comment/reply",
+      "body": {
+        "message": "Route POST:/api/topics/1/posts not found",
+        "error": "Not Found",
+        "statusCode": 404
+      },
+      "at": "2026-11-05T07:38:29.646Z"
+    },
+    {
+      "id": "content.edit_own",
+      "status": 404,
+      "summary": "Edit own post",
+      "body": {
+        "message": "Route PUT:/api/posts/1 not found",
+        "error": "Not Found",
+        "statusCode": 404
+      },
+      "at": "2026-11-05T07:38:29.662Z"
+    },
+    {
+      "id": "content.like",
+      "status": 200,
+      "summary": "Like post",
+      "at": "2026-11-05T07:38:29.842Z"
+    },
+    {
+      "id": "content.categories",
+      "status": "PASS",
+      "summary": "Category available",
+      "categoryId": 1,
+      "at": "2026-11-05T07:38:29.842Z"
+    },
+    {
+      "id": "credit.rules_patch",
+      "status": 200,
+      "summary": "Admin patch reward rules",
+      "at": "2026-11-05T07:38:29.848Z"
+    },
+    {
+      "id": "credit.wallet",
+      "status": 404,
+      "summary": "Credit wallet readable",
+      "at": "2026-11-05T07:38:29.851Z"
+    },
+    {
+      "id": "credit.checkin",
+      "status": 200,
+      "summary": "Daily check-in grants credit",
+      "before": "6.0000000000",
+      "after": "7.0000000000",
+      "body": {
+        "amount": "1",
+        "balance": "7",
+        "checkInStreak": 1,
+        "message": "check_in_ok"
+      },
+      "at": "2026-11-05T07:38:30.037Z"
+    },
+    {
+      "id": "credit.checkin_idempotent",
+      "status": 200,
+      "summary": "Same-day check-in does not double-pay",
+      "mid": "7.0000000000",
+      "after2": "7.0000000000",
+      "at": "2026-11-05T07:38:30.079Z"
+    },
+    {
+      "id": "credit.checkin_streak",
+      "status": 200,
+      "summary": "Streak check-in via fake clock",
+      "beforeStreak": "7.0000000000",
+      "afterStreak": "8.5000000000",
+      "clock": 200,
+      "at": "2026-11-05T07:38:30.236Z"
+    },
+    {
+      "id": "credit.topic_reward",
+      "status": 200,
+      "summary": "Topic create reward path exercised",
+      "beforeTopic": "8.5000000000",
+      "afterTopic": "9.0000000000",
+      "topicTxBefore": 1,
+      "topicTxAfter": 2,
+      "note": "grant observed",
+      "at": "2026-11-05T07:38:30.347Z"
+    },
+    {
+      "id": "credit.like_reward",
+      "status": "PASS",
+      "summary": "Like reward (or already granted once)",
+      "likeTxBefore": 1,
+      "likeTxAfter": 1,
+      "authorBefore": "9.0000000000",
+      "authorAfter": "9.0000000000",
+      "at": "2026-11-05T07:38:30.441Z"
+    },
+    {
+      "id": "credit.like_idempotent",
+      "status": "PASS",
+      "summary": "Like retry does not double-pay",
+      "likeTxAfter": 1,
+      "likeTxRetry": 1,
+      "at": "2026-11-05T07:38:30.441Z"
+    },
+    {
+      "id": "credit.rule_toggle_off",
+      "status": "PASS",
+      "summary": "Disabled check-in rules grant zero",
+      "beforeOff": "9.0000000000",
+      "afterOff": "9.0000000000",
+      "at": "2026-11-05T07:38:30.587Z"
+    },
+    {
+      "id": "credit.tx_history",
+      "status": 200,
+      "summary": "Transaction history readable",
+      "at": "2026-11-05T07:38:30.689Z"
+    },
+    {
+      "id": "pin.free_mode",
+      "status": "PASS",
+      "summary": "Free Mode enabled",
+      "expiresAt": "2027-01-05T07:35:25.854Z",
+      "freeMode": true,
+      "at": "2026-11-05T07:38:30.712Z"
+    },
+    {
+      "id": "pin.activate",
+      "status": 200,
+      "summary": "Activate pin under Free Mode",
+      "body": {
+        "id": "a520a28c-526d-4344-8d61-8f6eef360f74",
+        "topic_id": 1,
+        "user_id": 2,
+        "product_id": null,
+        "transaction_id": null,
+        "idempotency_key": "d4320101-2cf1-4f69-bebe-df6cb6a024f4",
+        "payload_hash": "206a91a9a146e2bd5704358ac5c8e7e53af5db62e62fb30a23f19f7ed8578b8b",
+        "price": "0",
+        "duration_seconds": 86400,
+        "balance_before": "9",
+        "balance_after": "9",
+        "starts_at": "2026-11-05 14:38:30.754642+07",
+        "ends_at": "2026-11-06 14:38:30.754642+07",
+        "status": "active",
+        "reason": null,
+        "created_at": "2026-11-05 14:38:30.729078+07",
+        "ops_sku_code": "paid_pin_default",
+        "pricing_version": 1,
+        "pricing_authority": "forum-free-mode"
+      },
+      "creditUnchanged": true,
+      "balBefore": "9.0000000000",
+      "balAfter": "9.0000000000",
+      "at": "2026-11-05T07:38:30.761Z"
+    },
+    {
+      "id": "pin.no_credit_charge",
+      "status": "PASS",
+      "summary": "Free Mode does not deduct Credit",
+      "balBefore": "9.0000000000",
+      "balAfter": "9.0000000000",
+      "at": "2026-11-05T07:38:30.761Z"
+    },
+    {
+      "id": "a520a28c-526d-4344-8d61-8f6eef360f74",
+      "status": "active",
+      "summary": "Pin activation history row exists",
+      "topic_id": 1,
+      "starts_at": "2026-11-05T07:38:30.754Z",
+      "ends_at": "2026-11-06T07:38:30.754Z",
+      "created_at": "2026-11-05T07:38:30.729Z",
+      "at": "2026-11-05T07:38:30.765Z"
+    },
+    {
+      "id": "pin.activate",
+      "status": "FAIL",
+      "summary": "column \"pinned_until\" does not exist",
+      "at": "2026-11-05T07:38:30.766Z"
+    },
+    {
+      "id": "network.status",
+      "status": "PASS",
+      "summary": "Child network status",
+      "ready": true,
+      "role": "child",
+      "forumId": "forum_e2e_new",
+      "databaseName": "pbn_forum_e2e_new",
+      "webOrigin": "http://127.0.0.1:3900",
+      "parentLink": {
+        "linkedAt": "2026-11-05T07:35:26.020Z",
+        "parentOrigin": "http://127.0.0.1:7400",
+        "parentForumId": "forum_p",
+        "runtimeDependency": false
+      },
+      "lastManagedPolicy": {
+        "version": "2026-11-05T07:35:25.863Z#init-forum_e2e_new",
+        "checksum": "bf66822609865188976048896d00b14da7b163b21e7877940f301eacb9036075",
+        "appliedAt": "2026-11-05T07:35:25.906Z",
+        "appliedKeys": [
+          "moderation_config",
+          "spam_protection_enabled",
+          "content_policy_sample",
+          "service_catalog_managed",
+          "credit_defaults_managed",
+          "ui_defaults_managed",
+          "seo_technical_managed",
+          "locale_catalog_managed"
+        ]
+      },
+      "parentEnabledAt": null,
+      "opsAdapter": {
+        "status": "unsupported",
+        "contract": null
+      },
+      "fieldClasses": {
+        "template": [
+          "site_name",
+          "site_description",
+          "site_logo",
+          "site_primary_color",
+          "forum_default_locale",
+          "categories_seed",
+          "admin_bootstrap",
+          "free_mode_initial",
+          "credit_seed",
+          "service_prices_seed"
+        ],
+        "managed": [
+          "moderation_config",
+          "spam_protection_enabled",
+          "spam_protection_block_proxy",
+          "spam_protection_block_tor",
+          "spam_protection_block_vpn",
+          "content_policy_sample",
+          "service_catalog_managed",
+          "credit_defaults_managed",
+          "ui_defaults_managed",
+          "seo_technical_managed",
+          "locale_catalog_managed"
+        ],
+        "local": [
+          "site_url",
+          "registration_mode",
+          "free_mode",
+          "vnd_per_credit",
+          "forum_local_services",
+          "ops_forum_connections",
+          "jwt_secret",
+          "cookie_secret",
+          "database_url",
+          "admin_credentials",
+          "users",
+          "topics",
+          "posts",
+          "sys_accounts",
+          "sys_transactions",
+          "sessions"
+        ]
+      },
+      "parentOfflineSafe": true,
+      "installationKeyRequired": false,
+      "opsRequired": false,
+      "schemaMissing": false,
+      "canEnableParent": false,
+      "protectedForum": false,
+      "provision": {
+        "availableInRuntime": false,
+        "reason": "runtime_provision_disabled",
+        "note": "Creating a Child requires a separate database and operator confirmation via CLI. The Admin UI prepares a draft and shows commands; it does not create databases.",
+        "cli": {
+          "enableParent": "node scripts/forum-network.mjs enable-parent forums/<parent>.json",
+          "createChild": "node scripts/forum-network.mjs create-child --config forums/<child>.json --parent forums/<parent>.json --template default --free-months 2",
+          "exportPolicy": "node scripts/forum-network.mjs export-policy forums/<parent>.json --out path.json",
+          "applyPolicy": "node scripts/forum-network.mjs apply-policy forums/<child>.json --package path.json"
+        }
+      },
+      "at": "2026-11-05T07:38:30.775Z"
+    },
+    {
+      "id": "network.policy_version",
+      "status": "FAIL",
+      "summary": "Managed policy has version",
+      "at": "2026-11-05T07:38:30.778Z"
+    },
+    {
+      "id": "network.local_preserved",
+      "status": "PASS",
+      "summary": "Local free_mode not overwritten by managed policy",
+      "freeAfter": {
+        "enabled": true,
+        "expiresAt": "2027-01-05T07:35:25.854Z",
+        "e2eLocalMarker": true
+      },
+      "at": "2026-11-05T07:38:30.884Z"
+    },
+    {
+      "id": "network.topic_refs_private",
+      "status": "PASS",
+      "summary": "Topic refs not public topics",
+      "refs": 3,
+      "leaked": [],
+      "at": "2026-11-05T07:38:30.888Z"
+    },
+    {
+      "id": "network.template",
+      "status": "PASS",
+      "summary": "Template commercial services present",
+      "services": 2,
+      "at": "2026-11-05T07:38:30.890Z"
+    },
+    {
+      "id": "network.parent_offline",
+      "status": "PASS",
+      "summary": "Child works while Parent offline",
+      "me": 200,
+      "pricing": 200,
+      "at": "2026-11-05T07:38:32.177Z"
+    },
+    {
+      "id": "payment.admin_ui_api",
+      "status": 200,
+      "summary": "Admin payment packages API",
+      "at": "2026-11-05T07:38:32.216Z"
+    },
+    {
+      "id": "payment.sandbox",
+      "status": 404,
+      "summary": "Sandbox status",
+      "sandbox": true,
+      "at": "2026-11-05T07:38:32.216Z"
+    },
+    {
+      "id": "payment.flag_off",
+      "status": "PASS",
+      "summary": "Public checkout gated OFF",
+      "publicCheckout": false,
+      "checkoutStatus": 404,
+      "checkoutCode": "Not Found",
+      "at": "2026-11-05T07:38:32.216Z"
+    },
+    {
+      "id": "payment.packages_visible",
+      "status": "PASS",
+      "summary": "Packages endpoint responds",
+      "user": 200,
+      "admin": 200,
+      "at": "2026-11-05T07:38:32.216Z"
+    },
+    {
+      "id": "payment.no_real_acb",
+      "status": "PASS",
+      "summary": "No real ACB transfer attempted (API-only sandbox checks)",
+      "at": "2026-11-05T07:38:32.216Z"
+    },
+    {
+      "id": "i18n.api_settings_vi-VN",
+      "status": 200,
+      "summary": "Settings API reachable for locale check",
+      "at": "2026-11-05T07:38:32.236Z"
+    },
+    {
+      "id": "i18n.api_settings_en-US",
+      "status": 200,
+      "summary": "Settings API reachable for locale check",
+      "at": "2026-11-05T07:38:32.250Z"
+    },
+    {
+      "id": "browser.web_up",
+      "status": "PASS",
+      "summary": "Child web :3900",
+      "at": "2026-11-05T07:38:39.898Z"
+    },
+    {
+      "id": "browser.home",
+      "status": "PASS",
+      "summary": "Home loaded",
+      "screenshot": "docs/audit/screenshots/fresh-child-e2e/home-vi.png",
+      "at": "2026-11-05T07:38:42.751Z"
+    },
+    {
+      "id": "i18n.home",
+      "status": "PASS",
+      "summary": "No raw i18n keys on home",
+      "suspects": [],
+      "at": "2026-11-05T07:38:42.760Z"
+    },
+    {
+      "id": "browser.admin_login",
+      "status": "BLOCKED",
+      "summary": "Admin browser login",
+      "url": "http://127.0.0.1:3900/auth/login",
+      "screenshot": "docs/audit/screenshots/fresh-child-e2e/admin-login.png",
+      "at": "2026-11-05T07:38:46.507Z"
+    },
+    {
+      "id": "browser.dashboard",
+      "status": "PASS",
+      "summary": "/dashboard loaded",
+      "screenshot": "docs/audit/screenshots/fresh-child-e2e/dashboard.png",
+      "rawKeys": false,
+      "at": "2026-11-05T07:38:48.661Z"
+    },
+    {
+      "id": "i18n.dashboard",
+      "status": "PASS",
+      "summary": "i18n check dashboard",
+      "hasRaw": false,
+      "at": "2026-11-05T07:38:48.661Z"
+    },
+    {
+      "id": "browser.ledger",
+      "status": "PASS",
+      "summary": "/dashboard/ledger loaded",
+      "screenshot": "docs/audit/screenshots/fresh-child-e2e/ledger.png",
+      "rawKeys": false,
+      "at": "2026-11-05T07:38:50.860Z"
+    },
+    {
+      "id": "i18n.ledger",
+      "status": "PASS",
+      "summary": "i18n check ledger",
+      "hasRaw": false,
+      "at": "2026-11-05T07:38:50.860Z"
+    },
+    {
+      "id": "browser.payment",
+      "status": "PASS",
+      "summary": "/dashboard/payment loaded",
+      "screenshot": "docs/audit/screenshots/fresh-child-e2e/payment.png",
+      "rawKeys": false,
+      "at": "2026-11-05T07:38:55.309Z"
+    },
+    {
+      "id": "i18n.payment",
+      "status": "PASS",
+      "summary": "i18n check payment",
+      "hasRaw": false,
+      "at": "2026-11-05T07:38:55.309Z"
+    },
+    {
+      "id": "browser.forum_network",
+      "status": "PASS",
+      "summary": "/dashboard/forum-network loaded",
+      "screenshot": "docs/audit/screenshots/fresh-child-e2e/forum_network.png",
+      "rawKeys": false,
+      "at": "2026-11-05T07:38:57.244Z"
+    },
+    {
+      "id": "i18n.forum_network",
+      "status": "PASS",
+      "summary": "i18n check forum_network",
+      "hasRaw": false,
+      "at": "2026-11-05T07:38:57.244Z"
+    },
+    {
+      "id": "browser.home_en",
+      "status": "PASS",
+      "summary": "Home EN attempt",
+      "screenshot": "docs/audit/screenshots/fresh-child-e2e/home-en.png",
+      "at": "2026-11-05T07:38:57.655Z"
+    },
+    {
+      "id": "i18n.home_en",
+      "status": "PASS",
+      "summary": "No raw i18n keys on home_en",
+      "suspects": [],
+      "at": "2026-11-05T07:38:57.664Z"
+    },
+    {
+      "id": "cleanup.child_kept",
+      "status": "PASS",
+      "summary": "Child left running for PO browser verification",
+      "web": "http://127.0.0.1:3900",
+      "api": "http://127.0.0.1:7900",
+      "at": "2026-11-05T07:38:57.767Z"
+    }
+  ]
+}
