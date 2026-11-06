@@ -3,6 +3,8 @@
  * 集中管理和校验所有环境变量
  */
 
+import { assertRuntimeSecrets } from './runtime-secrets.js';
+
 // 简单的环境变量获取与校验
 const getEnv = (key, defaultValue) => {
   const value = process.env[key];
@@ -41,11 +43,18 @@ const getOptionalBooleanEnv = (key) => {
   return Boolean(value);
 };
 
+const nodeEnv = getEnv('NODE_ENV', 'production');
+const authSecrets = assertRuntimeSecrets({
+  nodeEnv,
+  jwtSecret: getEnv('JWT_SECRET') || '',
+  cookieSecret: getEnv('COOKIE_SECRET') || '',
+});
+
 const env = {
   // 环境信息
-  nodeEnv: getEnv('NODE_ENV', 'production'),
-  isDev: getEnv('NODE_ENV', 'production') === 'development',
-  isProd: getEnv('NODE_ENV', 'production') === 'production',
+  nodeEnv,
+  isDev: nodeEnv === 'development',
+  isProd: nodeEnv === 'production',
 
   // 服务器配置
   app: {
@@ -65,10 +74,10 @@ const env = {
 
   // 安全与认证
   security: {
-    jwtSecret: getEnv('JWT_SECRET', 'your-secret-key-change-this-in-production'),
+    jwtSecret: authSecrets.jwtSecret,
     jwtExpiresIn: getEnv('JWT_ACCESS_TOKEN_EXPIRES_IN', '7d'),
-    
-    cookieSecret: getEnv('COOKIE_SECRET') || getEnv('JWT_SECRET') || 'cookie-secret-change-this',
+
+    cookieSecret: authSecrets.cookieSecret,
     cookieSecure: getOptionalBooleanEnv('COOKIE_SECURE'),
     cookieSameSite: getEnv('COOKIE_SAMESITE', 'lax'),
     cookieDomain: getEnv('COOKIE_DOMAIN'), // undefined 表示当前域

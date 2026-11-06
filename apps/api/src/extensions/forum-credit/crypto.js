@@ -10,16 +10,23 @@ const KEY_LEN = 32;
  * Prefer OPS_FORUM_KEK (base64 or hex); fallback scrypt(JWT_SECRET).
  */
 export function resolveKekMaterial() {
-  const raw = process.env.OPS_FORUM_KEK || process.env.JWT_SECRET || 'forum-credit-dev-kek-change-me';
-  if (/^[0-9a-fA-F]{64}$/.test(raw)) {
-    return { key: Buffer.from(raw, 'hex'), version: process.env.OPS_FORUM_KEK_VERSION || 'v1' };
+  const raw = process.env.OPS_FORUM_KEK || process.env.JWT_SECRET;
+  if (!raw) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Refusing to derive a forum-credit key without OPS_FORUM_KEK or JWT_SECRET');
+    }
+    // Unit tests import this module without a forum env file.
   }
-  if (/^[A-Za-z0-9+/=_-]{43,}$/.test(raw) && Buffer.from(raw, 'base64').length === KEY_LEN) {
-    return { key: Buffer.from(raw, 'base64'), version: process.env.OPS_FORUM_KEK_VERSION || 'v1' };
+  const material = raw || 'forum-credit-dev-kek-change-me';
+  if (/^[0-9a-fA-F]{64}$/.test(material)) {
+    return { key: Buffer.from(material, 'hex'), version: process.env.OPS_FORUM_KEK_VERSION || 'v1' };
+  }
+  if (/^[A-Za-z0-9+/=_-]{43,}$/.test(material) && Buffer.from(material, 'base64').length === KEY_LEN) {
+    return { key: Buffer.from(material, 'base64'), version: process.env.OPS_FORUM_KEK_VERSION || 'v1' };
   }
   const salt = Buffer.from('pbn-forum-credit-kek-v1');
   return {
-    key: scryptSync(raw, salt, KEY_LEN),
+    key: scryptSync(material, salt, KEY_LEN),
     version: process.env.OPS_FORUM_KEK_VERSION || 'v1-scrypt',
   };
 }

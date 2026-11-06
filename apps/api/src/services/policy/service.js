@@ -5,10 +5,10 @@ import { evaluate, urlField } from './engine.js';
 export class PolicyService {
   constructor(fastify) { this.fastify = fastify; }
   async inspect(content, type, id = null, userId = null, client = pool, forced = null) {
+    // Local forum blacklist is authoritative. Global signed snapshots remain optional:
+    // when present their rules still evaluate; missing global no longer forces REVIEW.
     const rules = (await client.query('SELECT * FROM policy_rules ORDER BY priority DESC,id')).rows;
-    const ready = (await client.query("SELECT 1 FROM policy_versions WHERE scope='global'")).rowCount;
     const result = forced || evaluate(content, rules);
-    if (!ready && result.action !== 'BLOCK') { result.action='REVIEW'; result.reason='GLOBAL_SNAPSHOT_NOT_CONFIGURED'; }
     const [decision] = (await client.query('INSERT INTO policy_decisions(forum_id,user_id,content_type,content_id,action,rule_ids,reason,content_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id', [process.env.FORUM_ID || 'standalone',userId,type,id,result.action,JSON.stringify(result.ruleIds),result.reason,crypto.createHash('sha256').update(content).digest('hex')])).rows;
     return {...result,id:decision.id};
   }
@@ -33,7 +33,7 @@ export class PolicyService {
     }
     const content = ['topic','post','policy_ad','policy_page'].includes(item.targetType) ? await this.content(item.targetType,item.targetId) : item.targetType==='user_avatar'?urlField(item.payload?.value):String(item.payload?.value || '');
     const decision = await this.inspect(content,item.targetType,item.targetId,item.reviewedBy);
-    if (decision.action === 'BLOCK' || decision.reason === 'GLOBAL_SNAPSHOT_NOT_CONFIGURED') {
+    if (decision.action === 'BLOCK') {
       const error=new Error('This content cannot be published because it violates community rules.'); error.statusCode=422; throw error;
     }
   }

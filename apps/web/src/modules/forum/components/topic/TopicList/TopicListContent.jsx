@@ -5,7 +5,8 @@ import Link from '@/components/common/Link';
 import { Fragment } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Eye, Pin, Lock, BookOpen, Plus } from 'lucide-react';
+import { MessageSquare, Eye, Lock, BookOpen, Plus } from 'lucide-react';
+import { PinnedBadge, SeoActiveBadge, SeoActiveFrame, useSeoActive } from '@/modules/forum/components/topic/SeoActiveMark';
 import UserAvatar from '@/components/user/UserAvatar';
 import { Pager } from '@/components/common/Pagination';
 import Time from '@/components/common/Time';
@@ -33,9 +34,11 @@ export function TopicItem({
   const pbnT = usePbnTranslations();
   const categoryName = topic.categoryName || topic.category?.name || pbnT("m77");
   const isPinned = topic.isPinned;
+  const seoActive = useSeoActive(topic);
   const replyCount = Math.max((topic.postCount || 1) - 1, 0);
   const viewCount = topic.viewCount || 0;
-  return <div className={`p-3 sm:p-5 group relative transition-colors ${isPinned ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-accent/50'}`} style={{
+  return <SeoActiveFrame active={seoActive} className="rounded-none" innerClassName="rounded-none">
+    <div className={`p-3 sm:p-5 group relative transition-colors ${isPinned ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-accent/50'}`} style={{
     contain: 'layout style'
   }}>
       <div className='flex items-start gap-3 sm:gap-4 w-full'>
@@ -50,8 +53,8 @@ export function TopicItem({
         <div className='flex-1 min-w-0'>
           {/* 标题行 */}
           <div className='mb-1.5 leading-snug relative'>
-            {isPinned && <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary align-middle mr-1.5'>
-                <Pin className='w-3 h-3' />{pbnT("m1175")}</span>}
+            <PinnedBadge topic={topic} />
+            <SeoActiveBadge topic={topic} />
             {topic.isClosed && <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground align-middle mr-1.5'>
                 <Lock className='w-3 h-3' />{pbnT("m831")}</span>}
             <Link href={`/topic/${topic.id}`} className={`text-base sm:text-lg font-medium align-middle break-all before:absolute before:inset-0 before:z-0 text-foreground group-hover:text-primary ${isPinned ? '' : 'visited:text-muted-foreground'}`}>
@@ -127,7 +130,8 @@ export function TopicItem({
             </div>}
         </div>
       </div>
-    </div>;
+    </div>
+  </SeoActiveFrame>;
 }
 
 // 主 UI 组件

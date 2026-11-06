@@ -7,8 +7,8 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { apiClient } from '@/lib/api';
-const categories=['gambling_promotion','phishing','malware','fraud','spam','custom_domain','custom_url'];
-const types=['domain_exact','domain_subdomains','url_exact','url_prefix','text_signals','verify_redirect'];
+const categories=['gambling_promotion','phishing','malware','fraud','spam','custom_domain','custom_url','custom_keyword'];
+const types=['domain_exact','domain_subdomains','url_exact','url_prefix','text_signals','verify_redirect','keyword'];
 const blank={category:'custom_domain',type:'domain_subdomains',value:'',action:'BLOCK',priority:0,enabled:true,reason:''};
 export default function PolicyPage() {
   const t=useTranslations('policy'),locale=useLocale();

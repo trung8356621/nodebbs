@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'sonner';
-import { Settings, KeyRound, Shield, ShieldCheck, Bot, Fingerprint, Users, ShieldAlert, Gauge, Unplug, Send, HardDrive, Webhook, Wallet, Plug } from 'lucide-react';
+import { Settings, KeyRound, Shield, ShieldCheck, Bot, Fingerprint, Users, ShieldAlert, Gauge, Unplug, Send, HardDrive, Webhook, Wallet, Plug, Ban } from 'lucide-react';
 import { Loading } from '@/components/common/Loading';
 
 // 导入所有重构后或原有的配置子组件
@@ -16,6 +16,7 @@ import { GeneralSettings } from './components/GeneralSettings';
 import { RegistrationSettings } from './components/RegistrationSettings';
 import { SecuritySettings } from './components/SecuritySettings';
 import { ContentModerationSettings } from './components/ContentModerationSettings';
+import { ContentBlacklistSettings } from './components/ContentBlacklistSettings';
 import { AuthenticationSettings } from './components/AuthenticationSettings';
 import { UserManagementSettings } from './components/UserManagementSettings';
 import { SpamProtectionSettings } from './components/SpamProtectionSettings';
@@ -62,6 +63,11 @@ const navigationGroups = (pbnT = pbnRuntimeT) => [{
     label: pbnT("m180"),
     icon: ShieldCheck,
     description: pbnT("m799")
+  }, {
+    id: 'content-blacklist',
+    label: pbnT("blacklistNavLabel"),
+    icon: Ban,
+    description: pbnT("blacklistNavDesc")
   }, {
     id: 'spam-protection',
     label: pbnT("m800"),
@@ -202,6 +208,8 @@ function SystemSettingsContent() {
         return <SecuritySettings settings={settings} handleChange={handleChange} handleInputBlur={handleInputBlur} saving={saving} />;
       case 'content-moderation':
         return <ContentModerationSettings settings={settings} handleInputBlur={handleInputBlur} saving={saving} />;
+      case 'content-blacklist':
+        return <ContentBlacklistSettings />;
       case 'spam-protection':
         return <SpamProtectionSettings settings={settings} handleChange={handleChange} handleInputBlur={handleInputBlur} saving={saving} />;
       case 'rate-limit':

@@ -1,7 +1,5 @@
-import { getPbnTranslations } from "@/i18n/server";
 import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
-import { cache } from 'react';
-import { fetchData } from '@/lib/server/api';
+import { fetchData, request } from '@/lib/server/api';
 
 /**
  * 论坛模块服务端数据获取。
@@ -128,17 +126,20 @@ export async function getTagsData(params = {}, pbnT = pbnRuntimeT) {
 }
 
 /**
- * 服务端获取单个话题数据
- * 使用 React cache 确保同一渲染周期内的重复请求被去重
+ * 服务端获取单个话题数据。
+ *
+ * 不使用 React.cache()：该函数经 request() 读取 cookies()，与 generateMetadata /
+ * page 并行的其它 cache()+cookies() 调用组合时会卡住 App Router（/topic/* 524）。
+ *
+ * 也不走 fetchData 兜底：404 → null（真不存在）；5xx/网络错误向上抛，避免假 404。
+ *
  * @param {number|string} id - 话题ID
- * @returns {Promise<Object|null>} 话题数据
+ * @param {Function} [pbnT]
+ * @returns {Promise<Object|null>}
  */
-export const getTopicData = cache(async id => {
-  const pbnT = await getPbnTranslations();
-  return fetchData(`/topics/${id}`, {
-    fallback: null
-  }, pbnT);
-});
+export async function getTopicData(id, pbnT = pbnRuntimeT) {
+  return request(`/topics/${id}`, undefined, pbnT);
+}
 
 /**
  * 服务端获取话题回复数据

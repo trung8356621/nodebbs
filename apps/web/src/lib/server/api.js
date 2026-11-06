@@ -88,7 +88,9 @@ export const request = async (endpoint, options = {}, pbnT = pbnRuntimeT) => {
 
 /**
  * 判断错误是否应「中断渲染、上抛到错误边界」（如限速 429 → RateLimitView）。
- * 这是「降级 vs 浮现」策略的唯一判定点；未来若要让 5xx 也浮现，只改这里。
+ * 这是「降级 vs 浮现」策略的唯一判定点。
+ * 话题详情等关键资源应直接调 request()（见 getTopicData），勿依赖 fetchData 兜底，
+ * 以免 5xx 被吞成 null 变成假 404。
  */
 export function shouldSurface(error) {
   return error?.status === 429;

@@ -194,6 +194,29 @@ describe('policy exclude rules (domain BLOCK / REVIEW)', () => {
     const decision = evaluate('Visit https://review-me.example/a', [rule]);
     assert.equal(decision.action, 'REVIEW');
   });
+
+  it('blocks keyword rules with Vietnamese word boundaries', () => {
+    const rule = validateRule({
+      id: 'local-kw',
+      category: 'custom_keyword',
+      type: 'keyword',
+      value: 'cờ bạc',
+      action: 'BLOCK',
+      priority: 1,
+      enabled: true,
+      reason: 'keyword block',
+    });
+    assert.equal(evaluate('Tin về CỜ BẠC hôm nay', [rule]).action, 'BLOCK');
+    assert.equal(evaluate('classification only', [validateRule({
+      id: 'local-class',
+      category: 'custom_keyword',
+      type: 'keyword',
+      value: 'class',
+      action: 'BLOCK',
+      enabled: true,
+      reason: 'x',
+    })]).action, 'ALLOW');
+  });
 });
 
 describe('permission / revoked key (contract codes)', () => {

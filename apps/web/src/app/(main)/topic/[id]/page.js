@@ -13,16 +13,28 @@ export async function generateMetadata({
   const {
     id
   } = await params;
-  const [topic, {
+
+  // Sequential: avoid Promise.all([getTopicData, getSiteInfo]) which both touch
+  // cookies()/React.cache and have stalled the topic App Router render.
+  let topic = null;
+  try {
+    topic = await getTopicData(id, pbnT);
+  } catch (error) {
+    // 5xx / network: real error, not a soft 404 and not a 200 metadata title.
+    console.error(`[topic metadata] /topics/${id}`, error);
+    throw error;
+  }
+  // Missing, pending, or rejected (API 404 → null) must commit HTTP 404
+  // before metadata returns a normal document.
+  if (!topic) {
+    notFound();
+  }
+
+  const {
     siteName,
     siteUrl,
     siteLogo
-  }] = await Promise.all([getTopicData(id), getSiteInfo(pbnT)]);
-  if (!topic) {
-    return {
-      title: pbnT("m118")
-    };
-  }
+  } = await getSiteInfo(pbnT);
 
   // 提取纯文本内容作为描述（去除Markdown标记）
   const description = topic.content?.replace(/[#*`\[\]]/g, '').substring(0, 160) || '';
@@ -73,10 +85,16 @@ export default async function TopicDetailPage({
   const currentPage = parseInt(resolvedSearchParams.p) || 1;
   const LIMIT = 20;
 
-  // 优化：先获取话题数据（利用 Next.js 自动去重与 generateMetadata 的请求）
-  const topic = await getTopicData(id);
+  let topic;
+  try {
+    topic = await getTopicData(id, pbnT);
+  } catch (error) {
+    // Do not convert API/server failures into notFound() (fake 404).
+    console.error(`[topic page] /topics/${id}`, error);
+    throw error;
+  }
 
-  // 话题不存在，立即返回 404，避免浪费 posts 请求
+  // API 404 (missing / pending / rejected for anonymous) → real Next 404
   if (!topic) {
     notFound();
   }

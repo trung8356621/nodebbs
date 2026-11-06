@@ -12,6 +12,7 @@ import './config/forum-runtime.js';
 import Fastify from 'fastify';
 import server from './server.js';
 import env from './config/env.js';
+import { trustProxyFromEnv } from './config/trusted-proxy.js';
 
 /**
  * 日志配置
@@ -36,7 +37,8 @@ const logger = env.isDev
 const app = Fastify({
   logger,
   disableRequestLogging: true, // 禁用默认的请求日志，由自定义中间件处理
-  trustProxy: false, // 信任反向代理（用于获取真实客户端 IP）
+  // Trust X-Forwarded-* only from TRUSTED_PROXIES (default: loopback). Never true.
+  trustProxy: trustProxyFromEnv(),
   ajv: {
     customOptions: {
       allowUnionTypes: true, // 允许 JSON Schema 联合类型（如 type: ['integer', 'null']）

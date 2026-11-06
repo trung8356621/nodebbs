@@ -1,7 +1,8 @@
 'use client';
 
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {contentLinkRel} from '@/lib/content-link-policy';
+import {useDeadlineExpired} from '@/hooks/usePaidPinExpired';
 import Link from '@/components/common/Link';
 
 import Markdown, { defaultUrlTransform } from 'react-markdown';
@@ -126,18 +127,8 @@ const COMPONENTS = {
 };
 
 function MarkdownRender({ content, linkPolicy='ugc', canonicalOrigin, pinExpiresAt, pinServerNow }) {
-  const [expired,setExpired]=useState(false);
-  useEffect(()=>{
-    setExpired(false);
-    if(linkPolicy!=='paid'||!pinExpiresAt)return;
-    // Start once from server time. This is a DOM downgrade, never an authority grant.
-    const remaining=Math.min(new Date(pinExpiresAt)-new Date(pinServerNow),new Date(pinExpiresAt)-Date.now());
-    if(!Number.isFinite(remaining)||remaining<=0){setExpired(true);return;}
-    const deadline=Date.now()+remaining;
-    let timer;
-    const check=()=>{const left=deadline-Date.now();if(left<=0)setExpired(true);else timer=setTimeout(check,Math.min(left,2147483647));};
-    check();return()=>clearTimeout(timer);
-  },[linkPolicy,pinExpiresAt,pinServerNow]);
+  // Same SEO deadline as the badge. A passed entitlement downgrades the DOM only.
+  const expired=useDeadlineExpired(linkPolicy==='paid'?pinExpiresAt:null,pinServerNow);
   const policy=expired && linkPolicy==='paid'?'ugc':linkPolicy;
   const components={...COMPONENTS,a:({node,href,...props})=><a {...props} href={href} target='_blank' rel={contentLinkRel(href,{policy,canonicalOrigin})}/>};
   return (

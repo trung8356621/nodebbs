@@ -6,7 +6,10 @@ import { users } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import ms from 'ms';
 import env from '../config/env.js';
+import { trustProxyFromEnv, trustedProtocol } from '../config/trusted-proxy.js';
 import { userEnricher } from '../services/user/index.js';
+
+const trustProxy = trustProxyFromEnv();
 
 async function authPlugin(fastify) {
   // 注入日志实例到 userEnricher（需在注册 enrichers 之前）
@@ -31,9 +34,9 @@ async function authPlugin(fastify) {
       // 开发环境：
       // - Secure: 自动检测 (HTTPS时为true，HTTP时为false)
       // - SameSite: Lax (localhost 不同端口视为同站，允许发送)
-      secure: env.security.cookieSecure !== undefined 
+      secure: env.security.cookieSecure !== undefined
         ? env.security.cookieSecure
-        : this.request.protocol === 'https',
+        : trustedProtocol(this.request, trustProxy) === 'https',
       sameSite: env.security.cookieSameSite,
       domain: process.env.FORUM_ID ? undefined : env.security.cookieDomain, // 生产环境如果是子域名部署，需要设置主域名 (如 .example.com)
       maxAge: ms(expiresIn) / 1000,

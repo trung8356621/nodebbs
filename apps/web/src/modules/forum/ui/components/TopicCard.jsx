@@ -5,8 +5,9 @@ import Link from '@/components/common/Link';
 import UserAvatar from '@/components/user/UserAvatar';
 import Time from '@/components/common/Time';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Eye, Pin, Lock } from 'lucide-react';
+import { MessageSquare, Eye, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PinnedBadge, SeoActiveBadge, SeoActiveFrame, useSeoActive } from '@/modules/forum/components/topic/SeoActiveMark';
 export default function TopicCard({
   topic,
   sort = 'latest'
@@ -14,10 +15,12 @@ export default function TopicCard({
   const pbnT = usePbnTranslations();
   const replyCount = Math.max((topic.postCount || 1) - 1, 0);
   const isPinned = topic.isPinned;
+  const seoActive = useSeoActive(topic);
 
   // 根据排序模式决定显示时间
   const displayTime = sort === 'newest' ? topic.createdAt : topic.lastPostAt || topic.createdAt;
-  return <div className={cn('bg-card border border-border rounded-lg flex items-start gap-3 p-4 hover:bg-muted/60 transition-colors group relative', isPinned && 'bg-primary/5! dark:bg-primary/10! ring-1 ring-primary/10')}>
+  return <SeoActiveFrame active={seoActive}>
+    <div className={cn('bg-card border border-border rounded-lg flex items-start gap-3 p-4 hover:bg-muted/60 transition-colors group relative', seoActive && 'border-0 rounded-[calc(var(--radius)-3px)]', isPinned && 'bg-primary/5! dark:bg-primary/10! ring-1 ring-primary/10')}>
       {/* 覆盖层链接：点击卡片跳转帖子详情 */}
       <Link href={`/topic/${topic.id}`} className='absolute inset-0 z-0'>
         <span className='sr-only'>{pbnT("m2452")}</span>
@@ -30,14 +33,14 @@ export default function TopicCard({
 
       <div className='flex-1 min-w-0 relative z-10 pointer-events-none'>
         {/* 标题行：标记 + 标题 */}
-        <div className='flex items-center gap-2'>
-          {isPinned && <span className='inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary shrink-0'>
-              <Pin className='w-3 h-3' />{pbnT("m1175")}</span>}
+        <div className='flex items-center gap-2 min-w-0'>
+          <PinnedBadge topic={topic} size="compact" />
+          <SeoActiveBadge topic={topic} size="compact" />
           {topic.isClosed && <span className='inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground shrink-0'>
               <Lock className='w-3 h-3' />{pbnT("m831")}</span>}
           {topic.approvalStatus === 'pending' && <Badge variant='outline' className='text-chart-5 border-chart-5 text-[10px] h-4 shrink-0'>{pbnT("m379")}</Badge>}
           {topic.approvalStatus === 'rejected' && <Badge variant='outline' className='text-destructive border-destructive text-[10px] h-4 shrink-0'>{pbnT("m434")}</Badge>}
-          <h3 className={cn('text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors', isPinned && 'font-bold')}>
+          <h3 className={cn('min-w-0 flex-1 text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors', isPinned && 'font-bold')}>
             {topic.title}
           </h3>
         </div>
@@ -69,5 +72,6 @@ export default function TopicCard({
             {topic.viewCount}
           </span>}
       </div>
-    </div>;
+    </div>
+  </SeoActiveFrame>;
 }
