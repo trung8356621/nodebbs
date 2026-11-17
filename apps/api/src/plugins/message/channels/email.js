@@ -11,6 +11,10 @@ import { emailProviderSenders } from '../providers/email/index.js';
 import { getEmailTemplate } from '../templates/email/index.js';
 import { isDev } from '../../../config/env.js';
 import { MessageError, MessageErrorCode } from '../errors.js';
+import {
+  decryptConfigSecrets,
+  validateEmailProviderConfig,
+} from '../utils/providerSecrets.js';
 
 export class EmailChannel extends BaseChannel {
   constructor(fastify) {
@@ -51,49 +55,34 @@ export class EmailChannel extends BaseChannel {
   }
 
   /**
-   * 验证提供商配置
-   * @param {string} providerName - 提供商名称 (smtp, sendgrid, etc.)
-   * @param {object} config - 配置对象
-   * @throws {MessageError} 如果验证失败抛出错误
+   * Parse provider row and decrypt secret fields for sending.
+   * @param {object} provider
+   * @returns {object|null}
+   */
+  parseConfig(provider) {
+    const parsed = super.parseConfig(provider);
+    if (!parsed) return null;
+    return {
+      ...parsed,
+      config: decryptConfigSecrets(parsed.config),
+    };
+  }
+
+  /**
+   * Validate provider config.
+   * @param {string} providerName
+   * @param {object} config - decrypted config
+   * @throws {MessageError}
    */
   validateConfig(providerName, config) {
-    if (!config) {
+    const result = validateEmailProviderConfig(providerName, config, {
+      requireSecrets: true,
+    });
+    if (!result.ok) {
       throw new MessageError(
         MessageErrorCode.INVALID_CONFIG,
-        '配置不能为空',
+        result.message,
         { provider: providerName }
-      );
-    }
-
-    const missingFields = [];
-
-    switch (providerName) {
-      case 'smtp':
-      case 'aliyun': // 阿里云邮件推送通常使用 SMTP
-        if (!config.smtpHost) missingFields.push('smtpHost');
-        if (!config.smtpPort) missingFields.push('smtpPort');
-        if (!config.smtpUser) missingFields.push('smtpUser');
-        if (!config.smtpPassword) missingFields.push('smtpPassword');
-        if (!config.fromEmail) missingFields.push('fromEmail');
-        break;
-      
-      case 'sendgrid':
-      case 'resend':
-        if (!config.apiKey) missingFields.push('apiKey');
-        if (!config.fromEmail) missingFields.push('fromEmail');
-        break;
-      
-      default:
-        // 允许未知提供商，但至少需要发件人邮箱
-        if (!config.fromEmail) missingFields.push('fromEmail');
-        break;
-    }
-
-    if (missingFields.length > 0) {
-      throw new MessageError(
-        MessageErrorCode.INVALID_CONFIG,
-        `提供商 ${providerName} 配置缺少必要字段: ${missingFields.join(', ')}`,
-        { provider: providerName, missingFields }
       );
     }
   }
@@ -173,7 +162,8 @@ export class EmailChannel extends BaseChannel {
     this.validateConfig(provider.provider, provider.config);
 
     if (isDev) {
-      this.fastify.log.info(`[邮件发送] 收件人: ${to}, 数据: ${JSON.stringify(data)}, 模板: ${template || '自定义'}`);
+      const safeData = data ? { ...data, code: data.code ? '[redacted]' : undefined } : undefined;
+      this.fastify.log.info(`[邮件发送] 收件人: ${to}, 数据: ${JSON.stringify(safeData)}, 模板: ${template || '自定义'}`);
     }
 
     // ===== 获取发送函数 =====

@@ -30,6 +30,20 @@ async function messagePlugin(fastify, opts) {
     [VerificationChannel.SMS]: smsChannel,
   };
 
+  async function resolveSiteBranding() {
+    let siteName = process.env.FORUM_DEFAULT_SITE_NAME || 'Forum';
+    let siteUrl = process.env.FORUM_WEB_ORIGIN || process.env.FORUM_PUBLIC_ORIGIN || '';
+    try {
+      if (fastify.settings) {
+        siteName = await fastify.settings.get('site_name', siteName);
+        siteUrl = await fastify.settings.get('site_url', siteUrl);
+      }
+    } catch {
+      // settings plugin may be unavailable during early boot
+    }
+    return { siteName, siteUrl };
+  }
+
   /**
    * 消息服务对象
    */
@@ -66,6 +80,8 @@ async function messagePlugin(fastify, opts) {
         );
       }
 
+      const { siteName, siteUrl } = await resolveSiteBranding();
+
       // 构建发送选项
       const sendOptions = {
         to,
@@ -77,6 +93,8 @@ async function messagePlugin(fastify, opts) {
           expiryMinutes: config.expiryMinutes,
           identifier: to,
           locale: data?.locale || process.env.FORUM_DEFAULT_LOCALE || 'vi-VN',
+          siteName,
+          siteUrl,
         },
         provider,
       };
@@ -109,7 +127,7 @@ async function messagePlugin(fastify, opts) {
 
 export default fp(messagePlugin, {
   name: 'message',
-  dependencies: [],
+  dependencies: ['settings'],
 });
 
 // 导出配置和工具函数

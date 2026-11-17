@@ -5,53 +5,86 @@ import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { emailConfigApi } from '@/lib/api';
 import { toast } from 'sonner';
-import { Loader2, Check, Mail } from 'lucide-react';
+import { Loader2, Check, Mail, Trash2 } from 'lucide-react';
 import { ConfigProviderCard } from './ConfigProviderCard';
 import { Loading } from '@/components/common/Loading';
 import { useProviderSettings } from '@/hooks/dashboard/useProviderSettings';
 import { useProviderCard } from '@/hooks/dashboard/useProviderCard';
+
+function resolveEncryption(cfg = {}) {
+  if (cfg.smtpEncryption) return cfg.smtpEncryption;
+  if (cfg.smtpSecure === false) return 'starttls';
+  return 'ssl';
+}
+
 const getInitialFormData = provider => {
   const cfg = provider.config || {};
   return {
     isEnabled: provider.isEnabled,
-    // 配置字段（存储在 config JSON 中）
     smtpHost: cfg.smtpHost || '',
     smtpPort: cfg.smtpPort || 587,
-    smtpSecure: cfg.smtpSecure !== undefined ? cfg.smtpSecure : true,
+    smtpEncryption: resolveEncryption(cfg),
     smtpUser: cfg.smtpUser || '',
-    smtpPassword: cfg.smtpPassword || '',
+    smtpPassword: '',
     fromEmail: cfg.fromEmail || '',
     fromName: cfg.fromName || '',
-    apiKey: cfg.apiKey || '',
-    apiEndpoint: cfg.apiEndpoint || ''
+    apiKey: '',
+    apiEndpoint: cfg.apiEndpoint || '',
+    hasSmtpPassword: Boolean(cfg.hasSmtpPassword),
+    hasApiKey: Boolean(cfg.hasApiKey),
+    clearSmtpPassword: false,
+    clearApiKey: false,
   };
 };
+
 const buildSavePayload = (formData, provider) => {
   const isSmtpBased = provider.provider === 'smtp' || provider.provider === 'aliyun';
   const isApiBased = provider.provider === 'sendgrid' || provider.provider === 'resend';
-  return {
-    isEnabled: formData.isEnabled,
-    config: {
-      fromEmail: formData.fromEmail,
-      fromName: formData.fromName,
-      ...(isSmtpBased && {
-        smtpHost: formData.smtpHost,
-        smtpPort: formData.smtpPort,
-        smtpSecure: formData.smtpSecure,
-        smtpUser: formData.smtpUser,
-        smtpPassword: formData.smtpPassword
-      }),
-      ...(isApiBased && {
-        apiKey: formData.apiKey,
-        apiEndpoint: formData.apiEndpoint
-      })
-    }
+  const config = {
+    fromEmail: formData.fromEmail,
+    fromName: formData.fromName,
   };
+
+  if (isSmtpBased) {
+    config.smtpHost = formData.smtpHost;
+    config.smtpPort = formData.smtpPort;
+    config.smtpEncryption = formData.smtpEncryption;
+    config.smtpSecure = formData.smtpEncryption === 'ssl';
+    config.smtpUser = formData.smtpUser;
+    if (formData.smtpPassword) {
+      config.smtpPassword = formData.smtpPassword;
+    }
+  }
+
+  if (isApiBased) {
+    if (formData.apiKey) {
+      config.apiKey = formData.apiKey;
+    }
+    config.apiEndpoint = formData.apiEndpoint;
+  }
+
+  const payload = {
+    isEnabled: formData.isEnabled,
+    config,
+  };
+
+  if (formData.clearSmtpPassword) payload.clearSmtpPassword = true;
+  if (formData.clearApiKey) payload.clearApiKey = true;
+
+  return payload;
 };
+
 const testApiFn = (providerId, testEmail) => emailConfigApi.testProvider(providerId, testEmail);
+
 export function EmailSettings() {
   const pbnT = usePbnTranslations();
   const {
@@ -76,6 +109,7 @@ export function EmailSettings() {
       {providers.map(provider => <EmailProviderCard key={provider.id} provider={provider} onUpdate={updateProvider} editingProvider={editingProvider} setEditingProvider={setEditingProvider} testingProvider={testingProvider} setTestingProvider={setTestingProvider} />)}
     </div>;
 }
+
 function EmailProviderCard({
   provider,
   onUpdate,
@@ -85,7 +119,6 @@ function EmailProviderCard({
   setTestingProvider
 }) {
   const pbnT = usePbnTranslations();
-  // 从 provider.config 对象中提取配置（新 API 返回已解析的 JSON）
   const config = provider.config || {};
   const [testEmail, setTestEmail] = useState('');
   const updateApiFn = useCallback((id, payload) => emailConfigApi.updateProvider(id, payload), []);
@@ -122,15 +155,36 @@ function EmailProviderCard({
     }
     handleTest(testEmail);
   };
+
+  const clearSmtpPassword = () => {
+    setFormData({
+      ...formData,
+      smtpPassword: '',
+      clearSmtpPassword: true,
+      hasSmtpPassword: false,
+    });
+    toast.message(pbnT("m2488"));
+  };
+
+  const clearApiKey = () => {
+    setFormData({
+      ...formData,
+      apiKey: '',
+      clearApiKey: true,
+      hasApiKey: false,
+    });
+    toast.message(pbnT("m2488"));
+  };
+
   const summaryContent = config.fromEmail ? <div className='flex flex-col gap-1'>
       <div>{pbnT("m599")}{" "}{config.fromName} &lt;{config.fromEmail}&gt;</div>
-      {isSmtpBased && config.smtpHost && <div className='opacity-80'>SMTP: {config.smtpHost}:{config.smtpPort}</div>}
-      {isApiBased && config.apiKey && <div className='opacity-80'>API Key: {config.apiKey.substring(0, 20)}...</div>}
+      {isSmtpBased && config.smtpHost && <div className='opacity-80'>SMTP: {config.smtpHost}:{config.smtpPort} · {resolveEncryption(config)}</div>}
+      {isApiBased && config.hasApiKey && <div className='opacity-80'>API Key: {pbnT("m2489")}</div>}
     </div> : null;
+
   return <ConfigProviderCard title={provider.displayName} icon={Mail} isEnabled={provider.isEnabled} isEditing={isEditing} onToggleEnabled={handleToggleEnabled} onEditClick={handleEditClick} onCancelClick={handleCancelClick} summary={summaryContent}>
       <div className='space-y-4 pt-2'>
 
-        {/* 发件人信息 */}
         <div className='space-y-2'>
           <Label htmlFor={`${provider.provider}-fromEmail`}>{pbnT("m600")}</Label>
           <Input id={`${provider.provider}-fromEmail`} type='email' value={formData.fromEmail} onChange={e => setFormData({
@@ -147,7 +201,6 @@ function EmailProviderCard({
         })} placeholder={pbnT("m602")} />
         </div>
 
-        {/* SMTP 配置 */}
         {isSmtpBased && <>
             <div className='space-y-2'>
               <Label htmlFor={`${provider.provider}-smtpHost`}>{pbnT("m603")}</Label>
@@ -162,16 +215,25 @@ function EmailProviderCard({
                 <Label htmlFor={`${provider.provider}-smtpPort`}>{pbnT("m604")}</Label>
                 <Input id={`${provider.provider}-smtpPort`} type='number' value={formData.smtpPort} onChange={e => setFormData({
               ...formData,
-              smtpPort: parseInt(e.target.value)
+              smtpPort: parseInt(e.target.value, 10) || ''
             })} placeholder='587' />
               </div>
 
-              <div className='flex items-center justify-between pt-8'>
-                <Label htmlFor={`${provider.provider}-smtpSecure`}>{pbnT("m605")}</Label>
-                <Switch id={`${provider.provider}-smtpSecure`} checked={formData.smtpSecure} onCheckedChange={checked => setFormData({
+              <div className='space-y-2'>
+                <Label htmlFor={`${provider.provider}-smtpEncryption`}>{pbnT("m605")}</Label>
+                <Select value={formData.smtpEncryption} onValueChange={value => setFormData({
               ...formData,
-              smtpSecure: checked
-            })} />
+              smtpEncryption: value
+            })}>
+                  <SelectTrigger id={`${provider.provider}-smtpEncryption`} className='w-full'>
+                    <SelectValue placeholder={pbnT("m605")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='none'>{pbnT("m2490")}</SelectItem>
+                    <SelectItem value='starttls'>{pbnT("m2491")}</SelectItem>
+                    <SelectItem value='ssl'>{pbnT("m2492")}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -184,22 +246,48 @@ function EmailProviderCard({
             </div>
 
             <div className='space-y-2'>
-              <Label htmlFor={`${provider.provider}-smtpPassword`}>{pbnT("m608")}</Label>
-              <Input id={`${provider.provider}-smtpPassword`} type='password' value={formData.smtpPassword} onChange={e => setFormData({
+              <div className='flex items-center justify-between gap-2'>
+                <Label htmlFor={`${provider.provider}-smtpPassword`}>{pbnT("m608")}</Label>
+                {formData.hasSmtpPassword && !formData.clearSmtpPassword ? (
+                  <Button type='button' variant='ghost' size='sm' className='h-7 px-2 text-muted-foreground' onClick={clearSmtpPassword}>
+                    <Trash2 className='h-3.5 w-3.5' />
+                    {pbnT("m2487")}
+                  </Button>
+                ) : null}
+              </div>
+              <Input id={`${provider.provider}-smtpPassword`} type='password' autoComplete='new-password' value={formData.smtpPassword} onChange={e => setFormData({
             ...formData,
-            smtpPassword: e.target.value
-          })} placeholder={pbnT("m609")} />
+            smtpPassword: e.target.value,
+            clearSmtpPassword: false,
+          })} placeholder={formData.hasSmtpPassword && !formData.clearSmtpPassword ? pbnT("m2314") : pbnT("m609")} />
+              {formData.hasSmtpPassword && !formData.clearSmtpPassword && !formData.smtpPassword ? (
+                <p className='text-xs text-muted-foreground'>{pbnT("m2489")}</p>
+              ) : null}
+              {formData.clearSmtpPassword ? (
+                <p className='text-xs text-amber-600'>{pbnT("m2488")}</p>
+              ) : null}
             </div>
           </>}
 
-        {/* API 配置 */}
         {isApiBased && <>
             <div className='space-y-2'>
-              <Label htmlFor={`${provider.provider}-apiKey`}>API Key *</Label>
-              <Input id={`${provider.provider}-apiKey`} type='password' value={formData.apiKey} onChange={e => setFormData({
+              <div className='flex items-center justify-between gap-2'>
+                <Label htmlFor={`${provider.provider}-apiKey`}>API Key *</Label>
+                {formData.hasApiKey && !formData.clearApiKey ? (
+                  <Button type='button' variant='ghost' size='sm' className='h-7 px-2 text-muted-foreground' onClick={clearApiKey}>
+                    <Trash2 className='h-3.5 w-3.5' />
+                    {pbnT("m2487")}
+                  </Button>
+                ) : null}
+              </div>
+              <Input id={`${provider.provider}-apiKey`} type='password' autoComplete='new-password' value={formData.apiKey} onChange={e => setFormData({
             ...formData,
-            apiKey: e.target.value
-          })} placeholder={pbnT("m610")} />
+            apiKey: e.target.value,
+            clearApiKey: false,
+          })} placeholder={formData.hasApiKey && !formData.clearApiKey ? pbnT("m2314") : pbnT("m610")} />
+              {formData.hasApiKey && !formData.clearApiKey && !formData.apiKey ? (
+                <p className='text-xs text-muted-foreground'>{pbnT("m2489")}</p>
+              ) : null}
             </div>
 
             <div className='space-y-2'>
@@ -212,7 +300,6 @@ function EmailProviderCard({
             </div>
           </>}
 
-        {/* 测试邮件 */}
         <div className='space-y-2 pt-2 border-t border-border'>
           <Label htmlFor={`${provider.provider}-testEmail`}>{pbnT("m613")}</Label>
           <Input id={`${provider.provider}-testEmail`} type='email' value={testEmail} onChange={e => setTestEmail(e.target.value)} placeholder={pbnT("m614")} />

@@ -192,7 +192,14 @@ export default function OAuthCallback() {
         });
 
         // 处理特定的错误消息
-        if (errorMsg.includes(pbnT("m22"))) {
+        if (
+          err.code === 'REDIRECT_URI_MISMATCH' ||
+          /redirect_uri_mismatch/i.test(errorMsg)
+        ) {
+          errorMsg = pbnT('oauthRedirectUriMismatch', {
+            arg0: getProviderName(provider, pbnT),
+          });
+        } else if (errorMsg.includes(pbnT("m22"))) {
           errorMsg = pbnT("m23");
         } else if (errorMsg.includes(pbnT("m24"))) {
           errorMsg = pbnT("m25");
@@ -269,7 +276,10 @@ function getErrorMessage(error, provider, isLink = false, pbnT = pbnRuntimeT) {
     }),
     temporarily_unavailable: pbnT("m42", {
       arg0: providerName
-    })
+    }),
+    redirect_uri_mismatch: pbnT('oauthRedirectUriMismatch', {
+      arg0: providerName,
+    }),
   };
   return errorMessages[error] || pbnT("m43", {
     arg0: providerName,

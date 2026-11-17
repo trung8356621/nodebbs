@@ -4,6 +4,35 @@
 import jwt from 'jsonwebtoken';
 import { BaseOAuthProvider } from './base.js';
 import { normalizeOAuthProfile } from './normalize.js';
+import { OAuthError, OAuthErrorCode } from '../errors.js';
+
+/**
+ * @param {object} tokenErrorBody
+ * @param {string | null | undefined} callbackUrl
+ */
+function throwGoogleTokenError(tokenErrorBody, callbackUrl) {
+  const error = tokenErrorBody?.error || '';
+  const description = tokenErrorBody?.error_description || '';
+  const combined = `${error} ${description}`.toLowerCase();
+
+  if (
+    error === 'redirect_uri_mismatch' ||
+    combined.includes('redirect_uri_mismatch') ||
+    combined.includes('redirect uri mismatch')
+  ) {
+    throw new OAuthError(
+      OAuthErrorCode.REDIRECT_URI_MISMATCH,
+      'redirect_uri_mismatch: Google 拒绝了回调地址。请将 Admin 显示的 Callback URL 原样粘贴到 Google Cloud → Authorized redirect URIs，并确认与当前 public origin 一致。',
+      { callbackUrl: callbackUrl || null, googleError: error, googleDescription: description },
+    );
+  }
+
+  throw new OAuthError(
+    OAuthErrorCode.TOKEN_EXCHANGE_FAILED,
+    description || error || '代码换取 Token 失败',
+    { googleError: error || null, googleDescription: description || null },
+  );
+}
 
 export class GoogleProvider extends BaseOAuthProvider {
   constructor() {
@@ -11,23 +40,65 @@ export class GoogleProvider extends BaseOAuthProvider {
     this.name = 'google';
   }
 
+  validateConfig(config) {
+    const base = super.validateConfig(config);
+    if (!base.valid) return base;
+    if (!config.callbackUrl) {
+      return {
+        valid: false,
+        message:
+          '缺少 Callback URL：请配置 FORUM_PUBLIC_ORIGIN / FORUM_WEB_ORIGIN 或后台 Site URL',
+      };
+    }
+    return { valid: true };
+  }
+
   async getAuthorizationUrl(config, state) {
+    if (!config.callbackUrl) {
+      throw new OAuthError(
+        OAuthErrorCode.INVALID_CONFIG,
+        '缺少 Callback URL：请配置 FORUM_PUBLIC_ORIGIN / FORUM_WEB_ORIGIN 或后台 Site URL',
+      );
+    }
+
     const scope = this.parseScope(config.scope, ['openid', 'profile', 'email']);
 
-    const params = new URLSearchParams({
-      client_id: config.clientId,
-      redirect_uri: config.callbackUrl,
-      scope: scope.join(' '),
-      state,
-      response_type: 'code',
-      access_type: 'offline',
-      prompt: 'consent',
-    });
+    const redirectUri = String(config.callbackUrl || '').trim();
+    if (!redirectUri) {
+      throw new OAuthError(
+        OAuthErrorCode.INVALID_CONFIG,
+        '缺少 Callback URL：请配置 FORUM_PUBLIC_ORIGIN / FORUM_WEB_ORIGIN 或后台 Site URL',
+      );
+    }
+
+    const params = new URLSearchParams();
+    params.set('client_id', config.clientId);
+    params.set('redirect_uri', redirectUri);
+    params.set('scope', scope.join(' '));
+    params.set('state', state);
+    params.set('response_type', 'code');
+    params.set('access_type', 'offline');
+    params.set('prompt', 'consent');
+
+    // Hard guard: never send Google an auth URL with blank redirect_uri.
+    if (!params.get('redirect_uri')) {
+      throw new OAuthError(
+        OAuthErrorCode.INVALID_CONFIG,
+        '缺少 Callback URL：无法构造 Google 授权链接',
+      );
+    }
 
     return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   }
 
   async handleCallback(config, code) {
+    if (!config.callbackUrl) {
+      throw new OAuthError(
+        OAuthErrorCode.INVALID_CONFIG,
+        '缺少 Callback URL：请配置 FORUM_PUBLIC_ORIGIN / FORUM_WEB_ORIGIN 或后台 Site URL',
+      );
+    }
+
     // 用 code 换取 access_token
     const tokenResponse = await this.fetch(
       'https://oauth2.googleapis.com/token',
@@ -46,14 +117,19 @@ export class GoogleProvider extends BaseOAuthProvider {
       }
     );
 
-    if (!tokenResponse.ok) {
-      throw new Error('代码换取 Token 失败');
+    let token;
+    try {
+      token = await tokenResponse.json();
+    } catch {
+      token = null;
     }
 
-    const token = await tokenResponse.json();
+    if (!tokenResponse.ok) {
+      throwGoogleTokenError(token || {}, config.callbackUrl);
+    }
 
-    if (token.error) {
-      throw new Error(token.error_description || token.error);
+    if (token?.error) {
+      throwGoogleTokenError(token, config.callbackUrl);
     }
 
     // 从 id_token 解析用户信息

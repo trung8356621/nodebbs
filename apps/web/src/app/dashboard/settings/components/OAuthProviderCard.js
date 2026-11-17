@@ -9,10 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { oauthConfigApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { Loader2, Check, Globe } from 'lucide-react';
+import CopyButton from '@/components/common/CopyButton';
 import { ConfigProviderCard } from './ConfigProviderCard';
 import { Loading } from '@/components/common/Loading';
 import { useProviderSettings } from '@/hooks/dashboard/useProviderSettings';
 import { useProviderCard } from '@/hooks/dashboard/useProviderCard';
+
 export function OAuthSettings() {
   const pbnT = usePbnTranslations();
   const {
@@ -46,6 +48,12 @@ const parseAdditionalConfig = config => {
     return {};
   }
 };
+
+function callbackHintKey(providerName) {
+  if (providerName === 'google') return 'oauthCallbackGoogleHint';
+  return 'oauthCallbackGenericHint';
+}
+
 function OAuthProviderCard({
   provider,
   onUpdate,
@@ -55,13 +63,15 @@ function OAuthProviderCard({
   setTestingProvider
 }) {
   const pbnT = usePbnTranslations();
+  const resolvedCallbackUrl = provider.callbackUrl || '';
+  const callbackResolvable = provider.callbackResolvable !== false && Boolean(resolvedCallbackUrl);
+
   const getInitialFormData = useCallback(p => {
     const additional = parseAdditionalConfig(p.additionalConfig);
     return {
       isEnabled: p.isEnabled,
       clientId: p.clientId || '',
       clientSecret: p.clientSecret || '',
-      callbackUrl: p.callbackUrl || '',
       scope: p.scope || '',
       // Apple 特有配置
       teamId: additional.teamId || '',
@@ -69,12 +79,14 @@ function OAuthProviderCard({
     };
   }, []);
   const buildSavePayload = useCallback((formData, p) => {
+    // Callback is server-derived and shown readonly. Still include the displayed
+    // value so older backends persist it; new backends re-derive and overwrite.
     const payload = {
       isEnabled: formData.isEnabled,
       clientId: formData.clientId,
       clientSecret: formData.clientSecret,
-      callbackUrl: formData.callbackUrl,
-      scope: formData.scope
+      scope: formData.scope,
+      ...(p.callbackUrl ? { callbackUrl: p.callbackUrl } : {}),
     };
 
     // 对 Apple 特殊处理 additionalConfig
@@ -131,12 +143,12 @@ function OAuthProviderCard({
     } else {
       baseHandleToggleEnabled(checked);
     }
-  }, [baseHandleToggleEnabled, provider.provider, provider.displayName, onUpdate]);
+  }, [baseHandleToggleEnabled, provider.provider, provider.displayName, onUpdate, pbnT]);
 
   // 准备 summary 内容
   const summaryContent = provider.clientId ? <div className='flex flex-col gap-1'>
       <div>Client ID: {provider.clientId.substring(0, 20)}...</div>
-      {provider.callbackUrl && <div className='opacity-80'>{pbnT("m641")}{" "}{provider.callbackUrl}</div>}
+      {resolvedCallbackUrl && <div className='opacity-80 break-all'>{pbnT("m641")}{" "}{resolvedCallbackUrl}</div>}
     </div> : null;
   return <ConfigProviderCard title={provider.displayName} icon={Globe} isEnabled={provider.isEnabled} isEditing={isEditing} onToggleEnabled={handleToggleEnabled} onEditClick={handleEditClick} onCancelClick={handleCancelClick} summary={summaryContent}>
       <div className='space-y-4 pt-2'>
@@ -184,11 +196,28 @@ function OAuthProviderCard({
         {provider.provider !== 'wechat_miniprogram' && <>
             <div className='space-y-2'>
               <Label htmlFor={`${provider.provider}-callbackUrl`}>{pbnT("m644")}</Label>
-              <Input id={`${provider.provider}-callbackUrl`} value={formData.callbackUrl} onChange={e => setFormData({
-            ...formData,
-            callbackUrl: e.target.value
-          })} placeholder={provider.provider === 'apple' ? `${typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}/api/oauth/apple/callback` : `${typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}/auth/${provider.provider}/callback`} />
-              <p className='text-xs text-muted-foreground'>{pbnT("m645")}</p>
+              <div className="flex gap-2">
+                <Input
+                  id={`${provider.provider}-callbackUrl`}
+                  value={resolvedCallbackUrl}
+                  readOnly
+                  className="font-mono text-xs"
+                  placeholder={pbnT('oauthCallbackMissing')}
+                />
+                <CopyButton
+                  value={resolvedCallbackUrl}
+                  variant="outline"
+                  size="default"
+                  className="shrink-0 px-3"
+                  disabled={!callbackResolvable}
+                  onCopy={() => toast.success(pbnT('oauthCallbackCopied'))}
+                />
+              </div>
+              <p className='text-xs text-muted-foreground'>
+                {callbackResolvable
+                  ? pbnT(callbackHintKey(provider.provider))
+                  : pbnT('oauthCallbackMissing')}
+              </p>
             </div>
 
             <div className='space-y-2'>

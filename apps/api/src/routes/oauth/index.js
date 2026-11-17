@@ -120,6 +120,10 @@ export default async function oauthRoutes(fastify, options) {
                     clientId: { type: ['string', 'null'] },
                     clientSecret: { type: ['string', 'null'] },
                     callbackUrl: { type: ['string', 'null'] },
+                    callbackUrlReadonly: { type: 'boolean' },
+                    callbackOriginSource: { type: ['string', 'null'] },
+                    callbackResolvable: { type: 'boolean' },
+                    callbackReason: { type: ['string', 'null'] },
                     scope: { type: ['string', 'null'] },
                     additionalConfig: { type: ['string', 'null'] },
                     displayName: { type: ['string', 'null'] },
@@ -136,10 +140,30 @@ export default async function oauthRoutes(fastify, options) {
     },
     async (request, reply) => {
       try {
-        const items = await db
+        const rows = await db
           .select()
           .from(oauthProviders)
           .orderBy(oauthProviders.displayOrder);
+
+        const items = await Promise.all(
+          rows.map(async (row) => {
+            const resolved = await fastify.oauth.resolveCallbackUrl(row.provider, {
+              storedCallbackUrl: row.callbackUrl,
+            });
+            if (resolved.callbackUrl && resolved.callbackUrl !== row.callbackUrl) {
+              void fastify.oauth.persistCallbackUrl(row.provider, resolved.callbackUrl);
+            }
+            return {
+              ...row,
+              // Admin always sees the server-derived callback (never Host-based guesswork).
+              callbackUrl: resolved.callbackUrl,
+              callbackUrlReadonly: true,
+              callbackOriginSource: resolved.originSource,
+              callbackResolvable: resolved.resolvable,
+              callbackReason: resolved.reason,
+            };
+          }),
+        );
 
         return { items };
       } catch (error) {
@@ -190,7 +214,19 @@ export default async function oauthRoutes(fastify, options) {
                   id: { type: 'number' },
                   provider: { type: 'string' },
                   isEnabled: { type: 'boolean' },
+                  clientId: { type: ['string', 'null'] },
+                  clientSecret: { type: ['string', 'null'] },
+                  callbackUrl: { type: ['string', 'null'] },
+                  callbackUrlReadonly: { type: 'boolean' },
+                  callbackOriginSource: { type: ['string', 'null'] },
+                  callbackResolvable: { type: 'boolean' },
+                  callbackReason: { type: ['string', 'null'] },
+                  scope: { type: ['string', 'null'] },
+                  additionalConfig: { type: ['string', 'null'] },
                   displayName: { type: ['string', 'null'] },
+                  displayOrder: { type: 'number' },
+                  createdAt: { type: 'string' },
+                  updatedAt: { type: 'string' },
                 },
               },
             },
@@ -200,7 +236,7 @@ export default async function oauthRoutes(fastify, options) {
     },
     async (request, reply) => {
       const { provider } = request.params;
-      const updateData = request.body;
+      const updateData = { ...request.body };
 
       try {
         const existing = await db
@@ -213,6 +249,16 @@ export default async function oauthRoutes(fastify, options) {
           return reply.code(404).send({ error: 'OAuth 提供商不存在' });
         }
 
+        // Callback URL is server-derived from trusted public origin + deployed route.
+        // Ignore any client-supplied value to prevent redirect_uri drift.
+        delete updateData.callbackUrl;
+        const resolved = await fastify.oauth.resolveCallbackUrl(provider, {
+          storedCallbackUrl: existing[0].callbackUrl,
+        });
+        if (resolved.resolvable && resolved.callbackUrl) {
+          updateData.callbackUrl = resolved.callbackUrl;
+        }
+
         const updated = await db
           .update(oauthProviders)
           .set({ ...updateData })
@@ -223,7 +269,14 @@ export default async function oauthRoutes(fastify, options) {
 
         return {
           message: 'OAuth 配置已更新',
-          provider: updated[0],
+          provider: {
+            ...updated[0],
+            callbackUrl: resolved.callbackUrl || updated[0].callbackUrl,
+            callbackUrlReadonly: true,
+            callbackOriginSource: resolved.originSource,
+            callbackResolvable: resolved.resolvable,
+            callbackReason: resolved.reason,
+          },
         };
       } catch (error) {
         fastify.log.error(error, '[OAuth] 更新提供商配置失败');

@@ -8,6 +8,8 @@ import { normalizeEmail, normalizeUsername } from '../../utils/normalization.js'
 import { checkSpammer, formatSpamCheckMessage } from '../../services/spamService.js';
 import { DEFAULT_CURRENCY_CODE } from '../../extensions/ledger/constants.js';
 import { afterCommit } from '../../db/write-context.js';
+import { createVerificationCode } from '../../plugins/message/utils/verificationCode.js';
+import { VerificationCodeType } from '../../plugins/message/config/verificationCode.js';
 
 export default async function registerRoute(fastify, options) {
   fastify.post(
@@ -249,8 +251,35 @@ export default async function registerRoute(fastify, options) {
         }
       }
 
-      // 注册成功后，不再发送邮件
       fastify.log.info(`[注册] 用户 ${email} 注册成功，等待邮箱验证`);
+
+      // When forum policy requires email verification, send code after commit (non-blocking).
+      afterCommit(() => {
+        (async () => {
+          try {
+            const emailVerificationRequired = await fastify.settings.get(
+              'email_verification_required',
+              false
+            );
+            if (!emailVerificationRequired) return;
+
+            const { code } = await createVerificationCode(
+              email,
+              VerificationCodeType.EMAIL_VERIFY,
+              newUser.id
+            );
+            await fastify.message.send(VerificationCodeType.EMAIL_VERIFY, {
+              to: email,
+              data: { code },
+            });
+            fastify.log.info(`[注册] 已向 ${email} 发送邮箱验证码`);
+          } catch (err) {
+            fastify.log.error(err, `[注册] 自动发送验证邮件失败（不阻断）: ${email}`);
+          }
+        })().catch((err) => {
+          fastify.log.error(err, `[注册] 自动发送验证邮件异常: ${email}`);
+        });
+      });
 
       // 如果使用了邀请码，标记为已使用并处理奖励（不阻断注册流程）
       if (isInvitationMode && invitationCode) {

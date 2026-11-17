@@ -51,15 +51,36 @@ export function useProviderCard({
     try {
       setSaving(true);
       const payload = buildSavePayload(formData, provider);
-      await updateApiFn(providerId, payload);
+      const result = await updateApiFn(providerId, payload);
       toast.success(pbnT("m2083", {
         arg0: provider.displayName
       }));
       setEditingProvider(null);
-      onUpdate(providerId, payload);
+      const updates = { ...payload };
+      if (result?.provider && typeof result.provider === 'object') {
+        Object.assign(updates, result.provider);
+      }
+      if (result?.config) {
+        updates.config = result.config;
+      } else if (payload.config) {
+        // Preserve has* flags when API omits sanitized config
+        updates.config = {
+          ...(provider.config || {}),
+          ...payload.config,
+          hasSmtpPassword: payload.clearSmtpPassword
+            ? false
+            : Boolean(payload.config.smtpPassword) || Boolean(provider.config?.hasSmtpPassword),
+          hasApiKey: payload.clearApiKey
+            ? false
+            : Boolean(payload.config.apiKey) || Boolean(provider.config?.hasApiKey),
+        };
+        delete updates.config.smtpPassword;
+        delete updates.config.apiKey;
+      }
+      onUpdate(providerId, updates);
     } catch (error) {
       console.error(`Failed to update provider ${providerId}:`, error);
-      toast.error(pbnT("m590"));
+      toast.error(error?.message || pbnT("m590"));
     } finally {
       setSaving(false);
     }

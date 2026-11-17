@@ -1,34 +1,69 @@
 /**
- * SMTP 邮件提供商
- * 使用 nodemailer 发送邮件
+ * SMTP email provider via nodemailer.
+ * Supports encryption modes: none | starttls | ssl
  */
 import nodemailer from 'nodemailer';
 
 /**
- * 通过 SMTP 发送邮件
- * @param {object} providerConfig - 提供商配置（已解析的 config 对象）
- * @param {object} options - 发送选项
- * @param {string} options.to - 收件人
- * @param {string} options.subject - 主题
- * @param {string} options.html - HTML 内容
- * @param {string} options.text - 纯文本内容
+ * @param {object} config
+ * @returns {{ secure: boolean, requireTLS?: boolean, ignoreTLS?: boolean }}
+ */
+function resolveTlsOptions(config) {
+  const encryption = String(
+    config.smtpEncryption || (config.smtpSecure === false ? 'starttls' : 'ssl')
+  ).toLowerCase();
+
+  switch (encryption) {
+    case 'none':
+      return { secure: false, requireTLS: false, ignoreTLS: true };
+    case 'starttls':
+      return { secure: false, requireTLS: true };
+    case 'ssl':
+    default:
+      return { secure: true };
+  }
+}
+
+/**
+ * Send email via SMTP.
+ * @param {object} providerConfig - decrypted provider config
+ * @param {object} options
+ * @param {string} options.to
+ * @param {string} options.subject
+ * @param {string} options.html
+ * @param {string} options.text
  * @returns {Promise<{success: boolean, messageId: string}>}
  */
 export async function sendViaSMTP(providerConfig, { to, subject, html, text }) {
-  const { smtpHost, smtpPort, smtpSecure, smtpUser, smtpPassword, fromEmail, fromName } = providerConfig;
+  const {
+    smtpHost,
+    smtpPort,
+    smtpUser,
+    smtpPassword,
+    fromEmail,
+    fromName,
+  } = providerConfig;
 
-  const transporter = nodemailer.createTransport({
+  const tls = resolveTlsOptions(providerConfig);
+  const transportOptions = {
     host: smtpHost,
-    port: smtpPort,
-    secure: smtpSecure,
-    auth: {
+    port: Number(smtpPort),
+    ...tls,
+  };
+
+  if (smtpUser) {
+    transportOptions.auth = {
       user: smtpUser,
       pass: smtpPassword,
-    },
-  });
+    };
+  }
+
+  const transporter = nodemailer.createTransport(transportOptions);
+
+  const from = fromName ? `"${fromName}" <${fromEmail}>` : fromEmail;
 
   const info = await transporter.sendMail({
-    from: `"${fromName}" <${fromEmail}>`,
+    from,
     to,
     subject,
     text,

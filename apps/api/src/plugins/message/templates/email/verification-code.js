@@ -46,13 +46,20 @@ export default function verificationCodeTemplate({
   expiryMinutes,
   identifier,
   locale,
+  siteName,
+  siteUrl,
 }) {
   const loc = resolveLocale(locale);
   const action = typeLabel(typeKey, type, loc);
+  const brand = siteName || 'Forum';
+  const brandLink = siteUrl
+    ? `<p style="margin: 10px 0 0; color: #999; font-size: 12px; line-height: 1.6; text-align: center;"><a href="${siteUrl}" style="color: #999; text-decoration: none;">${brand}</a></p>`
+    : `<p style="margin: 10px 0 0; color: #999; font-size: 12px; line-height: 1.6; text-align: center;">${brand}</p>`;
+  const brandText = siteUrl ? `${brand} (${siteUrl})` : brand;
 
   if (loc === 'en-US') {
     return {
-      subject: `${action} verification code`,
+      subject: `[${brand}] ${action} verification code`,
       html: `
 <!DOCTYPE html>
 <html>
@@ -68,6 +75,7 @@ export default function verificationCodeTemplate({
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
           <tr>
             <td style="padding: 40px 40px 20px; text-align: center;">
+              <p style="margin: 0 0 12px; color: #007bff; font-size: 14px; font-weight: 600; letter-spacing: 0.04em;">${brand}</p>
               <h1 style="margin: 0; color: #333; font-size: 28px; font-weight: 600;">
                 Verification code
               </h1>
@@ -79,7 +87,7 @@ export default function verificationCodeTemplate({
                 Hello,
               </p>
               <p style="margin: 0 0 20px; color: #666; font-size: 16px; line-height: 1.6;">
-                You are performing <strong style="color: #333;">${action}</strong>. Use this code to continue:
+                You are performing <strong style="color: #333;">${action}</strong> on ${brand}. Use this code to continue:
               </p>
               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                 <tr>
@@ -106,6 +114,7 @@ export default function verificationCodeTemplate({
               <p style="margin: 10px 0 0; color: #999; font-size: 12px; line-height: 1.6; text-align: center;">
                 Sent to: ${identifier}
               </p>
+              ${brandLink}
             </td>
           </tr>
         </table>
@@ -116,11 +125,11 @@ export default function verificationCodeTemplate({
 </html>
     `,
       text: `
-Verification code (${action})
+[${brand}] Verification code (${action})
 
 Hello,
 
-You are performing ${action}. Use this code to continue:
+You are performing ${action} on ${brand}. Use this code to continue:
 
 Code: ${code}
 
@@ -131,12 +140,13 @@ For your account security, do not share this code with anyone.
 If you did not request this, you can ignore this email.
 
 Sent to: ${identifier}
+${brandText}
     `.trim(),
     };
   }
 
   return {
-    subject: `Mã xác minh ${action}`,
+    subject: `[${brand}] Mã xác minh ${action}`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -152,6 +162,7 @@ Sent to: ${identifier}
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
           <tr>
             <td style="padding: 40px 40px 20px; text-align: center;">
+              <p style="margin: 0 0 12px; color: #007bff; font-size: 14px; font-weight: 600; letter-spacing: 0.04em;">${brand}</p>
               <h1 style="margin: 0; color: #333; font-size: 28px; font-weight: 600;">
                 Mã xác minh
               </h1>
@@ -163,7 +174,7 @@ Sent to: ${identifier}
                 Xin chào,
               </p>
               <p style="margin: 0 0 20px; color: #666; font-size: 16px; line-height: 1.6;">
-                Bạn đang thực hiện thao tác <strong style="color: #333;">${action}</strong>. Vui lòng dùng mã sau để tiếp tục:
+                Bạn đang thực hiện thao tác <strong style="color: #333;">${action}</strong> trên ${brand}. Vui lòng dùng mã sau để tiếp tục:
               </p>
               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                 <tr>
@@ -190,6 +201,7 @@ Sent to: ${identifier}
               <p style="margin: 10px 0 0; color: #999; font-size: 12px; line-height: 1.6; text-align: center;">
                 Gửi tới: ${identifier}
               </p>
+              ${brandLink}
             </td>
           </tr>
         </table>
@@ -200,11 +212,11 @@ Sent to: ${identifier}
 </html>
     `,
     text: `
-Mã xác minh (${action})
+[${brand}] Mã xác minh (${action})
 
 Xin chào,
 
-Bạn đang thực hiện thao tác ${action}. Vui lòng dùng mã sau để tiếp tục:
+Bạn đang thực hiện thao tác ${action} trên ${brand}. Vui lòng dùng mã sau để tiếp tục:
 
 Mã: ${code}
 
@@ -215,6 +227,7 @@ Vì an toàn tài khoản, vui lòng không chia sẻ mã này với người kh
 Nếu bạn không yêu cầu mã này, hãy bỏ qua email.
 
 Gửi tới: ${identifier}
+${brandText}
     `.trim(),
   };
 }

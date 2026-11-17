@@ -25,8 +25,8 @@ export const messageProviders = pgTable(
     provider: varchar('provider', { length: 50 }).notNull(),
     isEnabled: boolean('is_enabled').notNull().default(false),
     // 通用配置 JSON，根据提供商类型存储不同字段
-    // Email SMTP: { smtpHost, smtpPort, smtpSecure, smtpUser, smtpPassword, fromEmail, fromName }
-    // Email API: { apiKey, apiEndpoint, fromEmail, fromName }
+    // Email SMTP: { smtpHost, smtpPort, smtpEncryption ('none'|'starttls'|'ssl'), smtpSecure, smtpUser, smtpPassword (enc:v1:...), fromEmail, fromName }
+    // Email API: { apiKey (enc:v1:...), apiEndpoint, fromEmail, fromName }
     // SMS Aliyun: { accessKeyId, accessKeySecret, signName, region }
     // SMS Tencent: { secretId, secretKey, appId, signName, region }
     config: text('config'),

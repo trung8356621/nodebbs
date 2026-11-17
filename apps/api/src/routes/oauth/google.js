@@ -3,6 +3,7 @@
  */
 import { handleOAuthLogin, generateRandomState } from '../../services/oauthService.js';
 import { isProd } from '../../config/env.js';
+import { OAuthError, OAuthErrorCode } from '../../plugins/oauth/errors.js';
 
 export default async function googleRoutes(fastify, options) {
   const PROVIDER_NAME = 'google';
@@ -31,6 +32,14 @@ export default async function googleRoutes(fastify, options) {
         const providerConfig = await fastify.oauth.getProviderConfig(PROVIDER_NAME);
         if (!providerConfig || !providerConfig.isEnabled) {
           return reply.code(500).send({ error: 'Google OAuth 未启用' });
+        }
+
+        if (!providerConfig.callbackUrl) {
+          return reply.code(500).send({
+            error:
+              'Google OAuth Callback URL 未就绪：请配置 FORUM_PUBLIC_ORIGIN / FORUM_WEB_ORIGIN 或后台 Site URL',
+            code: OAuthErrorCode.INVALID_CONFIG,
+          });
         }
 
         const provider = await fastify.oauth.getProvider(PROVIDER_NAME);
@@ -132,6 +141,13 @@ export default async function googleRoutes(fastify, options) {
         return { ...result, token: authToken };
       } catch (error) {
         fastify.log.error(error);
+        if (error instanceof OAuthError) {
+          return reply.code(400).send({
+            error: error.message,
+            code: error.code,
+            details: error.details || undefined,
+          });
+        }
         return reply.code(400).send({ error: error.message });
       }
     }
