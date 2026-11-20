@@ -3,6 +3,7 @@ import { runtimeTranslate as pbnRuntimeT } from "@/i18n/translate";
 import { cookies } from 'next/headers';
 import { getApiBaseUrl } from '../api-url';
 import { encodeRateLimitDigest } from '../rate-limit-error';
+import { findAuthCookie } from '../auth-cookie.js';
 
 // 默认超时时间（毫秒）
 const DEFAULT_TIMEOUT = 20000;
@@ -14,11 +15,11 @@ export const request = async (endpoint, options = {}, pbnT = pbnRuntimeT) => {
     ...options.headers
   };
   const cks = await cookies();
-  const token = cks.get(process.env.AUTH_COOKIE_NAME || 'auth_token')?.value;
+  const authCookie = findAuthCookie(cks);
   const locale = cks.get(process.env.NEXT_PUBLIC_FORUM_LOCALE_COOKIE || 'pbn-locale')?.value;
-  if (token) {
+  if (authCookie) {
     // headers['Authorization'] = `Bearer ${token}`;
-    headers['Cookie'] = `${process.env.AUTH_COOKIE_NAME || 'auth_token'}=${token}`;
+    headers['Cookie'] = `${authCookie.name}=${authCookie.value}`;
   }
   if (locale === 'vi-VN' || locale === 'en-US') {
     headers['Cookie'] = [headers['Cookie'], `${process.env.NEXT_PUBLIC_FORUM_LOCALE_COOKIE || 'pbn-locale'}=${locale}`].filter(Boolean).join('; ');
@@ -143,12 +144,11 @@ function enhanceUser(user) {
 }
 
 // 获取当前登录用户 (SSR专用)
-// 优化：只有在存在 auth_token cookie 时才发请求
+// 优化：只有在存在 auth cookie 时才发请求（含 pbn_<forum>_auth 回退发现）
 // /auth/me 接口已包含 RBAC 权限数据 (userRoles, permissions, displayRole)
 export const getCurrentUser = async (pbnT = pbnRuntimeT) => {
   const cookieStore = await cookies();
-  const hasToken = cookieStore.has(process.env.AUTH_COOKIE_NAME || 'auth_token');
-  if (!hasToken) {
+  if (!findAuthCookie(cookieStore)) {
     return null;
   }
   try {

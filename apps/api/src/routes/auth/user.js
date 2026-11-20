@@ -183,8 +183,7 @@ export default async function userRoute(fastify, options) {
       },
     },
     async (request, reply) => {
-      // 清除 Cookie
-      reply.clearCookie(process.env.AUTH_COOKIE_NAME || 'auth_token', { path: '/', domain: process.env.FORUM_ID ? undefined : process.env.COOKIE_DOMAIN || undefined });
+      reply.clearAuthCookie();
       return { message: '登出成功' };
     }
   );

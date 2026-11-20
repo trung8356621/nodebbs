@@ -24,9 +24,9 @@ class ApiClient {
     try {
       const response = await fetch(url, config);
 
-      // 处理 401 未授权
+      // 处理 401 未授权（session probe 用 silentAuth，避免匿名访客被弹出登录框）
       if (response.status === 401) {
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && !options.silentAuth) {
           window.dispatchEvent(new Event('unauthorized'));
         }
       }
@@ -77,10 +77,11 @@ class ApiClient {
   }
 
   // GET 请求
-  async get(endpoint, params) {
+  async get(endpoint, params, requestOptions = {}) {
     const queryString = this.buildQueryString(params);
     return this.request(endpoint + queryString, {
-      method: 'GET'
+      method: 'GET',
+      ...requestOptions,
     });
   }
 
@@ -174,9 +175,12 @@ export const authApi = {
     }
     // Cookie 会被后端清除，无需前端操作
   },
-  // 获取当前用户
-  async getCurrentUser() {
-    return apiClient.get('/auth/me');
+  // 获取当前用户（默认 silentAuth：会话探测失败不应触发全局登录弹窗）
+  async getCurrentUser(requestOptions = {}) {
+    return apiClient.get('/auth/me', undefined, {
+      silentAuth: true,
+      ...requestOptions,
+    });
   },
   // 使用验证码重置密码
   async resetPassword(email, code, password) {

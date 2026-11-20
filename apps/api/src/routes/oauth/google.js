@@ -115,8 +115,6 @@ export default async function googleRoutes(fastify, options) {
           return reply.code(400).send({ error: '无效的 state 参数，可能的 CSRF 攻击' });
         }
 
-        reply.clearCookie('oauth_state');
-
         const providerConfig = await fastify.oauth.getProviderConfig(PROVIDER_NAME);
         if (!providerConfig || !providerConfig.isEnabled) {
           return reply.code(500).send({ error: 'Google OAuth 未启用' });
@@ -134,6 +132,9 @@ export default async function googleRoutes(fastify, options) {
           { ip: request.ip }
         );
 
+        // Match password login: only the auth Set-Cookie on this response.
+        // Clearing oauth_state here is unnecessary (Max-Age=600, Google codes are
+        // single-use). Session persistence bugs were on the web callback/SSR side.
         const authToken = reply.generateAuthToken({
           id: result.user.id,
         });

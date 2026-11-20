@@ -23,23 +23,22 @@ export function AuthProvider({
   initialUser
 }) {
   const pbnT = usePbnTranslations();
-  // 如果 initialUser 被传递（无论是 null 还是对象），说明服务端已经检查过了
-  // 我们直接使用该状态，且不需要 loading
-  const isHydrated = initialUser !== undefined;
+  // Trust a positive SSR user. When SSR reports null, still probe /auth/me once:
+  // HttpOnly pbn_<forum>_auth can exist in the browser while web env omitted
+  // AUTH_COOKIE_NAME (SSR looked for auth_token only). Without this client check,
+  // F5 after OAuth looks logged out despite a valid cookie.
+  const hasServerUser = initialUser != null;
   const {
     refreshSettings
   } = useSettings();
   const [user, setUser] = useState(enhanceUser(initialUser) || null);
-  const [loading, setLoading] = useState(!isHydrated);
+  const [loading, setLoading] = useState(!hasServerUser);
   const [error, setError] = useState(null);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
   // 初始化检查
   useEffect(() => {
-    // 如果已经由服务端 Hydrate，且有用户，则不需要再次检查
-    // 如果没有 Hydrate (SPA 导航/降级情况)，或者想双重确认，可以检查
-    // 这里我们选择：只有当未 Hydrate 时才检查
-    if (!isHydrated) {
+    if (!hasServerUser) {
       checkAuth();
     }
 

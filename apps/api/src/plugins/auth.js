@@ -24,11 +24,10 @@ async function authPlugin(fastify) {
     parseOptions: {} 
   });
 
-  // 设置 Auth Cookie 的辅助函数
-  fastify.decorateReply('setAuthCookie', function(token) {
-    const expiresIn = env.security.jwtExpiresIn;
-    
-    this.setCookie((process.env.AUTH_COOKIE_NAME || 'auth_token'), token, {
+  const authCookieName = process.env.AUTH_COOKIE_NAME || 'auth_token';
+
+  function authCookieBaseOptions(request) {
+    return {
       path: '/',
       httpOnly: true,
       // 开发环境：
@@ -36,11 +35,26 @@ async function authPlugin(fastify) {
       // - SameSite: Lax (localhost 不同端口视为同站，允许发送)
       secure: env.security.cookieSecure !== undefined
         ? env.security.cookieSecure
-        : trustedProtocol(this.request, trustProxy) === 'https',
+        : trustedProtocol(request, trustProxy) === 'https',
       sameSite: env.security.cookieSameSite,
-      domain: process.env.FORUM_ID ? undefined : env.security.cookieDomain, // 生产环境如果是子域名部署，需要设置主域名 (如 .example.com)
+      // FORUM_ID deployments stay host-scoped so web SSR and the browser share one cookie.
+      domain: process.env.FORUM_ID ? undefined : env.security.cookieDomain,
+    };
+  }
+
+  // 设置 Auth Cookie 的辅助函数
+  fastify.decorateReply('setAuthCookie', function(token) {
+    const expiresIn = env.security.jwtExpiresIn;
+
+    this.setCookie(authCookieName, token, {
+      ...authCookieBaseOptions(this.request),
       maxAge: ms(expiresIn) / 1000,
     });
+  });
+
+  // Clear with the same Path/Domain/Secure/SameSite used when setting, or browsers keep the cookie.
+  fastify.decorateReply('clearAuthCookie', function() {
+    this.clearCookie(authCookieName, authCookieBaseOptions(this.request));
   });
 
   // 生成 Token 并设置 Cookie
@@ -55,7 +69,7 @@ async function authPlugin(fastify) {
     secret: env.security.jwtSecret,
     verify: process.env.FORUM_ID ? { allowedIss: `pbn:${process.env.FORUM_ID}`, allowedAud: `pbn:${process.env.FORUM_ID}` } : {},
     cookie: {
-      cookieName: (process.env.AUTH_COOKIE_NAME || 'auth_token'),
+      cookieName: authCookieName,
       signed: false,
     },
     sign: {
